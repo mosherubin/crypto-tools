@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decimate Alphabet</title>
+<style>
+  body { font-family: monospace; max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: sans-serif; }
+  label { font-family: sans-serif; display: block; margin-top: 1rem; }
+  input[type="text"] { font-family: monospace; font-size: 1rem; padding: 0.3rem; width: 100%; box-sizing: border-box; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: sans-serif; cursor: pointer; }
+  pre { background: #f4f4f4; padding: 1rem; margin-top: 1.5rem; overflow-x: auto; }
+  a { font-family: sans-serif; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">&larr; back to tools</a></p>
+  <h1>Decimate Alphabet</h1>
+  <p>Cryptographically decimate an alphabet across a range of decimation values, showing the cycle decomposition for each.</p>
+
+  <label for="alphabet">Alphabet</label>
+  <input type="text" id="alphabet" value="abcdefghijklmnopqrstuvwxyz">
+
+  <label><input type="checkbox" id="even"> Include even-valued decimations</label>
+
+  <button id="run">Decimate</button>
+
+  <pre id="output"></pre>
+
+<script>
+function getTotalLength(chain) {
+  return chain.reduce((sum, s) => sum + s.length, 0);
+}
+
+function decimateAlphabet(alphabet, includeEven) {
+  const lines = [];
+  for (let decimation = 2; decimation < alphabet.length; decimation++) {
+    if (!includeEven && decimation % 2 === 0) continue;
+
+    const chain = [];
+    let startingOffset = 0;
+    while (getTotalLength(chain) < alphabet.length) {
+      let currentOffset = startingOffset;
+      let s = '';
+      while (true) {
+        s += alphabet[currentOffset];
+        currentOffset = (currentOffset + decimation) % alphabet.length;
+        if (currentOffset === startingOffset) break;
+      }
+      chain.push(s);
+      startingOffset += 1;
+    }
+    const cycles = chain.map(s => `(${s})`).join(' ');
+    lines.push(`${String(decimation).padStart(3, ' ')}: ${cycles}`);
+  }
+  return lines.join('\n');
+}
+
+document.getElementById('run').addEventListener('click', () => {
+  const alphabet = document.getElementById('alphabet').value;
+  const includeEven = document.getElementById('even').checked;
+  document.getElementById('output').textContent = decimateAlphabet(alphabet, includeEven);
+});
+</script>
+</body>
+</html>
