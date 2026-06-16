@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polyalphabetic Reconstruction Matrix Completion</title>
+<style>
+  body { font-family: monospace; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: sans-serif; }
+  p, label { font-family: sans-serif; }
+  textarea#matrix { font-family: monospace; font-size: 0.95rem; width: 100%; box-sizing: border-box; }
+  .options { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-top: 1rem; }
+  .options label { display: flex; align-items: center; gap: 0.4rem; }
+  input[type="text"] { font-family: monospace; padding: 0.3rem; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: sans-serif; cursor: pointer; }
+  #output {
+    background: #f4f4f4;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    height: 28rem;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    border: 1px solid #ccc;
+  }
+  a { font-family: sans-serif; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">&larr; back to tools</a></p>
+  <h1>Polyalphabetic Reconstruction Matrix Completion</h1>
+  <p>Complete a polyalphabetic reconstruction matrix using indirect symmetry of position.</p>
+  <p>Each line: <code>&lt;name&gt; &lt;alphabet&gt;</code>. Use <code>.</code> for unknown positions. Blank lines and lines starting with <code>#</code> are ignored.</p>
+
+  <label for="matrix">Reconstruction matrix</label>
+  <textarea id="matrix" rows="14"># Source: The Cryptogram, MJ2026, E-23, Quagmire III.
+
+0  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+1  .W..G.Z............K......
+2  ....K..Z.....S......F.....
+3  ....X..............U......
+4  E......GO..........P......
+5  ..R.D..C.....P............
+6  ....J.NO......F...........
+7  ....................O.....
+8  ......C...................
+9  .......JH..........S..A...
+10 .......EV....Q............</textarea>
+
+  <div class="options">
+    <label>Ignore line(s) (comma-separated): <input type="text" id="ignore" size="20"></label>
+    <label><input type="checkbox" id="allowRowDups"> Allow row duplicates</label>
+    <label><input type="checkbox" id="allowColDups"> Allow column duplicates</label>
+    <label><input type="checkbox" id="k3"> K3 mode</label>
+  </div>
+
+  <button id="run">Run</button>
+
+  <pre id="output" readonly></pre>
+
+<script src="js/reconstruction-matrix.js"></script>
+<script>
+const {
+  parseAndValidate,
+  validateMatrix,
+  validateK3Matrix,
+  printMatrix,
+  findRectangles,
+  findIncompleteRectangles,
+  applyIndirectSymmetry,
+} = ReconstructionMatrix;
+
+function formatDate(d) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function formatElapsed(ms) {
+  const totalSeconds = ms / 1000;
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `${hours}:${String(minutes).padStart(2, '0')}:${seconds.toFixed(6).padStart(9, '0')}`;
+}
+
+function runCompleteTable(matrixText, options) {
+  const output = [];
+
+  let rows;
+  try {
+    rows = parseAndValidate(matrixText.split(/\r?\n/));
+  } catch (e) {
+    return `ERROR: ${e.message}`;
+  }
+
+  const knownNames = new Set(rows.map(([name]) => name));
+  for (const name of options.ignore) {
+    if (!knownNames.has(name)) {
+      return `ERROR: --ignore '${name}' does not match any line name in the input.`;
+    }
+  }
+
+  if (options.ignore.length) {
+    rows = rows.filter(([name]) => !options.ignore.includes(name));
+    output.push(`Ignoring line(s): ${[...options.ignore].sort().join(', ')}`);
+    output.push('');
+  }
+
+  let result = validateMatrix(rows);
+  if (!result.ok) return `VALIDATION ERROR: ${result.reason}`;
+
+  result = validateK3Matrix(rows, options.k3);
+  if (!result.ok) return `K3 VALIDATION ERROR: ${result.reason}`;
+
+  const startTime = new Date();
+  output.push(`Start time: ${formatDate(startTime)}`);
+  output.push('');
+
+  output.push('=== Initial Matrix ===');
+  output.push(printMatrix(rows));
+  output.push('');
+
+  let passNum = 0;
+  while (true) {
+    passNum++;
+    output.push(`=== Pass ${passNum} ===`);
+
+    const { rectangles, rectIndex } = findRectangles(rows);
+    output.push(`Complete rectangles: ${rectangles.length}`);
+
+    const incomplete = findIncompleteRectangles(rows);
+    output.push(`Incomplete rectangles: ${incomplete.length}`);
+    output.push('');
+
+    let newLetters, outputLines;
+    try {
+      const applied = applyIndirectSymmetry(rows, rectangles, rectIndex, incomplete, options.allowRowDups, options.allowColDups, options.k3);
+      rows = applied.rows;
+      newLetters = applied.newLetters;
+      outputLines = applied.outputLines;
+    } catch (e) {
+      output.push(`CONTRADICTION: ${e.message}`);
+      output.push('');
+      output.push('Matrix at point of error:');
+      output.push(printMatrix(rows));
+      return output.join('\n');
+    }
+
+    output.push(...outputLines);
+    output.push('');
+    output.push(`New letters added this pass: ${newLetters}`);
+    output.push('');
+
+    if (newLetters === 0) {
+      output.push('No new letters found. Stopping.');
+      break;
+    }
+
+    output.push('=== Interim Matrix ===');
+    output.push(printMatrix(rows));
+    output.push('');
+  }
+
+  output.push('');
+  output.push('=== Final Matrix ===');
+  output.push(printMatrix(rows));
+
+  const nCols = rows[0][1].length;
+  const seenCols = new Map();
+  const keep = [];
+  for (let col = 0; col < nCols; col++) {
+    const colTuple = rows.map(([, alpha]) => alpha[col]).join('');
+    if (!seenCols.has(colTuple)) {
+      seenCols.set(colTuple, col + 1);
+      keep.push(col);
+    }
+  }
+
+  const dropped = nCols - keep.length;
+  if (dropped) {
+    const dedupRows = rows.map(([name, alpha]) => [name, keep.map(c => alpha[c]).join('')]);
+    const headerRow = [['0', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, keep.length)]];
+    const keepSet = new Set(keep);
+    const droppedPositions = [];
+    for (let c = 0; c < nCols; c++) if (!keepSet.has(c)) droppedPositions.push(c + 1);
+
+    output.push('');
+    output.push(`=== Deduplicated Matrix (${dropped} duplicate column(s) removed: ${droppedPositions.join(', ')}) ===`);
+    output.push(printMatrix([...headerRow, ...dedupRows]));
+  } else {
+    output.push('');
+    output.push('(No duplicate columns found.)');
+  }
+
+  const endTime = new Date();
+  output.push('');
+  output.push(`End time:   ${formatDate(endTime)}`);
+  output.push(`Elapsed:    ${formatElapsed(endTime - startTime)}`);
+
+  return output.join('\n');
+}
+
+document.getElementById('run').addEventListener('click', () => {
+  const matrixText = document.getElementById('matrix').value;
+  const ignoreText = document.getElementById('ignore').value.trim();
+  const ignore = ignoreText ? ignoreText.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const allowRowDups = document.getElementById('allowRowDups').checked;
+  const allowColDups = document.getElementById('allowColDups').checked;
+  const k3 = document.getElementById('k3').checked;
+
+  const output = document.getElementById('output');
+  output.textContent = runCompleteTable(matrixText, { ignore, allowRowDups, allowColDups, k3 });
+  output.scrollTop = output.scrollHeight;
+});
+</script>
+</body>
+</html>
