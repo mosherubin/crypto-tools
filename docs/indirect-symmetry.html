@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>List Indirect Symmetry Chains</title>
+<style>
+  body { font-family: monospace; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: sans-serif; }
+  p, label { font-family: sans-serif; }
+  textarea { font-family: monospace; font-size: 0.95rem; width: 100%; box-sizing: border-box; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: sans-serif; cursor: pointer; }
+  pre { background: #f4f4f4; padding: 1rem; margin-top: 1.5rem; overflow-x: auto; white-space: pre-wrap; }
+  a { font-family: sans-serif; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">&larr; back to tools</a></p>
+  <h1>List Indirect Symmetry Chains</h1>
+  <p>Given a polyalphabetic reconstruction matrix, list all derivable chains between every pair of secondary alphabets.</p>
+  <p>Each line: <code>&lt;alphabet-name&gt; &lt;partial-alphabet&gt;</code>. Use <code>.</code> for unknown positions. Blank lines and lines starting with <code>#</code> are ignored.</p>
+
+  <label for="matrix">Reconstruction matrix</label>
+  <textarea id="matrix" rows="12"># The Cryptogram, MJ2026, E-23
+0  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+1  CMBFDG.NZL.X.TH..AIKJ.....
+2  M...G..K......T..B..X.....
+3  B.MGF..T.X...KN..CZ.L.....
+4  G...K............F........
+5  F.GKT............D........
+6  .......A..M..CR..K.B......
+7  ..............M...........
+8  ..........I........S..A...</textarea>
+
+  <button id="run">Find Chains</button>
+
+  <pre id="output"></pre>
+
+<script>
+function parseInput(text) {
+  const rows = [];
+  const lines = text.split(/\r?\n/);
+  lines.forEach((rawLine, idx) => {
+    const lineno = idx + 1;
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) return;
+    const match = line.match(/^(\S+)\s+(\S+)$/);
+    if (!match) {
+      throw new Error(`Error on line ${lineno}: expected 'name contents', got: ${JSON.stringify(line)}`);
+    }
+    const name = match[1];
+    const contents = match[2].toUpperCase();
+    rows.push({ name, contents, lineno });
+  });
+  return rows;
+}
+
+function validateRows(rows) {
+  const expectedLen = rows[0].contents.length;
+  for (const { name, contents } of rows.slice(1)) {
+    if (contents.length !== expectedLen) {
+      throw new Error(`Error: row '${name}' has length ${contents.length}, but expected ${expectedLen} (same as first row).`);
+    }
+  }
+
+  for (const { name, contents, lineno } of rows) {
+    const seen = {};
+    for (let pos = 0; pos < contents.length; pos++) {
+      const ch = contents[pos];
+      if (ch === '.') continue;
+      if (ch in seen) {
+        throw new Error(`Error: row '${name}' (line ${lineno}) has duplicate character '${ch}' at positions ${seen[ch]} and ${pos}.`);
+      }
+      seen[ch] = pos;
+    }
+  }
+}
+
+function buildChains(topContents, botContents) {
+  const n = topContents.length;
+
+  const topPos = {};
+  const botPos = {};
+  for (let i = 0; i < n; i++) {
+    if (topContents[i] !== '.') topPos[topContents[i]] = i;
+  }
+  for (let i = 0; i < n; i++) {
+    if (botContents[i] !== '.') botPos[botContents[i]] = i;
+  }
+
+  const usedTop = new Set();
+  const usedBot = new Set();
+  const chains = []; // [startPos, chainStr]
+
+  for (let startPos = 0; startPos < n; startPos++) {
+    const topCh = topContents[startPos];
+    const botCh = botContents[startPos];
+
+    if (topCh === '.' || botCh === '.') continue;
+    if (usedTop.has(startPos) || usedBot.has(startPos)) continue;
+
+    const chain = [topCh, botCh];
+    usedTop.add(startPos);
+    usedBot.add(startPos);
+
+    // Extend right
+    while (true) {
+      const lastCh = chain[chain.length - 1];
+      if (!(lastCh in topPos)) break;
+      const nextPos = topPos[lastCh];
+      if (usedTop.has(nextPos) || usedBot.has(nextPos)) break;
+      const nextCh = botContents[nextPos];
+      if (nextCh === '.') break;
+      chain.push(nextCh);
+      usedTop.add(nextPos);
+      usedBot.add(nextPos);
+    }
+
+    // Extend left
+    while (true) {
+      const firstCh = chain[0];
+      if (!(firstCh in botPos)) break;
+      const prevPos = botPos[firstCh];
+      if (usedTop.has(prevPos) || usedBot.has(prevPos)) break;
+      const prevCh = topContents[prevPos];
+      if (prevCh === '.') break;
+      chain.unshift(prevCh);
+      usedTop.add(prevPos);
+      usedBot.add(prevPos);
+    }
+
+    if (chain.length >= 2) {
+      chains.push([startPos, chain.join('')]);
+    }
+  }
+
+  chains.sort((a, b) => a[0] - b[0]);
+  return chains.map(([, chainStr]) => chainStr);
+}
+
+function* combinations2(rows) {
+  for (let i = 0; i < rows.length; i++) {
+    for (let j = i + 1; j < rows.length; j++) {
+      yield [rows[i], rows[j]];
+    }
+  }
+}
+
+function run(text) {
+  const rows = parseInput(text);
+  if (rows.length < 2) {
+    throw new Error('Error: at least two rows are required.');
+  }
+  validateRows(rows);
+
+  const lines = [];
+  for (const [a, b] of combinations2(rows)) {
+    const chains = buildChains(a.contents, b.contents);
+    if (chains.length) {
+      lines.push(`${a.name}-${b.name} ${chains.join(' / ')}`);
+    } else {
+      lines.push(`${a.name}-${b.name} (no chains)`);
+    }
+  }
+  return lines.join('\n');
+}
+
+document.getElementById('run').addEventListener('click', () => {
+  const text = document.getElementById('matrix').value;
+  const output = document.getElementById('output');
+  try {
+    output.textContent = run(text);
+  } catch (err) {
+    output.textContent = err.message;
+  }
+});
+</script>
+</body>
+</html>
