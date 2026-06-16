@@ -397,8 +397,59 @@ function applyIndirectSymmetry(rows, rectangles, rectIndex, incomplete, allowRow
   return { rows: updatedRows, newLetters, outputLines };
 }
 
+// ---------------------------------------------------------------------------
+// Tetragram validity check
+// ---------------------------------------------------------------------------
+
+function tetragramIndex(chars) {
+  return chars[0] * 17576 + chars[1] * 676 + chars[2] * 26 + chars[3];
+}
+
+// Mirrors is_tetragram_valid from the Python library. `cache` is a plain
+// object owned by the caller; pass the same object on every call to reuse
+// wildcard-expansion results. Requires global.TETRAGRAM_FREQUENCY_DATA
+// (loaded via js/tetragram-data.js) to already be set.
+function isTetragramValid(tetragram, cache, cutoff = 'A') {
+  const data = global.TETRAGRAM_FREQUENCY_DATA;
+
+  tetragram = tetragram.toUpperCase();
+  cutoff = cutoff.toUpperCase();
+
+  const dotCount = [...tetragram].filter(ch => ch === '.').length;
+  if (dotCount >= 3) return true;
+
+  if (dotCount === 0) {
+    const chars = [...tetragram].map(ch => ch.charCodeAt(0) - 65);
+    return data[tetragramIndex(chars)] > cutoff;
+  }
+
+  const cacheKey = `${tetragram}|${cutoff}`;
+  if (cacheKey in cache) return cache[cacheKey];
+
+  const wildcardPositions = [];
+  for (let i = 0; i < tetragram.length; i++) if (tetragram[i] === '.') wildcardPositions.push(i);
+  const chars = [...tetragram].map(ch => (ch === '.' ? null : ch.charCodeAt(0) - 65));
+
+  const total = 26 ** wildcardPositions.length;
+  for (let n = 0; n < total; n++) {
+    let rem = n;
+    for (const pos of wildcardPositions) {
+      chars[pos] = rem % 26;
+      rem = Math.floor(rem / 26);
+    }
+    if (data[tetragramIndex(chars)] > cutoff) {
+      cache[cacheKey] = true;
+      return true;
+    }
+  }
+
+  cache[cacheKey] = false;
+  return false;
+}
+
 global.ReconstructionMatrix = {
   MatrixContradiction,
+  isTetragramValid,
   parseAndValidate,
   validateMatrix,
   validateK3Matrix,

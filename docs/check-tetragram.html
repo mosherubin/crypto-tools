@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check Tetragram</title>
+<style>
+  body { font-family: monospace; max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: sans-serif; }
+  p, label { font-family: sans-serif; }
+  .field { margin-top: 1rem; }
+  .field label { display: block; margin-bottom: 0.3rem; }
+  input[type="text"] { font-family: monospace; font-size: 0.95rem; padding: 0.3rem; width: 6rem; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: sans-serif; cursor: pointer; }
+  #output {
+    background: #f4f4f4;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    height: 24rem;
+    overflow-y: auto;
+    overflow-x: auto;
+    white-space: pre;
+    border: 1px solid #ccc;
+  }
+  a { font-family: sans-serif; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">&larr; back to tools</a></p>
+  <h1>Check Tetragram</h1>
+  <p>Look up a (possibly wildcard) tetragram against the frequency data used by the Quagmire solver.</p>
+  <p>Tetragram: 4 characters, A-Z or <code>.</code> for wildcard (e.g. <code>..QE</code>, <code>TION</code>). Grade cutoff: a single letter A-Z &mdash; grades <em>above</em> this are considered valid.</p>
+
+  <div class="field">
+    <label for="tetragram">Tetragram</label>
+    <input type="text" id="tetragram" maxlength="4" value="..QE">
+  </div>
+  <div class="field">
+    <label for="cutoff">Grade cutoff</label>
+    <input type="text" id="cutoff" maxlength="1" value="A">
+  </div>
+
+  <button id="run">Check</button>
+
+  <pre id="output" readonly></pre>
+
+<script src="js/tetragram-data.js"></script>
+<script src="js/reconstruction-matrix.js"></script>
+<script>
+const { isTetragramValid } = ReconstructionMatrix;
+
+function gradeAt(data, chars) {
+  return data[chars[0] * 17576 + chars[1] * 676 + chars[2] * 26 + chars[3]];
+}
+
+function expandMatches(tetragram, cutoff, data) {
+  tetragram = tetragram.toUpperCase();
+  cutoff = cutoff.toUpperCase();
+
+  const wildcardPositions = [];
+  for (let i = 0; i < tetragram.length; i++) if (tetragram[i] === '.') wildcardPositions.push(i);
+  const fixed = [...tetragram].map(ch => (ch === '.' ? null : ch.charCodeAt(0) - 65));
+
+  const matches = [];
+  const total = 26 ** wildcardPositions.length;
+  for (let n = 0; n < total; n++) {
+    const chars = [...fixed];
+    let rem = n;
+    for (const pos of wildcardPositions) {
+      chars[pos] = rem % 26;
+      rem = Math.floor(rem / 26);
+    }
+    const grade = gradeAt(data, chars);
+    if (grade > cutoff) {
+      matches.push([grade, chars.map(c => String.fromCharCode(65 + c)).join('')]);
+    }
+  }
+
+  matches.sort((a, b) => {
+    if (a[0] !== b[0]) return a[0] < b[0] ? 1 : -1; // best grade first
+    return a[1] < b[1] ? -1 : (a[1] > b[1] ? 1 : 0); // alpha within grade
+  });
+  return matches;
+}
+
+function runCheckTetragram(rawTg, rawCutoff) {
+  const output = [];
+
+  const tg = rawTg.toUpperCase();
+  if (tg.length !== 4) {
+    return `ERROR: tetragram must be exactly 4 characters; got '${rawTg}'.`;
+  }
+  for (const ch of tg) {
+    if (ch !== '.' && !(ch >= 'A' && ch <= 'Z')) {
+      return `ERROR: tetragram contains invalid character '${ch}'; only A-Z and '.' are allowed.`;
+    }
+  }
+
+  if (rawCutoff.length !== 1 || !(rawCutoff.toUpperCase() >= 'A' && rawCutoff.toUpperCase() <= 'Z')) {
+    return `ERROR: grade_cutoff must be a single letter A-Z; got '${rawCutoff}'.`;
+  }
+  const cutoff = rawCutoff.toUpperCase();
+
+  const cache = {};
+  const result = isTetragramValid(tg, cache, cutoff);
+  const dotCount = [...tg].filter(ch => ch === '.').length;
+
+  output.push(`Tetragram : ${tg}`);
+  output.push(`Cutoff    : ${cutoff} (grades above '${cutoff}' are valid)`);
+  output.push(`Valid     : ${result}`);
+  output.push('');
+
+  if (!result) {
+    if (dotCount >= 3) {
+      output.push('(Result is always True for 3+ wildcards.)');
+    } else {
+      output.push(`No expansions of '${tg}' have a grade above '${cutoff}'.`);
+    }
+    return output.join('\n');
+  }
+
+  const data = window.TETRAGRAM_FREQUENCY_DATA;
+
+  if (dotCount === 0) {
+    const chars = [...tg].map(ch => ch.charCodeAt(0) - 65);
+    output.push(`Grade: ${gradeAt(data, chars)}`);
+  } else if (dotCount >= 3) {
+    output.push(`(3 or more wildcards — result is always True; listing ${26 ** dotCount} expansions would be impractical.)`);
+  } else {
+    const matches = expandMatches(tg, cutoff, data);
+    output.push(`${matches.length} expansion(s) above cutoff '${cutoff}':`);
+    output.push('');
+    let currentGrade = null;
+    for (const [grade, expanded] of matches) {
+      if (grade !== currentGrade) {
+        currentGrade = grade;
+        output.push(`  Grade ${grade}:`);
+      }
+      output.push(`    ${expanded}`);
+    }
+  }
+
+  return output.join('\n');
+}
+
+document.getElementById('run').addEventListener('click', () => {
+  const output = document.getElementById('output');
+  output.textContent = 'Working ...';
+  output.scrollTop = 0;
+
+  setTimeout(() => {
+    const tetragram = document.getElementById('tetragram').value;
+    const cutoff = document.getElementById('cutoff').value;
+
+    output.textContent = runCheckTetragram(tetragram, cutoff);
+    output.scrollTop = 0;
+  }, 0);
+});
+</script>
+</body>
+</html>
