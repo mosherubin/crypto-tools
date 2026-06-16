@@ -51,6 +51,7 @@
     <label><input type="checkbox" id="allowRowDups"> Allow row duplicates</label>
     <label><input type="checkbox" id="allowColDups"> Allow column duplicates</label>
     <label><input type="checkbox" id="k3"> K3 mode</label>
+    <label><input type="checkbox" id="sortLine0"> Sort line 0</label>
   </div>
 
   <button id="run">Run</button>
@@ -176,20 +177,29 @@ function runCompleteTable(matrixText, options) {
   }
 
   const dropped = nCols - keep.length;
+  const dedupRows = rows.map(([name, alpha]) => [name, keep.map(c => alpha[c]).join('')]);
+
+  const hasZeroRow = rows.some(([name]) => name === '0');
+  const zeroAlpha = hasZeroRow
+    ? dedupRows.find(([name]) => name === '0')[1]
+    : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, keep.length);
+  const displayRows = hasZeroRow ? dedupRows : [['0', zeroAlpha], ...dedupRows];
+
+  const sortOrder = options.sortLine0
+    ? [...zeroAlpha].map((_, i) => i).sort((a, b) => zeroAlpha[a].localeCompare(zeroAlpha[b]))
+    : [...zeroAlpha].map((_, i) => i);
+  const sortedRows = displayRows.map(([name, alpha]) => [name, sortOrder.map(i => alpha[i]).join('')]);
+
+  output.push('');
   if (dropped) {
-    const dedupRows = rows.map(([name, alpha]) => [name, keep.map(c => alpha[c]).join('')]);
-    const headerRow = [['0', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, keep.length)]];
     const keepSet = new Set(keep);
     const droppedPositions = [];
     for (let c = 0; c < nCols; c++) if (!keepSet.has(c)) droppedPositions.push(c + 1);
-
-    output.push('');
     output.push(`=== Deduplicated Matrix (${dropped} duplicate column(s) removed: ${droppedPositions.join(', ')}) ===`);
-    output.push(printMatrix([...headerRow, ...dedupRows]));
   } else {
-    output.push('');
-    output.push('(No duplicate columns found.)');
+    output.push('=== Deduplicated Matrix (no duplicate columns found) ===');
   }
+  output.push(printMatrix(sortedRows));
 
   const endTime = new Date();
   output.push('');
@@ -200,16 +210,24 @@ function runCompleteTable(matrixText, options) {
 }
 
 document.getElementById('run').addEventListener('click', () => {
-  const matrixText = document.getElementById('matrix').value;
-  const ignoreText = document.getElementById('ignore').value.trim();
-  const ignore = ignoreText ? ignoreText.split(',').map(s => s.trim()).filter(Boolean) : [];
-  const allowRowDups = document.getElementById('allowRowDups').checked;
-  const allowColDups = document.getElementById('allowColDups').checked;
-  const k3 = document.getElementById('k3').checked;
-
   const output = document.getElementById('output');
-  output.textContent = runCompleteTable(matrixText, { ignore, allowRowDups, allowColDups, k3 });
-  output.scrollTop = output.scrollHeight;
+  output.textContent = 'Working ...';
+  output.scrollTop = 0;
+
+  // Defer the heavy work to the next tick so the browser paints the
+  // "Working ..." message before the (possibly slow) computation runs.
+  setTimeout(() => {
+    const matrixText = document.getElementById('matrix').value;
+    const ignoreText = document.getElementById('ignore').value.trim();
+    const ignore = ignoreText ? ignoreText.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const allowRowDups = document.getElementById('allowRowDups').checked;
+    const allowColDups = document.getElementById('allowColDups').checked;
+    const k3 = document.getElementById('k3').checked;
+    const sortLine0 = document.getElementById('sortLine0').checked;
+
+    output.textContent = runCompleteTable(matrixText, { ignore, allowRowDups, allowColDups, k3, sortLine0 });
+    output.scrollTop = 0;
+  }, 0);
 });
 </script>
 </body>
