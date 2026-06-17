@@ -6,11 +6,7 @@ Usage: python run_tests.py <input.json> [<input.json> ...]
 import sys
 import ciphertext
 import tests.mono_count as mono_count
-
-
-TESTS = [
-    ('mono_count', mono_count.run),
-]
+import tests.compute_ic_mono as compute_ic_mono
 
 
 def run_file(path: str):
@@ -27,22 +23,33 @@ def run_file(path: str):
     print(f"  ditscount     : {ct.ditscount}")
     print()
 
-    for name, fn in TESTS:
-        try:
-            result = fn(ct)
-        except Exception as e:
-            print(f"  [{name}] RUNTIME ERROR: {e}")
-            continue
+    # mono_count runs first; its output feeds compute_ic_mono
+    mc_result = None
+    try:
+        mc_result = mono_count.run(ct)
+        _report('mono_count', mc_result)
+    except Exception as e:
+        print(f"  [mono_count] RUNTIME ERROR: {e}")
 
-        if result.passed is None:
-            print(f"  [{name}] (no expected results to verify)")
-        elif result.passed:
-            print(f"  [{name}] PASS")
-        else:
-            print(f"  [{name}] FAIL")
-            for err in result.errors:
-                print(f"    {err}")
+    try:
+        if mc_result is not None:
+            ic_result = compute_ic_mono.run(ct, mc_result.counts)
+            _report('compute_ic_mono', ic_result)
+    except Exception as e:
+        print(f"  [compute_ic_mono] RUNTIME ERROR: {e}")
+
     print()
+
+
+def _report(name: str, result) -> None:
+    if result.passed is None:
+        print(f"  [{name}] (no expected results to verify)")
+    elif result.passed:
+        print(f"  [{name}] PASS")
+    else:
+        print(f"  [{name}] FAIL")
+        for err in result.errors:
+            print(f"    {err}")
 
 
 if __name__ == '__main__':

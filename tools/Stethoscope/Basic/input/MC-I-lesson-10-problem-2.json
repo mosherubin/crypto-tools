@@ -38,6 +38,13 @@
         "Y": 3,
         "Z": 3
       }
-    }
+    },
+	"compute_ic_mono": {
+		"ic": 1.2228,
+		"sigmage": 6.9,
+		"total": 220,
+		"hits_observed": 1133,
+		"hits_expected": 926
+	}
   }
 }

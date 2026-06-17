@@ -24,6 +24,13 @@
         "8": 22,
         "9": 29
       }
-    }
+    },
+	"compute_ic_mono": {
+		"ic": 1.1370,
+		"sigmage": 11.6,
+		"total": 360,
+		"hits_observed": 7347,
+		"hits_expected": 6462
+	}
   }
 }
