@@ -1,0 +1,29 @@
+{
+  "test_case_id": "MC-I-lesson-3-problem-5",
+  "description": "STETHOSCOPE input, Military Cryptanalytics, part I, lesson 3, problem 5",
+  "ciphertext": {
+    "raw": "11101 10333 12231 03023 33122 31000 06002 60610 15231 40424 24052 33206 03042 61122 33263 12334 11052 33011 00001 12200 20010 02600 06151 62611 13367 89310 62222 26050 41221 04101 30511 24230 52604 22221 21604 10151 10023 14122 30105 00113 50024 11111 33504 10131 42305 03042 60623 10360",
+    "charset": "[0-9]",
+    "casesensitive": false,
+    "ditschar": "-",
+    "notes": "Problem says 'Solve the following naval message, and recover all keys'.  ERROR FOUND: The frequency counts for 0, 3, and 6 are inaccurate."
+  },
+  "expected_results": {
+    "ditscount": 0,
+    "total_letters": 240,
+    "mono_count": {
+      "counts": {
+        "0": 58,
+        "1": 54,
+        "2": 44,
+        "3": 35,
+        "4": 16,
+        "5": 12,
+        "6": 18,
+        "7": 1,
+        "8": 1,
+        "9": 1
+      }
+    }
+  }
+}

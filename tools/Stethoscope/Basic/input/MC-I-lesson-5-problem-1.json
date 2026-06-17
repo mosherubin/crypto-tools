@@ -1,0 +1,43 @@
+{
+  "test_case_id": "MC-I-lesson-5-problem-1",
+  "description": "STETHOSCOPE input, Military Cryptanalytics, part I, lesson 5, problem 1",
+  "ciphertext": {
+    "raw": "MH EA XP SO ZP LM HT XN PR QU EH HG RH GR LC HU ZW VA BD MD WO HU ZB XR DD DU RH GR CG HO SO ZB XN WS ZO RG BL PC SO ZP ZC OC BL BT QL CP GR CC LU SD WS PR PX MD YG AM DF MH IL QH CQ YO IQ PF GF ND BI PF CC VA LF CC CQ YO OZ RT OQ VH CG IQ KP DL IY AO HA CG HO PF GF TD CP AO HA CV LF CC CQ YO QU OD CN OG CN WA QC HT MH KQ ZG LC HU PB GT ID WQ OF WG ZO LG KG DL ZW VA ZB XR AU VA DH PF MH PF ZB OH WL CG  HO LZ SO ZB XN WS ZO IU TA AO GA HA EU MH YO  LT EU MH HU LV WQ MZ YT ZT ZO YG SO LZ CP EU ON MU WG RT CG HO MH MS PR OT MF LF CP KS RO WZ MN QU CP AO HA CV CO MH DT DU PF GF NQ YG QD IB WS ZO YG BB YO ZN XR LW HU IQ WS QD DC ZB IB RM SO EN IA RU DW GR CG HO MH MS PR QD DC LZ TN WL KN PF XD UT WA ZO",
+    "charset": "[A-Z]",
+    "notes": "ERROR FOUND: The 147 listing has wrong frequency counts for G=27 (real) vs 28 (wrong), Q=20 (real) vs 19 (wrong).  I eyeballed it and the 147 count is wrong.  I assume the ciphertext was incorrectly typed when input to STETHOSCOPE."
+  },
+  "expected_results": {
+    "ditscount": 0,
+    "total_letters": 470,
+    "mono_count": {
+      "counts": {
+        "A": 20,
+        "B": 16,
+        "C": 35,
+        "D": 24,
+        "E": 6,
+        "F": 16,
+        "G": 27,
+        "H": 33,
+        "I": 11,
+        "J": 0,
+        "K": 5,
+        "L": 22,
+        "M": 20,
+        "N": 13,
+        "O": 38,
+        "P": 23,
+        "Q": 20,
+        "R": 19,
+        "S": 15,
+        "T": 15,
+        "U": 19,
+        "V": 8,
+        "W": 19,
+        "X": 9,
+        "Y": 11,
+        "Z": 26
+      }
+    }
+  }
+}

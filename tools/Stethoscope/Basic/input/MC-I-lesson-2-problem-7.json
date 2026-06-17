@@ -1,0 +1,45 @@
+{
+  "test_case_id": "MC-I-lesson-2-problem-7",
+  "description": "STETHOSCOPE input, Military Cryptanalytics, part I, lesson 2, problem 7",
+  "ciphertext": {
+    "raw": "JMQVS QZXIF FMZSL IZMLZ CEMEB FQOME MDXYQ OZCYY XJMZI VMZIY OQWYI DKYMV MZMNQ EQKMX CCWZB CYIXI CDYYX CBZQI FZCQN HWDOX ICDJQ YPMMD YMVMZ MFSNQ EQKMN QDNEW OJMAW IBEMD XNMYX ZCSMN YXCBU MQZME CVIDK CWZXZ CCBYX CZMQZ BCYIX ICDYY XCBZQ FYXCD",
+    "charset": "[A-Z]",
+    "casesensitive": false,
+    "ditschar": "-",
+    "notes": "Problem says 'Solve the following cryptogram and indicate the specific key (A[p]=Theta[c])'.  ERROR FOUND: the M and N frequency counts in 147 are off-by-one."
+  },
+  "expected_results": {
+    "ditscount": 0,
+    "total_letters": 200,
+    "mono_count": {
+      "counts": {
+        "A": 1,
+        "B": 8,
+        "C": 20,
+        "D": 11,
+        "E": 8,
+        "F": 6,
+        "G": 0,
+        "H": 1,
+        "I": 13,
+        "J": 4,
+        "K": 4,
+        "L": 2,
+        "M": 25,
+        "N": 7,
+        "O": 5,
+        "P": 1,
+        "Q": 16,
+        "R": 0,
+        "S": 4,
+        "T": 0,
+        "U": 1,
+        "V": 5,
+        "W": 6,
+        "X": 15,
+        "Y": 18,
+        "Z": 19
+      }
+    }
+  }
+}

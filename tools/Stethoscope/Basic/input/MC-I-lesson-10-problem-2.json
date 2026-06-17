@@ -1,0 +1,43 @@
+{
+  "test_case_id": "MC-I-lesson-10-problem-2",
+  "description": "STETHOSCOPE input, Military Cryptanalytics, part I, lesson 10, problem 2",
+  "ciphertext": {
+    "raw": "GHUIP GJHNI MBSPR IUSNS SHPGB RQSAJ OOQRS SIPQS MHVJI PQIVV JFKIH GSANY PTKKD YJKQX ZVNPR OQNJS NUYEF ENPZV NPROQ QTKLN FFHON QUPOQ HUQTV OTNDO JTKLP OWOJT EJWNQ EKJAE IOUTI QQGTB ANNKZ XVUKR EMMQR RTEII KVPXV UKRRE MWKIK VPXVU DAEIP RSQII GWQLQ UXVVX VUATG WQQVP",
+    "charset": "[A-Z]",
+    "notes": "2. Solve the following cryptogram and recover all keys."
+  },
+  "expected_results": {
+    "ditscount": 0,
+    "total_letters": 220,
+    "mono_count": {
+      "counts": {
+        "A": 6,
+        "B": 3,
+        "C": 0,
+        "D": 3,
+        "E": 9,
+        "F": 4,
+        "G": 7,
+        "H": 7,
+        "I": 15,
+        "J": 10,
+        "K": 13,
+        "L": 3,
+        "M": 5,
+        "N": 14,
+        "O": 11,
+        "P": 15,
+        "Q": 20,
+        "R": 11,
+        "S": 11,
+        "T": 10,
+        "U": 11,
+        "V": 15,
+        "W": 5,
+        "X": 6,
+        "Y": 3,
+        "Z": 3
+      }
+    }
+  }
+}

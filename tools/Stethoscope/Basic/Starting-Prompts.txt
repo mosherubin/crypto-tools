@@ -1,0 +1,11 @@
+I want to develop a Python project to replicate the STETHOSCOPE software package run by NSA in the 1950s onwards.  This program accepts any amount of ciphertext in an unknown cipher system, producing a standard ("basic") cryptanalytic diagnosis on output.  The output consists of numerous cryptanalytic tests.  A competent cryptanalyst is meant to divine the unknown cipher system by examining the STETHOSCOPE output.
+
+We know today precisely which tests should be run on the ciphertext, and what the output should look like (i.e., we know where the output of each test is printed).
+
+The project will consist of a main function.  This main function should:
+
+- Accept and validate the input ciphertext
+- Call all relevant cryptanalytic tests
+- Output the test results in their respective locations in the output
+
+The output will typically consist of about 50 lines that *all* runs produce, followed by a variable number of lines for variable length output (e.g., repetitions found in the ciphertext).

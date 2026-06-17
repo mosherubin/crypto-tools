@@ -1,0 +1,43 @@
+{
+  "test_case_id": "MC-I-lesson-9-problem-1",
+  "description": "STETHOSCOPE input, Military Cryptanalytics, part I, lesson 9, problem 1",
+  "ciphertext": {
+    "raw": "CRDSC RJSIS KSJTY CLSKR CQERB YJQIR KPKOJ RCRSD TFSDJ TYCDP FRDXB RCSFS JSCSJ UFRJQ IRKPK UPDDO FOXBP LCRRB DUKPI SLSJS KOKRG OJNLP KPCOF SPFJP CRRBF TJNLR AYJSH TFOXB QCKRH TESDY LRHUK UPCFO JNLRC NLUFT JSEOJ SFXCU YFESK PJSHX BRPFB XXBFY SCDPK SKUCR JWOCS LRBKO KRFXJ ULPBR QCKSK VBQCP JPCPJ UJRCS OEJRF PJSHU BOBRK WPCRI HVOBJ PKRFY DORDD UKPDT BPLPH TFOXB",
+    "charset": "[A-Z]",
+    "notes": "1. The following cryptogram is suspected to begin with the words 'REFERENCE YOUR MESSAGE NUMBER THREE FIVE FOUR DATED ONE SEVEN SEPTEMBER 11'. Solve the text, and reconstruct the cryptosystem employed.  ERROR FOUND: computed P=24/R=31 vs expected P=23/R=32."
+  },
+  "expected_results": {
+    "ditscount": 0,
+    "total_letters": 300,
+    "mono_count": {
+      "counts": {
+        "A": 1,
+        "B": 17,
+        "C": 23,
+        "D": 14,
+        "E": 5,
+        "F": 19,
+        "G": 1,
+        "H": 7,
+        "I": 5,
+        "J": 25,
+        "K": 22,
+        "L": 11,
+        "M": 0,
+        "N": 4,
+        "O": 16,
+        "P": 24,
+        "Q": 6,
+        "R": 31,
+        "S": 27,
+        "T": 9,
+        "U": 12,
+        "V": 2,
+        "W": 2,
+        "X": 9,
+        "Y": 8,
+        "Z": 0
+      }
+    }
+  }
+}

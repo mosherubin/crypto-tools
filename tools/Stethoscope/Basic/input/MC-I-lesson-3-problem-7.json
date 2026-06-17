@@ -1,0 +1,29 @@
+{
+  "test_case_id": "MC-I-lesson-3-problem-7",
+  "description": "STETHOSCOPE input, Military Cryptanalytics, part I, lesson 3, problem 7",
+  "ciphertext": {
+    "raw": "05105 23804 91161 38349 22702 74491 16138 33834 92274 27505 31612 74492 16127 14914 92274 38216 12724 91161 27138 10523 84274 05405 23801 61491 16105 22713 80271 05227 44910 51052 05327 14921 60491 05227 10502 74163 38016 11653 85492 27405 20531 61494 49238 42713 82492 27427 20522 71380 49127 02714 91270 49149 12702 72273 05505 30522 74272 16127 13814 93052 49449 24910 52380 05149 23834 91492 27449 23823 82384 38105 23844 91050",
+    "charset": "[0-9]",
+    "casesensitive": false,
+    "ditschar": "-",
+    "notes": "Problem says 'Solve the following message, and recover all keys'"
+  },
+  "expected_results": {
+    "ditscount": 0,
+    "total_letters": 360,
+    "mono_count": {
+      "counts": {
+        "0": 37,
+        "1": 55,
+        "2": 64,
+        "3": 33,
+        "4": 47,
+        "5": 28,
+        "6": 14,
+        "7": 31,
+        "8": 22,
+        "9": 29
+      }
+    }
+  }
+}
