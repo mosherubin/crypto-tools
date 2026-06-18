@@ -68,6 +68,7 @@ const {
   findRectangles,
   findIncompleteRectangles,
   applyIndirectSymmetry,
+  deduplicateColumns,
 } = ReconstructionMatrix;
 
 function formatDate(d) {
@@ -165,24 +166,12 @@ function runCompleteTable(matrixText, options) {
   output.push('=== Final Matrix ===');
   output.push(printMatrix(rows));
 
-  const nCols = rows[0][1].length;
-  const seenCols = new Map();
-  const keep = [];
-  for (let col = 0; col < nCols; col++) {
-    const colTuple = rows.map(([, alpha]) => alpha[col]).join('');
-    if (!seenCols.has(colTuple)) {
-      seenCols.set(colTuple, col + 1);
-      keep.push(col);
-    }
-  }
-
-  const dropped = nCols - keep.length;
-  const dedupRows = rows.map(([name, alpha]) => [name, keep.map(c => alpha[c]).join('')]);
+  const { rows: dedupRows, dropped, droppedPositions } = deduplicateColumns(rows);
 
   const hasZeroRow = rows.some(([name]) => name === '0');
   const zeroAlpha = hasZeroRow
     ? dedupRows.find(([name]) => name === '0')[1]
-    : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, keep.length);
+    : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, dedupRows[0][1].length);
   const displayRows = hasZeroRow ? dedupRows : [['0', zeroAlpha], ...dedupRows];
 
   const sortOrder = options.sortLine0
@@ -192,9 +181,6 @@ function runCompleteTable(matrixText, options) {
 
   output.push('');
   if (dropped) {
-    const keepSet = new Set(keep);
-    const droppedPositions = [];
-    for (let c = 0; c < nCols; c++) if (!keepSet.has(c)) droppedPositions.push(c + 1);
     output.push(`=== Deduplicated Matrix (${dropped} duplicate column(s) removed: ${droppedPositions.join(', ')}) ===`);
   } else {
     output.push('=== Deduplicated Matrix (no duplicate columns found) ===');

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Solve Polyalphabetic Isologs</title>
+<title>Polyalphabetic Isologs: Reduce to Monoalphabetic</title>
 <style>
   body { font-family: monospace; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
   h1 { font-family: sans-serif; }
@@ -28,7 +28,7 @@
 </head>
 <body>
   <p><a href="index.html">&larr; back to tools</a></p>
-  <h1>Solve Polyalphabetic Isologs</h1>
+  <h1>Polyalphabetic Isologs: Reduce to Monoalphabetic</h1>
   <p>Cryptanalysis of two periodic polyalphabetic isolog messages (two ciphertexts whose underlying plaintexts are identical), using the method described in Abraham Sinkov's <em>Elementary Cryptanalysis</em>, section 3.8, pp. 96-110.</p>
 
   <div class="field">
@@ -52,6 +52,7 @@
 
   <pre id="output" readonly></pre>
 
+<script src="js/reconstruction-matrix.js"></script>
 <script>
 const EMPTY = '.';
 
@@ -88,8 +89,9 @@ function printArray(array, period1) {
   let tens = '';
   let units = '';
   for (let c = 0; c < nCols; c++) {
-    tens += c >= 10 ? String(Math.floor(c / 10) % 10) : ' ';
-    units += String(c % 10);
+    const col1 = c + 1;
+    tens += col1 >= 10 ? String(Math.floor(col1 / 10) % 10) : ' ';
+    units += String(col1 % 10);
   }
   lines.push(`${prefixPad}${tens}`);
   lines.push(`${prefixPad}${units}`);
@@ -157,16 +159,16 @@ function compressArray(array) {
   return merges;
 }
 
-function runSolveIsologs(message1Raw, period1, message2Raw, period2) {
+function runSolveIsologs(message1Raw, period1, message2Raw, period2, allowRowDups, allowColDups) {
   const output = [];
 
   const message1 = stripWhitespace(message1Raw);
   const message2 = stripWhitespace(message2Raw);
 
   if (message1.length !== message2.length) {
-    return `Error: the two messages have unequal length after whitespace removal ` +
+    return { text: `Error: the two messages have unequal length after whitespace removal ` +
       `(message1 = ${message1.length} characters, message2 = ${message2.length} characters). ` +
-      `Isolog messages must be the same length.`;
+      `Isolog messages must be the same length.`, monoText: '' };
   }
 
   output.push(`Message 1 (period ${period1}): ${message1}`);
@@ -185,7 +187,7 @@ function runSolveIsologs(message1Raw, period1, message2Raw, period2) {
   } catch (e) {
     output.push('');
     output.push(e.message);
-    return output.join('\n');
+    return { text: output.join('\n'), monoText: '' };
   }
 
   output.push('');
@@ -193,7 +195,97 @@ function runSolveIsologs(message1Raw, period1, message2Raw, period2) {
   output.push('');
   output.push(printArray(array, period1));
 
-  return output.join('\n');
+  const { findRectangles, findIncompleteRectangles, applyIndirectSymmetry, deduplicateColumns } = ReconstructionMatrix;
+
+  let rows = array.map((row, i) => [String(i + 1), row.join('')]);
+  let totalNewLetters = 0;
+  let passNum = 0;
+  let contradiction = false;
+  while (true) {
+    passNum++;
+    const { rectangles, rectIndex } = findRectangles(rows);
+    const incomplete = findIncompleteRectangles(rows);
+    let applied;
+    try {
+      applied = applyIndirectSymmetry(rows, rectangles, rectIndex, incomplete, allowRowDups, allowColDups, false);
+    } catch (e) {
+      output.push('');
+      output.push(`CONTRADICTION on pass ${passNum}: ${e.message}`);
+      contradiction = true;
+      break;
+    }
+    rows = applied.rows;
+    totalNewLetters += applied.newLetters;
+    if (applied.newLetters === 0) break;
+  }
+
+  if (!contradiction) {
+    output.push('');
+    output.push(`Reconstruction matrix after ${passNum} pass(es), ${totalNewLetters} new letter(s) added: ${rows.length} rows x ${rows[0][1].length} columns`);
+    output.push('');
+    output.push(printArray(rows.map(([, alpha]) => [...alpha]), period1));
+
+    const { rows: dedupRows, dropped, droppedPositions } = deduplicateColumns(rows);
+    output.push('');
+    if (dropped) {
+      output.push(`Deduplicated (${dropped} duplicate column(s) removed: ${droppedPositions.join(', ')}): ${dedupRows.length} rows x ${dedupRows[0][1].length} columns`);
+    } else {
+      output.push(`Deduplicated (no duplicate columns found): ${dedupRows.length} rows x ${dedupRows[0][1].length} columns`);
+    }
+    output.push('');
+    output.push(printArray(dedupRows.map(([, alpha]) => [...alpha]), period1));
+
+    const monoText = convertToMonoalphabetic(message1, period1, dedupRows);
+    output.push('');
+    output.push('The monoalphabetic ciphertext:');
+    for (let i = 0; i < monoText.length; i += 50) output.push(monoText.slice(i, i + 50));
+    output.push('');
+    output.push('Use a Patristocrat automatic solver to solve the monoalphabetic ciphertext.');
+    return { text: output.join('\n'), monoText };
+  }
+
+  return { text: output.join('\n'), monoText: '' };
+}
+
+function convertToMonoalphabetic(message, period, dedupRows) {
+  const rowLookups = dedupRows.map(([, alpha]) => {
+    const map = {};
+    for (let c = 0; c < alpha.length; c++) {
+      if (alpha[c] !== '.') map[alpha[c]] = c;
+    }
+    return map;
+  });
+  const row1Alpha = dedupRows[0][1];
+
+  let M = '';
+  for (let i = 0; i < message.length; i++) {
+    const keyLine = i % period;
+    const ch = message[i];
+    if (keyLine === 0) {
+      M += ch;
+    } else {
+      const colIdx = rowLookups[keyLine][ch];
+      M += (colIdx !== undefined && row1Alpha[colIdx] !== '.') ? row1Alpha[colIdx] : '.';
+    }
+  }
+  return M;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+let _monoText = '';
+
+function copyMonoToClipboard() {
+  navigator.clipboard.writeText(_monoText).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = _monoText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
 }
 
 document.getElementById('run').addEventListener('click', () => {
@@ -207,7 +299,17 @@ document.getElementById('run').addEventListener('click', () => {
     const message2 = document.getElementById('message2').value;
     const period2 = parseInt(document.getElementById('period2').value, 10);
 
-    output.textContent = runSolveIsologs(message1, period1, message2, period2);
+    const result = runSolveIsologs(message1, period1, message2, period2, true, true);
+    _monoText = result.monoText;
+    let html = escapeHtml(result.text);
+    if (result.monoText) {
+      const label = escapeHtml('The monoalphabetic ciphertext:');
+      html = html.replace(
+        label,
+        label + ' <button onclick="copyMonoToClipboard()" style="margin-top:0;padding:0.2rem 0.6rem;font-size:0.85rem;cursor:pointer;">Copy to Clipboard</button>'
+      );
+    }
+    output.innerHTML = html;
     output.scrollTop = 0;
   }, 0);
 });

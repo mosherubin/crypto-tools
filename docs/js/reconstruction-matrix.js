@@ -447,6 +447,25 @@ function isTetragramValid(tetragram, cache, cutoff = 'A') {
   return false;
 }
 
+function deduplicateColumns(rows) {
+  const nCols = rows[0][1].length;
+  const seenCols = new Map();
+  const keep = [];
+  for (let col = 0; col < nCols; col++) {
+    const sig = rows.map(([, alpha]) => alpha[col]).join('');
+    if (!seenCols.has(sig)) {
+      seenCols.set(sig, col + 1);
+      keep.push(col);
+    }
+  }
+  const dropped = nCols - keep.length;
+  const keepSet = new Set(keep);
+  const droppedPositions = [];
+  for (let c = 0; c < nCols; c++) if (!keepSet.has(c)) droppedPositions.push(c + 1);
+  const dedupRows = rows.map(([name, alpha]) => [name, keep.map(c => alpha[c]).join('')]);
+  return { rows: dedupRows, dropped, droppedPositions };
+}
+
 global.ReconstructionMatrix = {
   MatrixContradiction,
   isTetragramValid,
@@ -459,6 +478,7 @@ global.ReconstructionMatrix = {
   findIncompleteRectangles,
   normalizeMatrix,
   applyIndirectSymmetry,
+  deduplicateColumns,
 };
 
 })(window);
