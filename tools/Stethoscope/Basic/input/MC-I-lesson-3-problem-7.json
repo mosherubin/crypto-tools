@@ -6,7 +6,7 @@
     "charset": "[0-9]",
     "casesensitive": false,
     "ditschar": "-",
-    "notes": "Problem says 'Solve the following message, and recover all keys'"
+    "notes": "Problem says 'Solve the following message, and recover all keys'.  compute_digraphic_ic_overall.sigmage value changed to use SUPERSTETH formula (58.8), not the original STETHOSCOPE one (64.7)."
   },
   "expected_results": {
     "ditscount": 0,
@@ -25,12 +25,33 @@
         "9": 29
       }
     },
-	"compute_ic_mono": {
-		"ic": 1.1370,
-		"sigmage": 11.6,
-		"total": 360,
-		"hits_observed": 7347,
-		"hits_expected": 6462
-	}
+    "compute_ic_mono": {
+        "ic": 1.1370,
+        "sigmage": 11.6,
+        "total": 360,
+        "hits_observed": 7347,
+        "hits_expected": 6462
+    },
+    "compute_digraphic_ic_overall": {
+        "ic": 3.537,
+        "sigmage": 58.8,
+        "total": 359,
+        "hits_observed": 2273,
+        "hits_expected": 643
+    },
+    "compute_digraphic_ic_on_cut": {
+        "ic": 3.687,
+        "sigmage": 34.4,
+        "total": 180,
+        "hits_observed": 594,
+        "hits_expected": 161
+    },
+    "compute_digraphic_ic_off_cut": {
+        "ic": 3.628,
+        "sigmage": 33.4,
+        "total": 179,
+        "hits_observed": 578,
+        "hits_expected": 159
+    }
   }
 }

@@ -4,7 +4,7 @@
   "ciphertext": {
     "raw": "GHUIP GJHNI MBSPR IUSNS SHPGB RQSAJ OOQRS SIPQS MHVJI PQIVV JFKIH GSANY PTKKD YJKQX ZVNPR OQNJS NUYEF ENPZV NPROQ QTKLN FFHON QUPOQ HUQTV OTNDO JTKLP OWOJT EJWNQ EKJAE IOUTI QQGTB ANNKZ XVUKR EMMQR RTEII KVPXV UKRRE MWKIK VPXVU DAEIP RSQII GWQLQ UXVVX VUATG WQQVP",
     "charset": "[A-Z]",
-    "notes": "2. Solve the following cryptogram and recover all keys."
+    "notes": "2. Solve the following cryptogram and recover all keys.  compute_digraphic_ic_overall.sigmage value changed to use SUPERSTETH formula (8.2), not the original STETHOSCOPE one (8.6)"
   },
   "expected_results": {
     "ditscount": 0,
@@ -39,12 +39,33 @@
         "Z": 3
       }
     },
-	"compute_ic_mono": {
-		"ic": 1.2228,
-		"sigmage": 6.9,
-		"total": 220,
-		"hits_observed": 1133,
-		"hits_expected": 926
-	}
+    "compute_ic_mono": {
+      "ic": 1.2228,
+      "sigmage": 6.9,
+      "total": 220,
+      "hits_observed": 1133,
+      "hits_expected": 926
+    },
+    "compute_digraphic_ic_overall": {
+      "ic": 2.435,
+      "sigmage": 8.2,
+      "total": 219,
+      "hits_observed": 86,
+      "hits_expected": 35
+    },
+    "compute_digraphic_ic_on_cut": {
+      "ic": 2.481,
+      "sigmage": 4.4,
+      "total": 110,
+      "hits_observed": 22,
+      "hits_expected": 9
+    },
+    "compute_digraphic_ic_off_cut": {
+      "ic": 2.756,
+      "sigmage": 5.2,
+      "total": 109,
+      "hits_observed": 24,
+      "hits_expected": 9
+    }
   }
 }

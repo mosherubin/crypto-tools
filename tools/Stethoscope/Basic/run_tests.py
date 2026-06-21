@@ -7,6 +7,7 @@ import sys
 import ciphertext
 import tests.mono_count as mono_count
 import tests.compute_ic_mono as compute_ic_mono
+import tests.digraphic_ic as digraphic_ic
 
 
 def run_file(path: str):
@@ -37,6 +38,16 @@ def run_file(path: str):
             _report('compute_ic_mono', ic_result)
     except Exception as e:
         print(f"  [compute_ic_mono] RUNTIME ERROR: {e}")
+
+    for label, fn in [
+        ('compute_digraphic_ic_overall', digraphic_ic.run_overall),
+        ('compute_digraphic_ic_on_cut',  digraphic_ic.run_on_cut),
+        ('compute_digraphic_ic_off_cut', digraphic_ic.run_off_cut),
+    ]:
+        try:
+            _report(label, fn(ct))
+        except Exception as e:
+            print(f"  [{label}] RUNTIME ERROR: {e}")
 
     print()
 
