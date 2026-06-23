@@ -9,6 +9,7 @@ import tests.mono_count as mono_count
 import tests.compute_ic_mono as compute_ic_mono
 import tests.digraphic_ic as digraphic_ic
 import tests.trigraphic_ic as trigraphic_ic
+import tests.local_roughness as local_roughness
 
 
 def run_file(path: str):
@@ -25,7 +26,7 @@ def run_file(path: str):
     print(f"  ditscount     : {ct.ditscount}")
     print()
 
-    # mono_count runs first; its output feeds compute_ic_mono
+    # mono_count runs first; its output feeds compute_ic_mono and local_roughness
     mc_result = None
     try:
         mc_result = mono_count.run(ct)
@@ -39,6 +40,12 @@ def run_file(path: str):
             _report('compute_ic_mono', ic_result)
     except Exception as e:
         print(f"  [compute_ic_mono] RUNTIME ERROR: {e}")
+
+    try:
+        if mc_result is not None:
+            _report('local_roughness', local_roughness.run(ct, mc_result.counts))
+    except Exception as e:
+        print(f"  [local_roughness] RUNTIME ERROR: {e}")
 
     for label, fn in [
         ('compute_digraphic_ic_overall',  digraphic_ic.run_overall),
