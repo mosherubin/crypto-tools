@@ -46,6 +46,12 @@ def load(path: str) -> CiphertextData:
     ct = data['ciphertext']
     raw: str = ct['raw']
 
+    remove_from_start: int = ct.get('remove_from_start', 0)
+    remove_from_end: int = ct.get('remove_from_end', 0)
+    if remove_from_start or remove_from_end:
+        end = len(raw) - remove_from_end if remove_from_end else len(raw)
+        raw = raw[remove_from_start:end]
+
     charset_pattern: str = ct.get('charset', r'[A-Z]')
     ignorechars_pattern: str = ct.get('ignorechars', r'\s')
     casesensitive: bool = ct.get('casesensitive', False)

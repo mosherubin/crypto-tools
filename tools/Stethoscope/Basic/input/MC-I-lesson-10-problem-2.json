@@ -53,19 +53,47 @@
       "hits_observed": 86,
       "hits_expected": 35
     },
-    "compute_digraphic_ic_on_cut": {
+    "compute_digraphic_ic_cut_a": {
       "ic": 2.481,
       "sigmage": 4.4,
       "total": 110,
       "hits_observed": 22,
       "hits_expected": 9
     },
-    "compute_digraphic_ic_off_cut": {
+    "compute_digraphic_ic_cut_b": {
       "ic": 2.756,
       "sigmage": 5.2,
       "total": 109,
       "hits_observed": 24,
       "hits_expected": 9
+    },
+    "compute_trigraphic_ic_overall": {
+      "ic": 17.09,
+      "sigmage": 18.7,
+      "total": 218,
+      "hits_observed": 23,
+      "hits_expected": 1.35
+    },
+    "compute_trigraphic_ic_cut_A": {
+      "ic": 13.38,
+      "sigmage": 4.8,
+      "total": 73,
+      "hits_observed": 2,
+      "hits_expected": 0.15
+    },
+    "compute_trigraphic_ic_cut_B": {
+      "ic": 20.06,
+      "sigmage": 7.4,
+      "total": 73,
+      "hits_observed": 3,
+      "hits_expected": 0.15
+    },
+    "compute_trigraphic_ic_cut_C": {
+      "ic": 34.38,
+      "sigmage": 12.8,
+      "total": 72,
+      "hits_observed": 5,
+      "hits_expected": 0.15
     }
   }
 }

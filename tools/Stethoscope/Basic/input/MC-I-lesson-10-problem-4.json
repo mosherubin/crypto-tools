@@ -1,0 +1,99 @@
+{
+  "test_case_id": "MC-I-lesson-10-problem-4",
+  "description": "STETHOSCOPE input, Military Cryptanalytics, part I, lesson 10, problem 4",
+  "ciphertext": {
+    "raw": "RDITJ OGDPF QUMTD IKRUI ULHKI MASKI JMHQD BBUGI AUYBU ILQUM PDTTD FKQUD BBUGI KFBKV UQUIK ZKQUH KTDHT ECMKI KFBAQ IKHIU PDIKQ KCLUI KODFI AULUW TERDI CDIDR LUJQU MJMVU IRKET IKHQA",
+    "charset": "[A-Z]",
+    "notes": "4. The following cryptogram is suspected to contain the word 'BATTALION'. Solve it and recover all keys."
+  },
+  "expected_results": {
+    "ditscount": 0,
+    "total_letters": 150,
+    "mono_count": {
+      "counts": {
+        "A": 5,
+        "B": 7,
+        "C": 3,
+        "D": 13,
+        "E": 3,
+        "F": 5,
+        "G": 3,
+        "H": 6,
+        "I": 19,
+        "J": 4,
+        "K": 17,
+        "L": 5,
+        "M": 7,
+        "N": 0,
+        "O": 2,
+        "P": 3,
+        "Q": 10,
+        "R": 5,
+        "S": 1,
+        "T": 8,
+        "U": 19,
+        "V": 2,
+        "W": 1,
+        "X": 0,
+        "Y": 1,
+        "Z": 1
+      }
+    },
+    "compute_ic_mono": {
+      "ic": 1.7357,
+      "sigmage": 15.6,
+      "total": 150,
+      "hits_observed": 746,
+      "hits_expected": 429
+    },
+    "compute_digraphic_ic_overall": {
+      "ic": 6.131,
+      "sigmage": 20.0,
+      "total": 149,
+      "hits_observed": 100,
+      "hits_expected": 16
+    },
+    "compute_digraphic_ic_cut_a": {
+      "ic": 4.385,
+      "sigmage": 6.9,
+      "total": 75,
+      "hits_observed": 18,
+      "hits_expected": 4
+    },
+    "compute_digraphic_ic_cut_b": {
+      "ic": 8.259,
+      "sigmage": 14.6,
+      "total": 74,
+      "hits_observed": 33,
+      "hits_expected": 4
+    },
+    "compute_trigraphic_ic_overall": {
+      "ic": 24.24,
+      "sigmage": 18.3,
+      "total": 148,
+      "hits_observed": 15,
+      "hits_expected": 0.62
+    },
+    "compute_trigraphic_ic_cut_A": {
+      "ic": 28.7,
+      "sigmage": 7.4,
+      "total": 50,
+      "hits_observed": 2,
+      "hits_expected": 0.07
+    },
+    "compute_trigraphic_ic_cut_B": {
+      "ic": 14.95,
+      "sigmage": 3.6,
+      "total": 49,
+      "hits_observed": 1,
+      "hits_expected": 0.07
+    },
+    "compute_trigraphic_ic_cut_C": {
+      "ic": 14.95,
+      "sigmage": 3.6,
+      "total": 49,
+      "hits_observed": 1,
+      "hits_expected": 0.07
+    }
+  }
+}

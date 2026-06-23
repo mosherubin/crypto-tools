@@ -8,6 +8,7 @@ import ciphertext
 import tests.mono_count as mono_count
 import tests.compute_ic_mono as compute_ic_mono
 import tests.digraphic_ic as digraphic_ic
+import tests.trigraphic_ic as trigraphic_ic
 
 
 def run_file(path: str):
@@ -40,9 +41,13 @@ def run_file(path: str):
         print(f"  [compute_ic_mono] RUNTIME ERROR: {e}")
 
     for label, fn in [
-        ('compute_digraphic_ic_overall', digraphic_ic.run_overall),
-        ('compute_digraphic_ic_on_cut',  digraphic_ic.run_on_cut),
-        ('compute_digraphic_ic_off_cut', digraphic_ic.run_off_cut),
+        ('compute_digraphic_ic_overall',  digraphic_ic.run_overall),
+        ('compute_digraphic_ic_cut_a',   digraphic_ic.run_cut_a),
+        ('compute_digraphic_ic_cut_b',  digraphic_ic.run_cut_b),
+        ('compute_trigraphic_ic_overall', trigraphic_ic.run_overall),
+        ('compute_trigraphic_ic_cut_A',   trigraphic_ic.run_cut_A),
+        ('compute_trigraphic_ic_cut_B',   trigraphic_ic.run_cut_B),
+        ('compute_trigraphic_ic_cut_C',   trigraphic_ic.run_cut_C),
     ]:
         try:
             _report(label, fn(ct))

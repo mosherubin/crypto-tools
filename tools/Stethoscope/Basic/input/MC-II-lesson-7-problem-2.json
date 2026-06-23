@@ -1,0 +1,101 @@
+{
+  "test_case_id": "MC-II-lesson-7-problem-2",
+  "description": "STETHOSCOPE input, Military Cryptanalytics, part II, lesson 7, problem 2",
+  "ciphertext": {
+    "raw": "NPYGN DVPWR PSCFD XYRGU JEQAS JNYMQ AJUSX XLILM ESFFO OAOIN YUIAN VARZB ICDDL BRGCN HAWSS XEZFN CMMJE DVFNK NVMGA UALJD DLICA IKLOM BNSAS JNYMA HRISN GZKFL RTRZV TJPGZ QOLDO GAINO XCCWU JEGPN HESWI OLDOC YZKOJ HTKPS XEZFN NQGGA HTKPL WWDSN DZKOT QEFWH ODYMR NGSDO GWWPV AXSSP NTUUX YDHMM TTDOI QXXOR PTKPQ OEFAN JTMJP TTXXX",
+    "remove_from_start": 0,
+    "remove_from_end": 3,
+    "charset": "[A-Z]",
+    "notes": "2. The enemy is using the system illustrated in par. 75 of the text. Solve the folloving naval intercept and recover the order of strips used in the encryption"
+  },
+  "expected_results": {
+    "ditscount": 0,
+    "total_letters": 267,
+    "mono_count": {
+      "counts": {
+        "A": 15,
+        "B": 3,
+        "C": 8,
+        "D": 15,
+        "E": 9,
+        "F": 9,
+        "G": 12,
+        "H": 7,
+        "I": 10,
+        "J": 11,
+        "K": 8,
+        "L": 10,
+        "M": 11,
+        "N": 20,
+        "O": 16,
+        "P": 12,
+        "Q": 7,
+        "R": 9,
+        "S": 15,
+        "T": 12,
+        "U": 7,
+        "V": 6,
+        "W": 9,
+        "X": 10,
+        "Y": 8,
+        "Z": 8
+      }
+    },
+    "compute_ic_mono": {
+      "ic": 1.0287,
+      "sigmage": 1.1,
+      "total": 267,
+      "hits_observed": 1405,
+      "hits_expected": 1365
+    },
+    "compute_digraphic_ic_overall": {
+      "ic": 1.534,
+      "sigmage": 3.7,
+      "total": 266,
+      "hits_observed": 80,
+      "hits_expected": 52
+    },
+    "compute_digraphic_ic_cut_a": {
+      "ic": 1.155,
+      "sigmage": 0.6,
+      "total": 133,
+      "hits_observed": 15,
+      "hits_expected": 13
+    },
+    "compute_digraphic_ic_cut_b": {
+      "ic": 1.386,
+      "sigmage": 1.4,
+      "total": 133,
+      "hits_observed": 18,
+      "hits_expected": 13
+    },
+    "compute_trigraphic_ic_overall": {
+      "ic": 9.04,
+      "sigmage": 11.4,
+      "total": 265,
+      "hits_observed": 18,
+      "hits_expected": 1.99
+    },
+    "compute_trigraphic_ic_cut_A": {
+      "ic": 17.95,
+      "sigmage": 8.0,
+      "total": 89,
+      "hits_observed": 4,
+      "hits_expected": 0.22
+    },
+    "compute_trigraphic_ic_cut_B": {
+      "ic": 22.96,
+      "sigmage": 10.3,
+      "total": 88,
+      "hits_observed": 5,
+      "hits_expected": 0.22
+    },
+    "compute_trigraphic_ic_cut_C": {
+      "ic": 36.73,
+      "sigmage": 16.8,
+      "total": 88,
+      "hits_observed": 8,
+      "hits_expected": 0.22
+    }
+  }
+}

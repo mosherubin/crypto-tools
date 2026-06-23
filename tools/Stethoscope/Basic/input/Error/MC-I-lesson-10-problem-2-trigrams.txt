@@ -1,0 +1,446 @@
+Cleaned text (N=220):
+GHUIPGJHNIMBSPRIUSNSSHPGBRQSAJOOQRSSIPQSMHVJIPQIVVJFKIHGSANYPTKKDYJKQXZVNPROQNJSNUYEFENPZVNPROQQTKLNFFHONQUPOQHUQTVOTNDOJTKLPOWOJTEJWNQEKJAEIOUTIQQGTBANNKZXVUKREMMQRRTEIIKVPXVUKRREMWKIKVPXVUDAEIPRSQIIGWQLQUXVVXVUATGWQQVP
+
+--- overall (M=218) ---
+  [  1] GHU
+  [  2] HUI
+  [  3] UIP
+  [  4] IPG
+  [  5] PGJ
+  [  6] GJH
+  [  7] JHN
+  [  8] HNI
+  [  9] NIM
+  [ 10] IMB
+  [ 11] MBS
+  [ 12] BSP
+  [ 13] SPR
+  [ 14] PRI
+  [ 15] RIU
+  [ 16] IUS
+  [ 17] USN
+  [ 18] SNS
+  [ 19] NSS
+  [ 20] SSH
+  [ 21] SHP
+  [ 22] HPG
+  [ 23] PGB
+  [ 24] GBR
+  [ 25] BRQ
+  [ 26] RQS
+  [ 27] QSA
+  [ 28] SAJ
+  [ 29] AJO
+  [ 30] JOO
+  [ 31] OOQ
+  [ 32] OQR
+  [ 33] QRS
+  [ 34] RSS
+  [ 35] SSI
+  [ 36] SIP
+  [ 37] IPQ
+  [ 38] PQS
+  [ 39] QSM
+  [ 40] SMH
+  [ 41] MHV
+  [ 42] HVJ
+  [ 43] VJI
+  [ 44] JIP
+  [ 45] IPQ
+  [ 46] PQI
+  [ 47] QIV
+  [ 48] IVV
+  [ 49] VVJ
+  [ 50] VJF
+  [ 51] JFK
+  [ 52] FKI
+  [ 53] KIH
+  [ 54] IHG
+  [ 55] HGS
+  [ 56] GSA
+  [ 57] SAN
+  [ 58] ANY
+  [ 59] NYP
+  [ 60] YPT
+  [ 61] PTK
+  [ 62] TKK
+  [ 63] KKD
+  [ 64] KDY
+  [ 65] DYJ
+  [ 66] YJK
+  [ 67] JKQ
+  [ 68] KQX
+  [ 69] QXZ
+  [ 70] XZV
+  [ 71] ZVN
+  [ 72] VNP
+  [ 73] NPR
+  [ 74] PRO
+  [ 75] ROQ
+  [ 76] OQN
+  [ 77] QNJ
+  [ 78] NJS
+  [ 79] JSN
+  [ 80] SNU
+  [ 81] NUY
+  [ 82] UYE
+  [ 83] YEF
+  [ 84] EFE
+  [ 85] FEN
+  [ 86] ENP
+  [ 87] NPZ
+  [ 88] PZV
+  [ 89] ZVN
+  [ 90] VNP
+  [ 91] NPR
+  [ 92] PRO
+  [ 93] ROQ
+  [ 94] OQQ
+  [ 95] QQT
+  [ 96] QTK
+  [ 97] TKL
+  [ 98] KLN
+  [ 99] LNF
+  [100] NFF
+  [101] FFH
+  [102] FHO
+  [103] HON
+  [104] ONQ
+  [105] NQU
+  [106] QUP
+  [107] UPO
+  [108] POQ
+  [109] OQH
+  [110] QHU
+  [111] HUQ
+  [112] UQT
+  [113] QTV
+  [114] TVO
+  [115] VOT
+  [116] OTN
+  [117] TND
+  [118] NDO
+  [119] DOJ
+  [120] OJT
+  [121] JTK
+  [122] TKL
+  [123] KLP
+  [124] LPO
+  [125] POW
+  [126] OWO
+  [127] WOJ
+  [128] OJT
+  [129] JTE
+  [130] TEJ
+  [131] EJW
+  [132] JWN
+  [133] WNQ
+  [134] NQE
+  [135] QEK
+  [136] EKJ
+  [137] KJA
+  [138] JAE
+  [139] AEI
+  [140] EIO
+  [141] IOU
+  [142] OUT
+  [143] UTI
+  [144] TIQ
+  [145] IQQ
+  [146] QQG
+  [147] QGT
+  [148] GTB
+  [149] TBA
+  [150] BAN
+  [151] ANN
+  [152] NNK
+  [153] NKZ
+  [154] KZX
+  [155] ZXV
+  [156] XVU
+  [157] VUK
+  [158] UKR
+  [159] KRE
+  [160] REM
+  [161] EMM
+  [162] MMQ
+  [163] MQR
+  [164] QRR
+  [165] RRT
+  [166] RTE
+  [167] TEI
+  [168] EII
+  [169] IIK
+  [170] IKV
+  [171] KVP
+  [172] VPX
+  [173] PXV
+  [174] XVU
+  [175] VUK
+  [176] UKR
+  [177] KRR
+  [178] RRE
+  [179] REM
+  [180] EMW
+  [181] MWK
+  [182] WKI
+  [183] KIK
+  [184] IKV
+  [185] KVP
+  [186] VPX
+  [187] PXV
+  [188] XVU
+  [189] VUD
+  [190] UDA
+  [191] DAE
+  [192] AEI
+  [193] EIP
+  [194] IPR
+  [195] PRS
+  [196] RSQ
+  [197] SQI
+  [198] QII
+  [199] IIG
+  [200] IGW
+  [201] GWQ
+  [202] WQL
+  [203] QLQ
+  [204] LQU
+  [205] QUX
+  [206] UXV
+  [207] XVV
+  [208] VVX
+  [209] VXV
+  [210] XVU
+  [211] VUA
+  [212] UAT
+  [213] ATG
+  [214] TGW
+  [215] GWQ
+  [216] WQQ
+  [217] QQV
+  [218] QVP
+
+--- cut_A (M=73) ---
+  [  1] GHU
+  [  2] IPG
+  [  3] JHN
+  [  4] IMB
+  [  5] SPR
+  [  6] IUS
+  [  7] NSS
+  [  8] HPG
+  [  9] BRQ
+  [ 10] SAJ
+  [ 11] OOQ
+  [ 12] RSS
+  [ 13] IPQ
+  [ 14] SMH
+  [ 15] VJI
+  [ 16] PQI
+  [ 17] VVJ
+  [ 18] FKI
+  [ 19] HGS
+  [ 20] ANY
+  [ 21] PTK
+  [ 22] KDY
+  [ 23] JKQ
+  [ 24] XZV
+  [ 25] NPR
+  [ 26] OQN
+  [ 27] JSN
+  [ 28] UYE
+  [ 29] FEN
+  [ 30] PZV
+  [ 31] NPR
+  [ 32] OQQ
+  [ 33] TKL
+  [ 34] NFF
+  [ 35] HON
+  [ 36] QUP
+  [ 37] OQH
+  [ 38] UQT
+  [ 39] VOT
+  [ 40] NDO
+  [ 41] JTK
+  [ 42] LPO
+  [ 43] WOJ
+  [ 44] TEJ
+  [ 45] WNQ
+  [ 46] EKJ
+  [ 47] AEI
+  [ 48] OUT
+  [ 49] IQQ
+  [ 50] GTB
+  [ 51] ANN
+  [ 52] KZX
+  [ 53] VUK
+  [ 54] REM
+  [ 55] MQR
+  [ 56] RTE
+  [ 57] IIK
+  [ 58] VPX
+  [ 59] VUK
+  [ 60] RRE
+  [ 61] MWK
+  [ 62] IKV
+  [ 63] PXV
+  [ 64] UDA
+  [ 65] EIP
+  [ 66] RSQ
+  [ 67] IIG
+  [ 68] WQL
+  [ 69] QUX
+  [ 70] VVX
+  [ 71] VUA
+  [ 72] TGW
+  [ 73] QQV
+
+--- cut_B (M=73) ---
+  [  1] HUI
+  [  2] PGJ
+  [  3] HNI
+  [  4] MBS
+  [  5] PRI
+  [  6] USN
+  [  7] SSH
+  [  8] PGB
+  [  9] RQS
+  [ 10] AJO
+  [ 11] OQR
+  [ 12] SSI
+  [ 13] PQS
+  [ 14] MHV
+  [ 15] JIP
+  [ 16] QIV
+  [ 17] VJF
+  [ 18] KIH
+  [ 19] GSA
+  [ 20] NYP
+  [ 21] TKK
+  [ 22] DYJ
+  [ 23] KQX
+  [ 24] ZVN
+  [ 25] PRO
+  [ 26] QNJ
+  [ 27] SNU
+  [ 28] YEF
+  [ 29] ENP
+  [ 30] ZVN
+  [ 31] PRO
+  [ 32] QQT
+  [ 33] KLN
+  [ 34] FFH
+  [ 35] ONQ
+  [ 36] UPO
+  [ 37] QHU
+  [ 38] QTV
+  [ 39] OTN
+  [ 40] DOJ
+  [ 41] TKL
+  [ 42] POW
+  [ 43] OJT
+  [ 44] EJW
+  [ 45] NQE
+  [ 46] KJA
+  [ 47] EIO
+  [ 48] UTI
+  [ 49] QQG
+  [ 50] TBA
+  [ 51] NNK
+  [ 52] ZXV
+  [ 53] UKR
+  [ 54] EMM
+  [ 55] QRR
+  [ 56] TEI
+  [ 57] IKV
+  [ 58] PXV
+  [ 59] UKR
+  [ 60] REM
+  [ 61] WKI
+  [ 62] KVP
+  [ 63] XVU
+  [ 64] DAE
+  [ 65] IPR
+  [ 66] SQI
+  [ 67] IGW
+  [ 68] QLQ
+  [ 69] UXV
+  [ 70] VXV
+  [ 71] UAT
+  [ 72] GWQ
+  [ 73] QVP
+
+--- cut_C (M=72) ---
+  [  1] UIP
+  [  2] GJH
+  [  3] NIM
+  [  4] BSP
+  [  5] RIU
+  [  6] SNS
+  [  7] SHP
+  [  8] GBR
+  [  9] QSA
+  [ 10] JOO
+  [ 11] QRS
+  [ 12] SIP
+  [ 13] QSM
+  [ 14] HVJ
+  [ 15] IPQ
+  [ 16] IVV
+  [ 17] JFK
+  [ 18] IHG
+  [ 19] SAN
+  [ 20] YPT
+  [ 21] KKD
+  [ 22] YJK
+  [ 23] QXZ
+  [ 24] VNP
+  [ 25] ROQ
+  [ 26] NJS
+  [ 27] NUY
+  [ 28] EFE
+  [ 29] NPZ
+  [ 30] VNP
+  [ 31] ROQ
+  [ 32] QTK
+  [ 33] LNF
+  [ 34] FHO
+  [ 35] NQU
+  [ 36] POQ
+  [ 37] HUQ
+  [ 38] TVO
+  [ 39] TND
+  [ 40] OJT
+  [ 41] KLP
+  [ 42] OWO
+  [ 43] JTE
+  [ 44] JWN
+  [ 45] QEK
+  [ 46] JAE
+  [ 47] IOU
+  [ 48] TIQ
+  [ 49] QGT
+  [ 50] BAN
+  [ 51] NKZ
+  [ 52] XVU
+  [ 53] KRE
+  [ 54] MMQ
+  [ 55] RRT
+  [ 56] EII
+  [ 57] KVP
+  [ 58] XVU
+  [ 59] KRR
+  [ 60] EMW
+  [ 61] KIK
+  [ 62] VPX
+  [ 63] VUD
+  [ 64] AEI
+  [ 65] PRS
+  [ 66] QII
+  [ 67] GWQ
+  [ 68] LQU
+  [ 69] XVV
+  [ 70] XVU
+  [ 71] ATG
+  [ 72] WQQ

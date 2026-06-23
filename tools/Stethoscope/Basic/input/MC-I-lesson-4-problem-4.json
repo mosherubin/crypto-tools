@@ -1,0 +1,85 @@
+{
+  "test_case_id": "MC-I-lesson-4-problem-4",
+  "description": "STETHOSCOPE input, Military Cryptanalytics, part I, lesson 4, problem 4",
+  "ciphertext": {
+    "raw": "22 08 71 29 19 83 05 34 76 58 05 56 62 26 22 35 48 75 13 78 58 34 65 02 07 71 51 87 35 96 10 32 69 45 47 81 46 11 01 14 67 37 75 79 35 30 53 29 37 46 60 19 30 94 66 49 68 88 57 98 84 93 30 86 28 90 51 04 53 03 84 76 58 31 57 42 12 86 49 36 79 54 28 09 38 24 41 86 63 79 08 28 67 68 66 94 22 63 71 66 83 56 05 07 58 95 60 19 62 26 48 23 59 40 38 15 67 43 92 42 62 77 43 79 54 69 38 65 16 82 10 96 67 97 57 48 93 24 13 53 29 46 37 32 65 12 94 84 95 68 83 93 98 37 75 79 45 12 97 84 53 03 75 76 95 31 29 32 21 49 17 25 73 00 69 86 36 79 45 19 77 98 38 95 97 93 94 98 72 42 59 00 08 50 44 27 26 62 57 06 91 23",
+    "charset": "[0-9]",
+    "casesensitive": false,
+    "ditschar": "-",
+    "notes": "Problem says '4. This message is suspected of having an ending similar to Problem 3. Solve it and recover all keys.'"
+  },
+  "expected_results": {
+    "ditscount": 0,
+    "total_letters": 404,
+    "mono_count": {
+      "counts": {
+        "0": 29,
+        "1": 29,
+        "2": 40,
+        "3": 45,
+        "4": 38,
+        "5": 43,
+        "6": 48,
+        "7": 44,
+        "8": 41,
+        "9": 47
+      }
+    },
+    "compute_ic_mono": {
+      "ic": 1.0028,
+      "sigmage": 0.3,
+      "total": 404,
+      "hits_observed": 8163,
+      "hits_expected": 8140
+    },
+    "compute_digraphic_ic_overall": {
+      "ic": 1.047,
+      "sigmage": 1.2,
+      "total": 403,
+      "hits_observed": 848,
+      "hits_expected": 810
+    },
+    "compute_digraphic_ic_cut_a": {
+      "ic": 0.965,
+      "sigmage": -0.5,
+      "total": 202,
+      "hits_observed": 196,
+      "hits_expected": 203
+    },
+    "compute_digraphic_ic_cut_b": {
+      "ic": 1.01,
+      "sigmage": 0.1,
+      "total": 201,
+      "hits_observed": 203,
+      "hits_expected": 201
+    },
+    "compute_trigraphic_ic_overall": {
+      "ic": 1.12,
+      "sigmage": 1.0,
+      "total": 402,
+      "hits_observed": 90,
+      "hits_expected": 80.6
+    },
+    "compute_trigraphic_ic_cut_A": {
+      "ic": 1.12,
+      "sigmage": 0.4,
+      "total": 134,
+      "hits_observed": 10,
+      "hits_expected": 8.91
+    },
+    "compute_trigraphic_ic_cut_B": {
+      "ic": 0.79,
+      "sigmage": -0.6,
+      "total": 134,
+      "hits_observed": 7,
+      "hits_expected": 8.91
+    },
+    "compute_trigraphic_ic_cut_C": {
+      "ic": 1.46,
+      "sigmage": 1.4,
+      "total": 134,
+      "hits_observed": 13,
+      "hits_expected": 8.91
+    }
+  }
+}

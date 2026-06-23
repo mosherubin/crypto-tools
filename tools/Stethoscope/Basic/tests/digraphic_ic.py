@@ -1,5 +1,5 @@
 """
-STETHOSCOPE tests: Digraphic Index of Coincidence (overall, on-cut, off-cut).
+STETHOSCOPE tests: Digraphic Index of Coincidence (overall, cut_a, cut_b).
 """
 
 import math
@@ -28,10 +28,10 @@ class DigraphicIcResult:
 def _bigrams_overall(text: str):
     return [(text[i], text[i + 1]) for i in range(len(text) - 1)]
 
-def _bigrams_on_cut(text: str):
+def _bigrams_cut_a(text: str):
     return [(text[i], text[i + 1]) for i in range(0, len(text) - 1, 2)]
 
-def _bigrams_off_cut(text: str):
+def _bigrams_cut_b(text: str):
     return [(text[i], text[i + 1]) for i in range(1, len(text) - 1, 2)]
 
 
@@ -88,12 +88,12 @@ def run_overall(ct: CiphertextData) -> DigraphicIcResult:
     expected = ct.expected_results.get('compute_digraphic_ic_overall', {})
     return _compute(ct, bigrams, 'overall', expected)
 
-def run_on_cut(ct: CiphertextData) -> DigraphicIcResult:
-    bigrams = _bigrams_on_cut(ct.letters)
-    expected = ct.expected_results.get('compute_digraphic_ic_on_cut', {})
+def run_cut_a(ct: CiphertextData) -> DigraphicIcResult:
+    bigrams = _bigrams_cut_a(ct.letters)
+    expected = ct.expected_results.get('compute_digraphic_ic_cut_a', {})
     return _compute(ct, bigrams, 'onoff', expected)
 
-def run_off_cut(ct: CiphertextData) -> DigraphicIcResult:
-    bigrams = _bigrams_off_cut(ct.letters)
-    expected = ct.expected_results.get('compute_digraphic_ic_off_cut', {})
+def run_cut_b(ct: CiphertextData) -> DigraphicIcResult:
+    bigrams = _bigrams_cut_b(ct.letters)
+    expected = ct.expected_results.get('compute_digraphic_ic_cut_b', {})
     return _compute(ct, bigrams, 'onoff', expected)
