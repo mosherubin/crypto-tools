@@ -10,6 +10,7 @@ import tests.compute_ic_mono as compute_ic_mono
 import tests.digraphic_ic as digraphic_ic
 import tests.trigraphic_ic as trigraphic_ic
 import tests.local_roughness as local_roughness
+import tests.width_tests as width_tests
 
 
 def run_file(path: str):
@@ -46,6 +47,12 @@ def run_file(path: str):
             _report('local_roughness', local_roughness.run(ct, mc_result.counts))
     except Exception as e:
         print(f"  [local_roughness] RUNTIME ERROR: {e}")
+
+    try:
+        if mc_result is not None:
+            _report('width_tests', width_tests.run(ct, mc_result.counts))
+    except Exception as e:
+        print(f"  [width_tests] RUNTIME ERROR: {e}")
 
     for label, fn in [
         ('compute_digraphic_ic_overall',  digraphic_ic.run_overall),

@@ -280,6 +280,358 @@
         "expected": 37,
         "sigmage": 3.8
       }
+    ],
+    "width_tests": [
+      {
+        "width": 2,
+        "hits": 3744,
+        "comparisons": 32220,
+        "average_ic": 1.162,
+        "sigmage": 1.5
+      },
+      {
+        "width": 3,
+        "hits": 4578,
+        "comparisons": 21420,
+        "average_ic": 2.137,
+        "sigmage": 49.0
+      },
+      {
+        "width": 4,
+        "hits": 1812,
+        "comparisons": 16020,
+        "average_ic": 1.131,
+        "sigmage": -0.25
+      },
+      {
+        "width": 5,
+        "hits": 1409,
+        "comparisons": 12780,
+        "average_ic": 1.103,
+        "sigmage": -1.31
+      },
+      {
+        "width": 6,
+        "hits": 2336,
+        "comparisons": 10620,
+        "average_ic": 2.2,
+        "sigmage": 36.81
+      },
+      {
+        "width": 7,
+        "hits": 1013,
+        "comparisons": 9078,
+        "average_ic": 1.116,
+        "sigmage": -0.68
+      },
+      {
+        "width": 8,
+        "hits": 882,
+        "comparisons": 7920,
+        "average_ic": 1.114,
+        "sigmage": -0.7
+      },
+      {
+        "width": 9,
+        "hits": 1569,
+        "comparisons": 7020,
+        "average_ic": 2.235,
+        "sigmage": 31.06
+      },
+      {
+        "width": 10,
+        "hits": 696,
+        "comparisons": 6300,
+        "average_ic": 1.105,
+        "sigmage": -0.86
+      },
+      {
+        "width": 11,
+        "hits": 639,
+        "comparisons": 5712,
+        "average_ic": 1.119,
+        "sigmage": -0.47
+      },
+      {
+        "width": 12,
+        "hits": 1118,
+        "comparisons": 5220,
+        "average_ic": 2.142,
+        "sigmage": 24.61
+      },
+      {
+        "width": 13,
+        "hits": 508,
+        "comparisons": 4806,
+        "average_ic": 1.057,
+        "sigmage": -1.88
+      },
+      {
+        "width": 14,
+        "hits": 484,
+        "comparisons": 4450,
+        "average_ic": 1.088,
+        "sigmage": -1.12
+      },
+      {
+        "width": 15,
+        "hits": 857,
+        "comparisons": 4140,
+        "average_ic": 2.07,
+        "sigmage": 20.44
+      },
+      {
+        "width": 16,
+        "hits": 452,
+        "comparisons": 3872,
+        "average_ic": 1.167,
+        "sigmage": 0.64
+      },
+      {
+        "width": 17,
+        "hits": 435,
+        "comparisons": 3633,
+        "average_ic": 1.197,
+        "sigmage": 1.24
+      },
+      {
+        "width": 18,
+        "hits": 790,
+        "comparisons": 3420,
+        "average_ic": 2.31,
+        "sigmage": 23.46
+      },
+      {
+        "width": 19,
+        "hits": 379,
+        "comparisons": 3231,
+        "average_ic": 1.173,
+        "sigmage": 0.7
+      },
+      {
+        "width": 20,
+        "hits": 317,
+        "comparisons": 3060,
+        "average_ic": 1.036,
+        "sigmage": -1.92
+      },
+      {
+        "width": 21,
+        "hits": 622,
+        "comparisons": 2907,
+        "average_ic": 2.14,
+        "sigmage": 18.57
+      },
+      {
+        "width": 22,
+        "hits": 317,
+        "comparisons": 2768,
+        "average_ic": 1.145,
+        "sigmage": 0.15
+      },
+      {
+        "width": 23,
+        "hits": 281,
+        "comparisons": 2640,
+        "average_ic": 1.064,
+        "sigmage": -1.28
+      },
+      {
+        "width": 24,
+        "hits": 528,
+        "comparisons": 2520,
+        "average_ic": 2.095,
+        "sigmage": 16.6
+      },
+      {
+        "width": 25,
+        "hits": 262,
+        "comparisons": 2415,
+        "average_ic": 1.085,
+        "sigmage": -0.88
+      },
+      {
+        "width": 26,
+        "hits": 241,
+        "comparisons": 2314,
+        "average_ic": 1.041,
+        "sigmage": -1.59
+      },
+      {
+        "width": 27,
+        "hits": 464,
+        "comparisons": 2223,
+        "average_ic": 2.087,
+        "sigmage": 15.52
+      },
+      {
+        "width": 28,
+        "hits": 226,
+        "comparisons": 2136,
+        "average_ic": 1.058,
+        "sigmage": -1.27
+      },
+      {
+        "width": 29,
+        "hits": 207,
+        "comparisons": 2058,
+        "average_ic": 1.006,
+        "sigmage": -2.07
+      },
+      {
+        "width": 30,
+        "hits": 420,
+        "comparisons": 1980,
+        "average_ic": 2.121,
+        "sigmage": 15.25
+      },
+      {
+        "width": 31,
+        "hits": 183,
+        "comparisons": 1914,
+        "average_ic": 0.956,
+        "sigmage": -2.76
+      },
+      {
+        "width": 32,
+        "hits": 197,
+        "comparisons": 1848,
+        "average_ic": 1.066,
+        "sigmage": -1.06
+      },
+      {
+        "width": 33,
+        "hits": 384,
+        "comparisons": 1785,
+        "average_ic": 2.151,
+        "sigmage": 14.98
+      },
+      {
+        "width": 34,
+        "hits": 197,
+        "comparisons": 1730,
+        "average_ic": 1.139,
+        "sigmage": 0.03
+      },
+      {
+        "width": 35,
+        "hits": 196,
+        "comparisons": 1675,
+        "average_ic": 1.17,
+        "sigmage": 0.48
+      },
+      {
+        "width": 36,
+        "hits": 354,
+        "comparisons": 1620,
+        "average_ic": 2.185,
+        "sigmage": 14.82
+      },
+      {
+        "width": 37,
+        "hits": 156,
+        "comparisons": 1575,
+        "average_ic": 0.99,
+        "sigmage": -2.04
+      },
+      {
+        "width": 38,
+        "hits": 171,
+        "comparisons": 1530,
+        "average_ic": 1.118,
+        "sigmage": -0.27
+      },
+      {
+        "width": 39,
+        "hits": 294,
+        "comparisons": 1485,
+        "average_ic": 1.98,
+        "sigmage": 11.45
+      },
+      {
+        "width": 40,
+        "hits": 134,
+        "comparisons": 1440,
+        "average_ic": 0.931,
+        "sigmage": -2.77
+      },
+      {
+        "width": 41,
+        "hits": 154,
+        "comparisons": 1404,
+        "average_ic": 1.097,
+        "sigmage": -0.53
+      },
+      {
+        "width": 42,
+        "hits": 287,
+        "comparisons": 1368,
+        "average_ic": 2.098,
+        "sigmage": 12.58
+      },
+      {
+        "width": 43,
+        "hits": 140,
+        "comparisons": 1332,
+        "average_ic": 1.051,
+        "sigmage": -1.11
+      },
+      {
+        "width": 44,
+        "hits": 130,
+        "comparisons": 1296,
+        "average_ic": 1.003,
+        "sigmage": -1.71
+      },
+      {
+        "width": 45,
+        "hits": 252,
+        "comparisons": 1260,
+        "average_ic": 2.0,
+        "sigmage": 10.92
+      },
+      {
+        "width": 46,
+        "hits": 128,
+        "comparisons": 1232,
+        "average_ic": 1.039,
+        "sigmage": -1.23
+      },
+      {
+        "width": 47,
+        "hits": 108,
+        "comparisons": 1204,
+        "average_ic": 0.897,
+        "sigmage": -2.97
+      },
+      {
+        "width": 48,
+        "hits": 305,
+        "comparisons": 1176,
+        "average_ic": 2.594,
+        "sigmage": 17.84
+      },
+      {
+        "width": 49,
+        "hits": 110,
+        "comparisons": 1148,
+        "average_ic": 0.958,
+        "sigmage": -2.17
+      },
+      {
+        "width": 50,
+        "hits": 104,
+        "comparisons": 1120,
+        "average_ic": 0.929,
+        "sigmage": -2.5
+      },
+      {
+        "width": 51,
+        "hits": 267,
+        "comparisons": 1092,
+        "average_ic": 2.445,
+        "sigmage": 15.54
+      }
     ]
   }
 }
