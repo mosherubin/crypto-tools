@@ -632,6 +632,24 @@
         "average_ic": 2.445,
         "sigmage": 15.54
       }
+    ],
+    "polygraphic_ic": [
+      {
+        "length": 4,
+        "total": 357,
+        "observed": 335,
+        "expected": 6.35,
+        "ic": 52.72,
+        "sigmage": 130.6
+      },
+      {
+        "length": 5,
+        "total": 356,
+        "observed": 182,
+        "expected": 0.63,
+        "ic": 288.02,
+        "sigmage": 228.5
+      }
     ]
   }
 }

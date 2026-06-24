@@ -11,6 +11,7 @@ import tests.digraphic_ic as digraphic_ic
 import tests.trigraphic_ic as trigraphic_ic
 import tests.local_roughness as local_roughness
 import tests.width_tests as width_tests
+import tests.polygraphic_ic as polygraphic_ic
 
 
 def run_file(path: str):
@@ -53,6 +54,11 @@ def run_file(path: str):
             _report('width_tests', width_tests.run(ct, mc_result.counts))
     except Exception as e:
         print(f"  [width_tests] RUNTIME ERROR: {e}")
+
+    try:
+        _report('polygraphic_ic', polygraphic_ic.run(ct))
+    except Exception as e:
+        print(f"  [polygraphic_ic] RUNTIME ERROR: {e}")
 
     for label, fn in [
         ('compute_digraphic_ic_overall',  digraphic_ic.run_overall),
