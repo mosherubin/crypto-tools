@@ -94,6 +94,206 @@
       "total": 72,
       "hits_observed": 5,
       "hits_expected": 0.15
-    }
+    },
+    "local_roughness": [
+      {
+        "offset": 1,
+        "observed": 16,
+        "expected": 10,
+        "sigmage": 1.8
+      },
+      {
+        "offset": 2,
+        "observed": 6,
+        "expected": 10,
+        "sigmage": -1.4
+      },
+      {
+        "offset": 3,
+        "observed": 10,
+        "expected": 10,
+        "sigmage": -0.1
+      },
+      {
+        "offset": 4,
+        "observed": 8,
+        "expected": 10,
+        "sigmage": -0.7
+      },
+      {
+        "offset": 5,
+        "observed": 15,
+        "expected": 10,
+        "sigmage": 1.6
+      },
+      {
+        "offset": 6,
+        "observed": 17,
+        "expected": 10,
+        "sigmage": 2.2
+      },
+      {
+        "offset": 7,
+        "observed": 9,
+        "expected": 10,
+        "sigmage": -0.3
+      },
+      {
+        "offset": 8,
+        "observed": 17,
+        "expected": 10,
+        "sigmage": 2.3
+      },
+      {
+        "offset": 9,
+        "observed": 7,
+        "expected": 10,
+        "sigmage": -1.0
+      },
+      {
+        "offset": 10,
+        "observed": 9,
+        "expected": 10,
+        "sigmage": -0.3
+      },
+      {
+        "offset": 11,
+        "observed": 9,
+        "expected": 10,
+        "sigmage": -0.3
+      },
+      {
+        "offset": 12,
+        "observed": 13,
+        "expected": 10,
+        "sigmage": 1.1
+      },
+      {
+        "offset": 13,
+        "observed": 11,
+        "expected": 10,
+        "sigmage": 0.4
+      },
+      {
+        "offset": 14,
+        "observed": 24,
+        "expected": 10,
+        "sigmage": 4.7
+      },
+      {
+        "offset": 15,
+        "observed": 13,
+        "expected": 10,
+        "sigmage": 1.1
+      },
+      {
+        "offset": 16,
+        "observed": 10,
+        "expected": 10,
+        "sigmage": 0.1
+      },
+      {
+        "offset": 17,
+        "observed": 15,
+        "expected": 10,
+        "sigmage": 1.8
+      },
+      {
+        "offset": 18,
+        "observed": 23,
+        "expected": 10,
+        "sigmage": 4.5
+      },
+      {
+        "offset": 19,
+        "observed": 14,
+        "expected": 9,
+        "sigmage": 1.5
+      },
+      {
+        "offset": 20,
+        "observed": 9,
+        "expected": 9,
+        "sigmage": -0.1
+      },
+      {
+        "offset": 21,
+        "observed": 5,
+        "expected": 9,
+        "sigmage": -1.5
+      },
+      {
+        "offset": 22,
+        "observed": 18,
+        "expected": 9,
+        "sigmage": 2.9
+      },
+      {
+        "offset": 23,
+        "observed": 12,
+        "expected": 9,
+        "sigmage": 0.9
+      },
+      {
+        "offset": 24,
+        "observed": 6,
+        "expected": 9,
+        "sigmage": -1.1
+      },
+      {
+        "offset": 25,
+        "observed": 12,
+        "expected": 9,
+        "sigmage": 1.0
+      },
+      {
+        "offset": 26,
+        "observed": 4,
+        "expected": 9,
+        "sigmage": -1.7
+      },
+      {
+        "offset": 27,
+        "observed": 9,
+        "expected": 9,
+        "sigmage": -0.0
+      },
+      {
+        "offset": 28,
+        "observed": 6,
+        "expected": 9,
+        "sigmage": -1.0
+      },
+      {
+        "offset": 29,
+        "observed": 12,
+        "expected": 9,
+        "sigmage": 1.0
+      },
+      {
+        "offset": 30,
+        "observed": 12,
+        "expected": 9,
+        "sigmage": 1.0
+      },
+      {
+        "offset": 31,
+        "observed": 7,
+        "expected": 9,
+        "sigmage": -0.6
+      },
+      {
+        "offset": 32,
+        "observed": 12,
+        "expected": 9,
+        "sigmage": 1.1
+      },
+      {
+        "offset": 33,
+        "observed": 15,
+        "expected": 9,
+        "sigmage": 2.1
+      }
+    ]
   }
 }
