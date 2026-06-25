@@ -22,6 +22,7 @@
     overflow-x: auto;
     white-space: pre;
     border: 1px solid #ccc;
+    resize: both;
   }
   a { font-family: sans-serif; }
 </style>
@@ -37,7 +38,7 @@
   </div>
   <div class="field">
     <label for="period1">Period 1</label>
-    <input type="number" id="period1" min="1" value="5">
+    <input type="number" id="period1" min="1" autocomplete="off">
   </div>
   <div class="field">
     <label for="message2">Message 2 (ciphertext)</label>
@@ -45,10 +46,13 @@
   </div>
   <div class="field">
     <label for="period2">Period 2</label>
-    <input type="number" id="period2" min="1" value="7">
+    <input type="number" id="period2" min="1" autocomplete="off">
   </div>
 
-  <button id="run">Run</button>
+  <div style="display:flex; align-items:center; gap:1.5rem; margin-top:1rem;">
+    <button id="run">Run</button>
+    <label style="font-family:sans-serif; margin-top:0;"><input type="checkbox" id="debuggingMode"> Verbose</label>
+  </div>
 
   <pre id="output" readonly></pre>
 
@@ -58,6 +62,38 @@ const EMPTY = '.';
 
 function stripWhitespace(text) {
   return text.replace(/\s+/g, '');
+}
+
+function alignArrows(lines) {
+  const split = lines.map(line => line.split(' -> '));
+  const threeparts = split.map(p => p.length === 3);
+  const active = split.filter((_, i) => threeparts[i]);
+  if (active.length === 0) return lines;
+  const maxP1 = Math.max(...active.map(p => p[0].length));
+  const maxP2 = Math.max(...active.map(p => p[1].length));
+  return lines.map((line, i) => {
+    if (!threeparts[i]) return line;
+    const [p1, p2, p3] = split[i];
+    return p1.padEnd(maxP1) + ' -> ' + p2.padEnd(maxP2) + ' -> ' + p3;
+  });
+}
+
+function wordWrap(text, maxLen) {
+  const words = text.split(' ');
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    if (current.length === 0) {
+      current = word;
+    } else if (current.length + 1 + word.length <= maxLen) {
+      current += ' ' + word;
+    } else {
+      lines.push(current);
+      current = word;
+    }
+  }
+  if (current.length > 0) lines.push(current);
+  return lines.join('\n');
 }
 
 function buildArray(message1, period1, message2, period2) {
@@ -123,7 +159,7 @@ function findMergePair(array) {
   return null;
 }
 
-function mergeColumns(array, i, j) {
+function mergeColumns(array, i, j, origIndices) {
   const nRows = array.length;
 
   for (let r = 0; r < nRows; r++) {
@@ -132,8 +168,8 @@ function mergeColumns(array, i, j) {
     const ci = array[r][i];
     if (ci !== EMPTY && ci !== cj) {
       throw new Error(
-        `Error: merge conflict while merging column ${j} into column ${i}. ` +
-        `Row ${r} holds '${ci}' in column ${i} but '${cj}' in column ${j}. Stopping immediately.`);
+        `Error: merge conflict while merging column ${j + 1} (original column ${origIndices[j]}) into column ${i + 1} (original column ${origIndices[i]}). ` +
+        `Row ${r + 1} holds '${ci}' in column ${i + 1} but '${cj}' in column ${j + 1}. Stopping immediately.`);
     }
   }
 
@@ -148,18 +184,26 @@ function mergeColumns(array, i, j) {
   }
 }
 
-function compressArray(array) {
+function compressArray(array, period1, debuggingMode = false) {
   let merges = 0;
+  const debugLines = [];
+  const origIndices = array[0].map((_, c) => c + 1);
   while (true) {
     const pair = findMergePair(array);
     if (pair === null) break;
-    mergeColumns(array, pair[0], pair[1]);
+    try {
+      mergeColumns(array, pair[0], pair[1], origIndices);
+    } catch (e) {
+      if (debuggingMode) debugLines.push(wordWrap(e.message, 50));
+      return { merges, debugLines, error: e.message };
+    }
+    origIndices.splice(pair[1], 1);
     merges++;
   }
-  return merges;
+  return { merges, debugLines, error: null };
 }
 
-function runSolveIsologs(message1Raw, period1, message2Raw, period2, allowRowDups, allowColDups) {
+function runSolveIsologs(message1Raw, period1, message2Raw, period2, allowRowDups, allowColDups, debuggingMode = false) {
   const output = [];
 
   const message1 = stripWhitespace(message1Raw);
@@ -181,12 +225,19 @@ function runSolveIsologs(message1Raw, period1, message2Raw, period2, allowRowDup
   output.push('');
   output.push(printArray(array, period1));
 
-  let merges;
-  try {
-    merges = compressArray(array);
-  } catch (e) {
+  const { merges, debugLines, error: compressError } = compressArray(array, period1, debuggingMode);
+
+  if (debuggingMode && debugLines.length) {
     output.push('');
-    output.push(e.message);
+    output.push('=== Compression debug output ===');
+    output.push(...debugLines);
+  }
+
+  if (compressError) {
+    if (!debuggingMode) {
+      output.push('');
+      output.push(wordWrap(compressError, 50));
+    }
     return { text: output.join('\n'), monoText: '' };
   }
 
@@ -195,7 +246,7 @@ function runSolveIsologs(message1Raw, period1, message2Raw, period2, allowRowDup
   output.push('');
   output.push(printArray(array, period1));
 
-  const { findRectangles, findIncompleteRectangles, applyIndirectSymmetry, deduplicateColumns } = ReconstructionMatrix;
+  const { findRectangles, findIncompleteRectangles, applyIndirectSymmetry, deduplicateColumns, validateColumnConsistency } = ReconstructionMatrix;
 
   let rows = array.map((row, i) => [String(i + 1), row.join('')]);
   let totalNewLetters = 0;
@@ -216,24 +267,58 @@ function runSolveIsologs(message1Raw, period1, message2Raw, period2, allowRowDup
     }
     rows = applied.rows;
     totalNewLetters += applied.newLetters;
+
+    if (debuggingMode) {
+      output.push('');
+      output.push(`=== Indirect symmetry pass ${passNum}: ${applied.newLetters} new letter(s) ===`);
+      output.push(...alignArrows(applied.outputLines));
+      output.push('');
+      output.push(printArray(rows.map(([, alpha]) => [...alpha]), period1));
+    }
+
+    const consistency = validateColumnConsistency(rows);
+    if (!consistency.ok) {
+      output.push('');
+      output.push(`COLUMN CONFLICT on pass ${passNum}: columns ${consistency.col1} and ${consistency.col2} share a letter in some row but conflict in row '${consistency.rowName}' ('${consistency.letter1}' vs '${consistency.letter2}'). The input periods are likely incorrect.`);
+      output.push('');
+      output.push(`Reconstruction matrix (inconsistent): ${rows.length} rows x ${rows[0][1].length} columns`);
+      output.push('');
+      output.push(printArray(rows.map(([, alpha]) => [...alpha]), period1));
+      return { text: output.join('\n'), monoText: '' };
+    }
+
     if (applied.newLetters === 0) break;
   }
 
   if (!contradiction) {
+
     output.push('');
     output.push(`Reconstruction matrix after ${passNum} pass(es), ${totalNewLetters} new letter(s) added: ${rows.length} rows x ${rows[0][1].length} columns`);
     output.push('');
     output.push(printArray(rows.map(([, alpha]) => [...alpha]), period1));
 
-    const { rows: dedupRows, dropped, droppedPositions } = deduplicateColumns(rows);
+    let dedupRows, dropped, droppedPositions;
+    try {
+      ({ rows: dedupRows, dropped, droppedPositions } = deduplicateColumns(rows));
+    } catch (e) {
+      output.push('');
+      output.push(`DEDUPLICATION ERROR: ${e.message}`);
+      return { text: output.join('\n'), monoText: '' };
+    }
     output.push('');
     if (dropped) {
       output.push(`Deduplicated (${dropped} duplicate column(s) removed: ${droppedPositions.join(', ')}): ${dedupRows.length} rows x ${dedupRows[0][1].length} columns`);
     } else {
       output.push(`Deduplicated (no duplicate columns found): ${dedupRows.length} rows x ${dedupRows[0][1].length} columns`);
     }
+    const nCols = dedupRows[0][1].length;
+    if (!dedupRows.some(([name]) => name === '0')) {
+      const row0Alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, nCols).padEnd(nCols, '.');
+      dedupRows = [['0', row0Alpha], ...dedupRows];
+    }
+
     output.push('');
-    output.push(printArray(dedupRows.map(([, alpha]) => [...alpha]), period1));
+    output.push(printDedupMatrix(dedupRows, period1));
 
     const monoText = convertToMonoalphabetic(message1, period1, dedupRows);
     output.push('');
@@ -247,26 +332,47 @@ function runSolveIsologs(message1Raw, period1, message2Raw, period2, allowRowDup
   return { text: output.join('\n'), monoText: '' };
 }
 
+function printDedupMatrix(rows, period1) {
+  const nCols = rows[0][1].length;
+  const maxNameLen = Math.max(...rows.map(([name]) => name.length));
+  const prefixPad = ' '.repeat(maxNameLen + 2);
+  let tens = '', units = '';
+  for (let c = 0; c < nCols; c++) {
+    const col1 = c + 1;
+    tens += col1 >= 10 ? String(Math.floor(col1 / 10) % 10) : ' ';
+    units += String(col1 % 10);
+  }
+  const lines = [`${prefixPad}${tens}`, `${prefixPad}${units}`];
+  for (const [name, alpha] of rows) {
+    const rowNum = parseInt(name);
+    if (!isNaN(rowNum) && rowNum === period1 + 1) {
+      lines.push(`#${prefixPad.slice(1)}${'-'.repeat(nCols)}`);
+    }
+    lines.push(`${name.padStart(maxNameLen)}  ${alpha}`);
+  }
+  return lines.join('\n');
+}
+
 function convertToMonoalphabetic(message, period, dedupRows) {
-  const rowLookups = dedupRows.map(([, alpha]) => {
+  const rowByName = new Map(dedupRows.map(([name, alpha]) => [name, alpha]));
+  const row0Alpha = rowByName.get('0') || '';
+
+  const rowLookups = new Map();
+  for (const [name, alpha] of dedupRows) {
     const map = {};
     for (let c = 0; c < alpha.length; c++) {
       if (alpha[c] !== '.') map[alpha[c]] = c;
     }
-    return map;
-  });
-  const row1Alpha = dedupRows[0][1];
+    rowLookups.set(name, map);
+  }
 
   let M = '';
   for (let i = 0; i < message.length; i++) {
-    const keyLine = i % period;
+    const rowName = String(i % period + 1);
+    const lookup = rowLookups.get(rowName) || {};
     const ch = message[i];
-    if (keyLine === 0) {
-      M += ch;
-    } else {
-      const colIdx = rowLookups[keyLine][ch];
-      M += (colIdx !== undefined && row1Alpha[colIdx] !== '.') ? row1Alpha[colIdx] : '.';
-    }
+    const colIdx = lookup[ch];
+    M += (colIdx !== undefined && row0Alpha[colIdx] && row0Alpha[colIdx] !== '.') ? row0Alpha[colIdx] : '.';
   }
   return M;
 }
@@ -299,7 +405,8 @@ document.getElementById('run').addEventListener('click', () => {
     const message2 = document.getElementById('message2').value;
     const period2 = parseInt(document.getElementById('period2').value, 10);
 
-    const result = runSolveIsologs(message1, period1, message2, period2, true, true);
+    const debuggingMode = document.getElementById('debuggingMode').checked;
+    const result = runSolveIsologs(message1, period1, message2, period2, true, true, debuggingMode);
     _monoText = result.monoText;
     let html = escapeHtml(result.text);
     if (result.monoText) {

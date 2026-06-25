@@ -387,7 +387,7 @@ function applyIndirectSymmetry(rows, rectangles, rectIndex, incomplete, allowRow
       }
     }
 
-    outputLines.push(`${rectStr(matchedRect)} -> ${rectStr(incRect)} -> ${inferredLetter}(${rowIdx},${unknownCol})`);
+    outputLines.push(`${rectStr(matchedRect)} -> ${rectStr(incRect)} -> ${inferredLetter}(${unknownRowName}-${unknownCol + 1})`);
     alphabets[rowIdx][unknownCol] = inferredLetter;
     inferred.set(cellKey, inferredLetter);
     newLetters++;
@@ -447,22 +447,112 @@ function isTetragramValid(tetragram, cache, cutoff = 'A') {
   return false;
 }
 
-function deduplicateColumns(rows) {
+function validateColumnConsistency(rows) {
+  const nRows = rows.length;
   const nCols = rows[0][1].length;
-  const seenCols = new Map();
-  const keep = [];
-  for (let col = 0; col < nCols; col++) {
-    const sig = rows.map(([, alpha]) => alpha[col]).join('');
-    if (!seenCols.has(sig)) {
-      seenCols.set(sig, col + 1);
-      keep.push(col);
+  for (let i = 0; i < nCols; i++) {
+    for (let j = i + 1; j < nCols; j++) {
+      let shared = false;
+      for (let r = 0; r < nRows; r++) {
+        const a = rows[r][1][i], b = rows[r][1][j];
+        if (a !== '.' && b !== '.' && a === b) { shared = true; break; }
+      }
+      if (!shared) continue;
+      for (let r = 0; r < nRows; r++) {
+        const a = rows[r][1][i], b = rows[r][1][j];
+        if (a !== '.' && b !== '.' && a !== b) {
+          return { ok: false, col1: i + 1, col2: j + 1, rowName: rows[r][0], letter1: a, letter2: b };
+        }
+      }
     }
   }
-  const dropped = nCols - keep.length;
-  const keepSet = new Set(keep);
+  return { ok: true };
+}
+
+function deduplicateColumns(rows) {
+  const nRows = rows.length;
+  const originalLen = rows[0][1].length;
+
+  const grid = rows.map(([, alpha]) => alpha.split(''));
+  // tracks which original 0-based column index each current column came from
+  let origIdx = Array.from({ length: originalLen }, (_, i) => i);
+
+  function colHasLetters(c) {
+    return grid.some(row => row[c] !== '.');
+  }
+
+  function compatible(a, b) {
+    for (let r = 0; r < nRows; r++) {
+      const ca = grid[r][a], cb = grid[r][b];
+      if (ca !== '.' && cb !== '.' && ca !== cb) return false;
+    }
+    return true;
+  }
+
+  function findSharedLetterPair() {
+    const nCols = origIdx.length;
+    for (let i = 0; i < nCols; i++) {
+      for (let j = i + 1; j < nCols; j++) {
+        for (let r = 0; r < nRows; r++) {
+          const a = grid[r][i], b = grid[r][j];
+          if (a !== '.' && b !== '.' && a === b) return [i, j];
+        }
+      }
+    }
+    return null;
+  }
+
+  function findUniqueCompatiblePair() {
+    const nCols = origIdx.length;
+    for (let b = 0; b < nCols; b++) {
+      if (!colHasLetters(b)) continue;
+      let partner = -1;
+      let count = 0;
+      for (let a = 0; a < nCols; a++) {
+        if (a === b || !colHasLetters(a)) continue;
+        if (compatible(a, b)) {
+          partner = a;
+          count++;
+          if (count > 1) break;
+        }
+      }
+      if (count === 1) return [partner, b];
+    }
+    return null;
+  }
+
+  function mergeCols(i, j) {
+    for (let r = 0; r < nRows; r++) {
+      const a = grid[r][i], b = grid[r][j];
+      if (a !== '.' && b !== '.' && a !== b) {
+        throw new Error(
+          `Deduplication conflict: column ${origIdx[i] + 1} has '${a}' but column ${origIdx[j] + 1} has '${b}' in row '${rows[r][0]}'`
+        );
+      }
+    }
+    for (let r = 0; r < nRows; r++) {
+      if (grid[r][j] !== '.' && grid[r][i] === '.') grid[r][i] = grid[r][j];
+    }
+    for (let r = 0; r < nRows; r++) grid[r].splice(j, 1);
+    origIdx.splice(j, 1);
+  }
+
+  while (true) {
+    const pair = findSharedLetterPair();
+    if (pair) { mergeCols(pair[0], pair[1]); continue; }
+
+    const uniquePair = findUniqueCompatiblePair();
+    if (uniquePair) { mergeCols(uniquePair[0], uniquePair[1]); continue; }
+
+    break;
+  }
+
+  const keptSet = new Set(origIdx);
+  const dropped = originalLen - origIdx.length;
   const droppedPositions = [];
-  for (let c = 0; c < nCols; c++) if (!keepSet.has(c)) droppedPositions.push(c + 1);
-  const dedupRows = rows.map(([name, alpha]) => [name, keep.map(c => alpha[c]).join('')]);
+  for (let c = 0; c < originalLen; c++) if (!keptSet.has(c)) droppedPositions.push(c + 1);
+
+  const dedupRows = rows.map(([name], r) => [name, grid[r].join('')]);
   return { rows: dedupRows, dropped, droppedPositions };
 }
 
@@ -479,6 +569,7 @@ global.ReconstructionMatrix = {
   normalizeMatrix,
   applyIndirectSymmetry,
   deduplicateColumns,
+  validateColumnConsistency,
 };
 
 })(window);
