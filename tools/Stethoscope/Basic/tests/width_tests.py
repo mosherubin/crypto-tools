@@ -48,6 +48,9 @@ def run(ct: CiphertextData, mono_counts: dict) -> WidthTestsResult:
             total_hits += pairs
             total_comps += Mk * (Mk - 1) // 2
 
+        if total_comps == 0:
+            break
+
         avg_ic_precise = c * total_hits / total_comps
         sigmage = N * (avg_ic_precise - delta_mono) / math.sqrt(2 * (c - 1) * w)
 

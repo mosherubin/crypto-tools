@@ -77,11 +77,16 @@ def format_listing(ct, mc_result, ic_result,
     # Width tests (2 columns: w=2-26 left, w=27-51 right)
     if wt_result and wt_result.entries:
         wt_hdr = f'{"W":>2}  {"HITS":>5}  {"COMPS":>6}  {"AVG IC":>6}  {"SIGMAGE":>7}'
-        out.append(f'{"":6}    {wt_hdr}    {wt_hdr}')
-        for idx in range(25):
-            l_e = wt_result.entries[idx]       # w = 2..26
-            r_e = wt_result.entries[idx + 25]  # w = 27..51
-            out.append(f'{"":6}    {_wt_row(l_e)}    {_wt_row(r_e)}')
+        left_entries  = wt_result.entries[:25]
+        right_entries = wt_result.entries[25:]
+        has_right = len(right_entries) > 0
+        out.append(f'{"":6}    {wt_hdr}' + (f'    {wt_hdr}' if has_right else ''))
+        for idx, l_e in enumerate(left_entries):
+            r_e = right_entries[idx] if idx < len(right_entries) else None
+            row = f'{"":6}    {_wt_row(l_e)}'
+            if r_e is not None:
+                row += f'    {_wt_row(r_e)}'
+            out.append(row)
 
     # Polygraphic IC
     if poly_result and poly_result.entries:
