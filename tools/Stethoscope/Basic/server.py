@@ -105,7 +105,7 @@ _HTML = """\
 <div class="row">
   <span class="lbl">Ciphertext:</span>
   <div class="ctrl">
-    <textarea id="ciphertext" placeholder="Paste ciphertext here…"></textarea>
+    <textarea id="ciphertext" placeholder="Paste ciphertext here..."></textarea>
   </div>
 </div>
 
@@ -160,7 +160,7 @@ async function runTests() {
   const btn = document.getElementById('run-btn');
   btn.disabled = true;
   const out = document.getElementById('output');
-  out.value = 'Running…';
+  out.value = 'Running...';
   try {
     const resp = await fetch('/run', {
       method: 'POST',
@@ -173,9 +173,25 @@ async function runTests() {
       })
     });
     const data = await resp.json();
-    out.value = data.error
-      ? ('ERROR: ' + data.error)
-      : (runHeader() + '\n\n' + data.output);
+    if (data.error) {
+      out.value = 'ERROR: ' + data.error;
+    } else {
+      const desc       = document.getElementById('description').value.trim();
+      const displayCt  = document.getElementById('display_ct').checked;
+      const descLine   = desc ? ('Description: ' + desc) : '';
+      let text;
+      if (displayCt && descLine) {
+        const cut  = data.output.indexOf('\\n\\n');
+        const ctBlock   = cut >= 0 ? data.output.slice(0, cut)       : data.output;
+        const reportBlock = cut >= 0 ? data.output.slice(cut + 2)    : '';
+        text = runHeader() + '\\n\\n' + ctBlock + '\\n\\n' + descLine + '\\n\\n' + reportBlock;
+      } else {
+        text = runHeader() + '\\n\\n';
+        if (descLine) text += descLine + '\\n\\n';
+        text += data.output;
+      }
+      out.value = text;
+    }
   } catch (e) {
     out.value = 'Network error: ' + e.message;
   }
