@@ -294,6 +294,10 @@
         "expected": 8,
         "sigmage": -1.0
       }
+    ],
+    "list_of_repeats": [
+      {"length": 6, "position":  35, "offset":  25, "text": "dbbugi"},
+      {"length": 4, "position":  65, "offset":  25, "text": "ikfb"}
     ]
   }
 }

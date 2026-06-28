@@ -280,6 +280,19 @@
         "expected": 37,
         "sigmage": -1.6
       }
+    ],
+    "list_of_repeats": [
+      {"length": 4, "position":  12, "offset":  79, "text": "3053"},
+      {"length": 4, "position": 159, "offset": 194, "text": "3679"},
+      {"length": 6, "position":  83, "offset": 224, "text": "377579"},
+      {"length": 5, "position": 136, "offset": 184, "text": "45303"},
+      {"length": 5, "position":  16, "offset": 126, "text": "47658"},
+      {"length": 4, "position": 290, "offset":  24, "text": "5129"},
+      {"length": 4, "position":  93, "offset": 186, "text": "5329"},
+      {"length": 4, "position": 101, "offset": 112, "text": "6019"},
+      {"length": 4, "position":  25, "offset": 192, "text": "6226"},
+      {"length": 5, "position": 311, "offset":  44, "text": "79451"},
+      {"length": 4, "position": 161, "offset":  86, "text": "7954"}
     ]
   }
 }

@@ -296,6 +296,12 @@
         "expected": 9,
         "sigmage": 0.6
       }
+    ],
+    "list_of_repeats": [
+      {"length": 6, "position":  24, "offset":  90, "text": "asjnym"},
+      {"length": 4, "position": 176, "offset":  15, "text": "htkp"},
+      {"length": 4, "position": 142, "offset":  24, "text": "oldo"},
+      {"length": 6, "position":  75, "offset": 105, "text": "sxezfn"}
     ]
   }
 }

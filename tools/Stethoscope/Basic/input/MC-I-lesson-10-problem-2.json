@@ -294,6 +294,11 @@
         "expected": 9,
         "sigmage": 2.1
       }
+    ],
+    "list_of_repeats": [
+      {"length": 7, "position": 170, "offset":  14, "text": "ikvpxvu"},
+      {"length": 5, "position": 156, "offset":  18, "text": "xvukr"},
+      {"length": 7, "position":  71, "offset":  18, "text": "zvnproq"}
     ]
   }
 }

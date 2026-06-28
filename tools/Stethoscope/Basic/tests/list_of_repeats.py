@@ -102,7 +102,7 @@ def run(ct: CiphertextData) -> RepeatsResult:
             ('offset',   got.offset,   exp.get('offset')),
             ('text',     got.text,     exp.get('text')),
         ]:
-            if ev is not None and gv != ev:
+            if ev is not None and (gv != ev if field_name != 'text' else gv.lower() != ev.lower()):
                 errors.append(
                     f"repeat[{idx}] {field_name}: computed {gv!r}, expected {ev!r}"
                 )

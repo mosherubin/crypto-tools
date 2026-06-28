@@ -280,6 +280,21 @@
         "expected": 39,
         "sigmage": -1.2
       }
+    ],
+    "list_of_repeats": [
+      {"length": 4, "position": 278, "offset": 135, "text": "1269"},
+      {"length": 4, "position":  85, "offset": 276, "text": "1521"},
+      {"length": 5, "position":  21, "offset":  20, "text": "15300"},
+      {"length": 4, "position":   3, "offset": 106, "text": "1857"},
+      {"length": 4, "position": 171, "offset": 217, "text": "2604"},
+      {"length": 5, "position": 295, "offset":  49, "text": "28649"},
+      {"length": 5, "position": 128, "offset": 136, "text": "29078"},
+      {"length": 4, "position":  69, "offset": 132, "text": "3114"},
+      {"length": 4, "position":  79, "offset": 142, "text": "4730"},
+      {"length": 4, "position":  63, "offset": 242, "text": "5835"},
+      {"length": 4, "position": 255, "offset": 120, "text": "6890"},
+      {"length": 4, "position":  67, "offset": 200, "text": "7831"},
+      {"length": 4, "position":   1, "offset": 242, "text": "9918"}
     ]
   }
 }
