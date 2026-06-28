@@ -27,27 +27,42 @@ def format_listing(ct, mc_result, ic_result,
     # Line 0 carries TOTAL/DITS; line 1 carries IC TESTS header.
     body = [''] * 26
     total_dits_line = f'TOTAL {N}  DITS {ct.ditscount}'
-    body[0]  = ' ' * 38 + 'HITS' + ' ' * 6 + 'HITS'
-    body[1]  = 'IC TESTS FOR SIGNIFICANCE    TOTAL  OBSERVED  EXPECTED'
+    body[0] = ' ' * 51 + 'HITS' + ' ' * 8 + 'HITS'
+    body[1] = 'IC TESTS FOR SIGNIFICANCE' + ' ' * 15 + 'TOTAL    OBSERVED    EXPECTED'
     if ic_result:
-        body[2]  = (f'MONO IC {ic_result.ic:.4f}  SIGMAGE  {ic_result.sigmage}  '
-                    f'{ic_result.total}  {ic_result.hits_observed}  {ic_result.hits_expected}')
+        body[2] = _ic_row(' MONO',     f'{ic_result.ic:.4f}', ic_result.sigmage,
+                          ic_result.total, ic_result.hits_observed,
+                          f'{ic_result.hits_expected:>4}')
     if dig_overall:
-        body[3]  = 'DIGRAPHIC TESTS'
-        body[4]  = _dig_row('DIGRAPH', dig_overall)
+        body[3] = ' DIGRAPHIC TESTS'
+        body[4] = _ic_row('  DIGRAPH', f'{dig_overall.ic:.3f}', dig_overall.sigmage,
+                          dig_overall.total, dig_overall.hits_observed,
+                          f'{dig_overall.hits_expected:>4}')
     if dig_cut_a:
-        body[5]  = _dig_row('CUT A', dig_cut_a)
+        body[5] = _ic_row('  CUT A',   f'{dig_cut_a.ic:.3f}', dig_cut_a.sigmage,
+                          dig_cut_a.total, dig_cut_a.hits_observed,
+                          f'{dig_cut_a.hits_expected:>4}')
     if dig_cut_b:
-        body[6]  = _dig_row('CUT B', dig_cut_b)
+        body[6] = _ic_row('  CUT B',   f'{dig_cut_b.ic:.3f}', dig_cut_b.sigmage,
+                          dig_cut_b.total, dig_cut_b.hits_observed,
+                          f'{dig_cut_b.hits_expected:>4}')
     if trig_overall:
-        body[7]  = 'TRIGRAPHIC TESTS'
-        body[8]  = _trig_row('TRIGRAPH', trig_overall)
+        body[7] = ' TRIGRAPHIC TESTS'
+        body[8] = _ic_row('  TRIGRAPH', f'{trig_overall.ic:.2f}', trig_overall.sigmage,
+                          trig_overall.total, trig_overall.hits_observed,
+                          _fmt_exp_float(trig_overall.hits_expected))
     if trig_cut_a:
-        body[9]  = _trig_row('CUT A', trig_cut_a)
+        body[9]  = _ic_row('  CUT A',  f'{trig_cut_a.ic:.2f}', trig_cut_a.sigmage,
+                           trig_cut_a.total, trig_cut_a.hits_observed,
+                           _fmt_exp_float(trig_cut_a.hits_expected))
     if trig_cut_b:
-        body[10] = _trig_row('CUT B', trig_cut_b)
+        body[10] = _ic_row('  CUT B',  f'{trig_cut_b.ic:.2f}', trig_cut_b.sigmage,
+                           trig_cut_b.total, trig_cut_b.hits_observed,
+                           _fmt_exp_float(trig_cut_b.hits_expected))
     if trig_cut_c:
-        body[11] = _trig_row('CUT C', trig_cut_c)
+        body[11] = _ic_row('  CUT C',  f'{trig_cut_c.ic:.2f}', trig_cut_c.sigmage,
+                           trig_cut_c.total, trig_cut_c.hits_observed,
+                           _fmt_exp_float(trig_cut_c.hits_expected))
     if lr_entries:
         body[12] = f'LOCAL ROUGHNESS  OFFSETS 1 TO {max_offset}'
         body[13] = ('OFF  OBS  EXP  SIGMAGE    '
@@ -116,14 +131,15 @@ def format_listing(ct, mc_result, ic_result,
     return '\n'.join(out)
 
 
-def _dig_row(label, r):
-    return (f'{label}  IC  {r.ic:.3f}  SIGMAGE  {r.sigmage}  '
-            f'{r.total}  {r.hits_observed}  {r.hits_expected}')
+def _ic_row(label, ic_str, sigmage, N, obs, exp_str):
+    pad = ' ' * max(0, 8 - len(ic_str))
+    return f'{label:<13}IC  {ic_str}{pad}SIGMAGE {sigmage:7.1f} {N:4d}    {obs:8}    {exp_str}'
 
 
-def _trig_row(label, r):
-    return (f'{label}  IC  {r.ic:.2f}  SIGMAGE  {r.sigmage}  '
-            f'{r.total}  {r.hits_observed}  {r.hits_expected:.2f}')
+def _fmt_exp_float(val, dp=2):
+    s = f'{val:.{dp}f}'
+    dot = s.index('.')
+    return f'{s[:dot]:>4}{s[dot:]}'
 
 
 def _wt_row(e):
