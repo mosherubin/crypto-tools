@@ -50,8 +50,8 @@ _HTML = """\
   }
   h1 {
     text-align: center;
-    letter-spacing: 6px;
-    font-size: 1.4em;
+    letter-spacing: 2px;
+    font-size: 1.2em;
     margin-bottom: 24px;
   }
   .row {
@@ -100,7 +100,7 @@ _HTML = """\
 </style>
 </head>
 <body>
-<h1>STETHOSCOPE PROGRAM</h1>
+<h1>STETHOSCOPE PROGRAM &nbsp;&nbsp; (Moshe Rubin) &nbsp;&nbsp; Timestamp &nbsp; <span id="ts"></span></h1>
 
 <div class="row">
   <span class="lbl">Ciphertext:</span>
@@ -142,6 +142,23 @@ _HTML = """\
 <textarea id="output" readonly></textarea>
 
 <script>
+const _MONTHS = ['January','February','March','April','May','June',
+                 'July','August','September','October','November','December'];
+
+function updateTimestamp() {
+  const n = new Date();
+  const dd   = String(n.getDate()).padStart(2, '0');
+  const mon  = _MONTHS[n.getMonth()];
+  const yyyy = n.getFullYear();
+  const hh   = String(n.getHours()).padStart(2, '0');
+  const mm   = String(n.getMinutes()).padStart(2, '0');
+  const ss   = String(n.getSeconds()).padStart(2, '0');
+  document.getElementById('ts').textContent =
+    `${dd} ${mon} ${yyyy}  –  ${hh}:${mm}:${ss}`;
+}
+updateTimestamp();
+setInterval(updateTimestamp, 1000);
+
 async function runTests() {
   const btn = document.getElementById('run-btn');
   btn.disabled = true;
