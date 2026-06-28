@@ -65,8 +65,8 @@ def format_listing(ct, mc_result, ic_result,
                            _fmt_exp_float(trig_cut_c.hits_expected))
     if lr_entries:
         body[12] = f'LOCAL ROUGHNESS  OFFSETS 1 TO {max_offset}'
-        body[13] = ('OFF  OBS  EXP  SIGMAGE    '
-                    'OFF  OBS  EXP  SIGMAGE    '
+        body[13] = ('OFF  OBS  EXP  SIGMAGE | '
+                    'OFF  OBS  EXP  SIGMAGE | '
                     'OFF  OBS  EXP  SIGMAGE')
         for i in range(11):
             parts = []
@@ -74,10 +74,10 @@ def format_listing(ct, mc_result, ic_result,
                 off = i + 1 + col * 11
                 e = entry_by_offset.get(off)
                 if e:
-                    parts.append(f'{off:>2}  {e.observed:>3}  {e.expected:>3}  {e.sigmage:>4}')
+                    parts.append(f'{off:>3}{e.observed:>5}{e.expected:>5}{e.sigmage:9.1f}')
                 else:
-                    parts.append(' ' * 17)
-            body[14 + i] = '    '.join(parts)
+                    parts.append(' ' * 22)
+            body[14 + i] = ' | '.join(parts)
     body[25] = 'WIDTH TESTS  2 TO 51  INCLUDING NO. OF COMPARISONS FOR EACH W'
 
     # Left-margin table: "MONO COUNT" header, then 26 body lines
