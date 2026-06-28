@@ -50,8 +50,8 @@ _HTML = """\
   }
   h1 {
     text-align: center;
-    letter-spacing: 2px;
-    font-size: 1.2em;
+    letter-spacing: 6px;
+    font-size: 1.4em;
     margin-bottom: 24px;
   }
   .row {
@@ -100,7 +100,7 @@ _HTML = """\
 </style>
 </head>
 <body>
-<h1>STETHOSCOPE PROGRAM &nbsp;&nbsp; (Moshe Rubin) &nbsp;&nbsp; Timestamp &nbsp; <span id="ts"></span></h1>
+<h1>STETHOSCOPE PROGRAM</h1>
 
 <div class="row">
   <span class="lbl">Ciphertext:</span>
@@ -145,7 +145,7 @@ _HTML = """\
 const _MONTHS = ['January','February','March','April','May','June',
                  'July','August','September','October','November','December'];
 
-function updateTimestamp() {
+function runHeader() {
   const n = new Date();
   const dd   = String(n.getDate()).padStart(2, '0');
   const mon  = _MONTHS[n.getMonth()];
@@ -153,11 +153,8 @@ function updateTimestamp() {
   const hh   = String(n.getHours()).padStart(2, '0');
   const mm   = String(n.getMinutes()).padStart(2, '0');
   const ss   = String(n.getSeconds()).padStart(2, '0');
-  document.getElementById('ts').textContent =
-    `${dd} ${mon} ${yyyy}  –  ${hh}:${mm}:${ss}`;
+  return `STETHOSCOPE PROGRAM (Moshe Rubin)  Timestamp  ${dd} ${mon} ${yyyy}  -  ${hh}:${mm}:${ss}`;
 }
-updateTimestamp();
-setInterval(updateTimestamp, 1000);
 
 async function runTests() {
   const btn = document.getElementById('run-btn');
@@ -176,7 +173,9 @@ async function runTests() {
       })
     });
     const data = await resp.json();
-    out.value = data.error ? ('ERROR: ' + data.error) : data.output;
+    out.value = data.error
+      ? ('ERROR: ' + data.error)
+      : (runHeader() + '\n\n' + data.output);
   } catch (e) {
     out.value = 'Network error: ' + e.message;
   }
