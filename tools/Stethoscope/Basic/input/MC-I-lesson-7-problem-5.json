@@ -4,7 +4,7 @@
   "ciphertext": {
     "raw": "MRA DMT GCI YIY MFG NNL SRK QFB DMD WII DSZ GNM IJA GOO LGI DEV LTD GCI IYD LCI MMT JIU PNM VZP LGI DMY ITI POV GIP TGO PLM MCH JPB MRC DGK FWJ IHC EEF MDO DSZ TEN DGK FWI NNM LEV EZF TAS DIP HMT TDL GTR QMD MZU ROD NPC JNJ GCI IQM UZK LIY NJN CWQ MZF VOD NWG PRG NLC URP MIA DGI VRG NRF URV PIF DUJ TDL POJ VRT DAZ MRI IFX DGG DHV VZP IQM EMF JPC SMK JLM MND PQW YZB OZN IJY IPJ DMD YJP NIP EMF JPC SMK JLF ENG NPW FNV FJJ IWI GTT MOT EOW CRV WLF ELE TSZ TNM VRS MTR TEQ VRV QJQ MRV NOV GIP RMT KQX GCJ ELC MZH PRT LNM LCR IYR CZY GPW XPA",
     "charset": "[A-Z]",
-    "notes": "NOTE: Due to a probable NSA coding bug (the ciphertext is input as groups of 3?), (a) The two digraphic cuts were swapped; (b) The trigraphic cuts were rotated: cut_B -> cut_A -> cut_C -> cut_B.  5. The cryptogram below is suspected to begin with the stereotype 'REFERRING TO YOUR MESSAGE' OR 'REFERENCE YOUR MESSAGE'. Solve the text and recover all keys."
+    "notes": "NOTE: Due to a probable NSA coding bug (the ciphertext is input as groups of 3?), (a) The two digraphic cuts were swapped; (b) The trigraphic cuts were rotated: cut_B -> cut_A -> cut_C -> cut_B.  5. The cryptogram below is suspected to begin with the stereotype 'REFERRING TO YOUR MESSAGE' OR 'REFERENCE YOUR MESSAGE'. Solve the text and recover all keys.  BUG: The positions in the repeated text list were all one too many (e.g., 104, rather than the correct 103)."
   },
   "expected_results": {
     "ditscount": 0,
@@ -294,6 +294,13 @@
         "expected": 18,
         "sigmage": 1.0
       }
+    ],
+    "list_of_repeats": [
+      {"length": 5, "position": 103, "offset": 21, "text": "DGKFW"},
+      {"length": 11, "position":  256, "offset": 39, "text": "EMFJPCSMKJL"},
+      {"length": 4, "position":   52, "offset": 117, "text": "GCII"},
+      {"length": 4, "position":   43, "offset": 30, "text": "LGID"},
+      {"length": 5, "position": 83, "offset":  282, "text": "OVGIP"}
     ]
   }
 }

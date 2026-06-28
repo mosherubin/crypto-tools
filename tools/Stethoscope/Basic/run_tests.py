@@ -12,6 +12,7 @@ import tests.trigraphic_ic as trigraphic_ic
 import tests.local_roughness as local_roughness
 import tests.width_tests as width_tests
 import tests.polygraphic_ic as polygraphic_ic
+import tests.list_of_repeats as list_of_repeats
 
 
 def run_file(path: str):
@@ -59,6 +60,14 @@ def run_file(path: str):
         _report('polygraphic_ic', polygraphic_ic.run(ct))
     except Exception as e:
         print(f"  [polygraphic_ic] RUNTIME ERROR: {e}")
+
+    try:
+        lor_result = list_of_repeats.run(ct)
+        _report('list_of_repeats', lor_result)
+        print(list_of_repeats.format_output(lor_result))
+        print()
+    except Exception as e:
+        print(f"  [list_of_repeats] RUNTIME ERROR: {e}")
 
     for label, fn in [
         ('compute_digraphic_ic_overall',  digraphic_ic.run_overall),
