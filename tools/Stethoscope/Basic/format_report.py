@@ -68,14 +68,14 @@ def format_listing(ct, mc_result, ic_result,
     # Left-margin table: "MONO COUNT" header, then 26 body lines
     out.append('MONO')
     out.append('COUNT')
-    out.append(f'{"":6}    {total_dits_line}')
+    out.append(f'{"":24}{total_dits_line}')
     for i, content in enumerate(body):
         if i < len(alphabet):
             ch = alphabet[i]
-            left = f'{ch}  {counts.get(ch, 0):>3}'
+            left = f'{ch} {counts.get(ch, 0):>5}'
         else:
-            left = ' ' * 6
-        out.append(f'{left}    {content}')
+            left = ' ' * 7
+        out.append(f'{left}   {content}')
 
     # Width tests (2 columns: w=2-26 left, w=27-51 right)
     if wt_result and wt_result.entries:
@@ -83,10 +83,10 @@ def format_listing(ct, mc_result, ic_result,
         left_entries  = wt_result.entries[:25]
         right_entries = wt_result.entries[25:]
         has_right = len(right_entries) > 0
-        out.append(f'{"":6}    {wt_hdr}' + (f'    {wt_hdr}' if has_right else ''))
+        out.append(f'{"":7}   {wt_hdr}' + (f'    {wt_hdr}' if has_right else ''))
         for idx, l_e in enumerate(left_entries):
             r_e = right_entries[idx] if idx < len(right_entries) else None
-            row = f'{"":6}    {_wt_row(l_e)}'
+            row = f'{"":7}   {_wt_row(l_e)}'
             if r_e is not None:
                 row += f'    {_wt_row(r_e)}'
             out.append(row)
