@@ -118,3 +118,56 @@ def load(path: str) -> CiphertextData:
         ditscount=ditscount,
         expected_results=expected_results,
     )
+
+
+def create_from_text(raw: str, charset_pattern: str = '[A-Z]',
+                     casesensitive: bool = False,
+                     description: str = '',
+                     ditschar: str = '-',
+                     ignorechars_pattern: str = r'\s') -> CiphertextData:
+    """Create CiphertextData directly from a raw string (no JSON file)."""
+    re_flags = 0 if casesensitive else re.IGNORECASE
+    charset_re = re.compile(charset_pattern, re_flags)
+    ignore_re  = re.compile(ignorechars_pattern, re_flags)
+
+    if ignore_re.fullmatch(ditschar):
+        raise ValueError(
+            f"ditschar {ditschar!r} is matched by ignorechars '{ignorechars_pattern}'"
+        )
+
+    alphabet = _expand_alphabet(charset_re, casesensitive)
+    if not alphabet:
+        raise ValueError(f"charset regex '{charset_pattern}' matched no printable ASCII characters")
+
+    letters = []
+    ditscount = 0
+    errors = []
+
+    for offset, ch in enumerate(raw):
+        folded = ch if casesensitive else ch.upper()
+        if charset_re.fullmatch(folded):
+            letters.append(folded)
+        elif folded == ditschar:
+            ditscount += 1
+        elif ignore_re.fullmatch(ch):
+            pass
+        else:
+            errors.append(f"Invalid character {ch!r} at position {offset}")
+
+    if errors:
+        raise ValueError("Ciphertext contains invalid characters:\n" +
+                         "\n".join(f"  {e}" for e in errors[:20]) +
+                         (f"\n  ... and {len(errors)-20} more" if len(errors) > 20 else ""))
+
+    return CiphertextData(
+        test_case_id='',
+        description=description,
+        raw=raw,
+        charset=charset_pattern,
+        alphabet=alphabet,
+        casesensitive=casesensitive,
+        ditschar=ditschar,
+        letters=''.join(letters),
+        ditscount=ditscount,
+        expected_results={},
+    )
