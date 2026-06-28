@@ -98,12 +98,12 @@ def format_listing(ct, mc_result, ic_result,
         left_entries  = wt_result.entries[:25]
         right_entries = wt_result.entries[25:]
         has_right = len(right_entries) > 0
-        out.append(f'{"":7}   {wt_hdr}' + (f'    {wt_hdr}' if has_right else ''))
+        out.append(f'{"":7}   {wt_hdr}' + (f' | {wt_hdr}' if has_right else ''))
         for idx, l_e in enumerate(left_entries):
             r_e = right_entries[idx] if idx < len(right_entries) else None
             row = f'{"":7}   {_wt_row(l_e)}'
             if r_e is not None:
-                row += f'    {_wt_row(r_e)}'
+                row += f' | {_wt_row(r_e)}'
             out.append(row)
 
     # Polygraphic IC
