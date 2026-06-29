@@ -114,16 +114,16 @@ def format_listing(ct, mc_result, ic_result,
                    f'{"EXPECTED":>8}  {"IC":>10}  {"SIGMAGE":>7}')
         for e in poly_result.entries:
             out.append(f'{e.length:>6}  {e.total:>5}  {e.observed:>8}  '
-                       f'{e.expected:>8}  {e.ic:>10}  {e.sigmage:>7}')
+                       f'{e.expected:>8.2f}  {e.ic:>10}  {e.sigmage:>7}')
 
     # List of repeats
     if repeats_result:
         out.append('')
         out.append('LIST OF HITS OF LENGTH 4 OR LONGER')
-        out.append(f'{"LENGTH":>6}  {"POSITION":>8}  {"OFFSET":>6}  REPEATED TEXT')
+        out.append(f'{"LENGTH":>6}  {"POSITION":>8}  {"OFFSET":>6}    REPEATED TEXT')
         for r in repeats_result.repeats:
-            out.append(f'{r.length:>6}  {r.position:>8}  {r.offset:>6}  '
-                       + '  '.join(r.text.upper()))
+            out.append(f'{r.length:>6}  {r.position:>8}  {r.offset:>6}    '
+                       + '  '.join(r.text.lower()))
         remaining = repeats_result.total_found - len(repeats_result.repeats)
         if remaining > 0:
             out.append(f'MORE ({remaining} remaining)')

@@ -1,8 +1,5 @@
 """
-STETHOSCOPE test: Polygraphic Hits and IC (m = p, p+1, ...).
-
-p is the smallest m >= 3 where mN*(mN-1)/c^m <= 40.
-The table continues while mN*(mN-1)/c^m >= 1 (EXPECTED >= 0.5).
+STETHOSCOPE test: Polygraphic Hits and IC for lengths 3, 4, and 5.
 """
 
 import math
@@ -35,34 +32,19 @@ def run(ct: CiphertextData) -> PolygraphicResult:
     N = len(text)
     c = len(ct.alphabet)
 
-    # Find p: smallest m >= 3 where mN*(mN-1)/c^m <= 40
-    p = None
-    for m in range(3, N):
-        mN = N - m + 1
-        cm = c ** m
-        if mN * (mN - 1) / cm <= 40:
-            p = m
-            break
-    if p is None:
-        return PolygraphicResult(entries=[])
-
     entries = []
-    m = p
-    while True:
+    for m in range(3, 6):
         mN = N - m + 1
         if mN < 2:
             break
         cm = c ** m
-        ratio = mN * (mN - 1) / cm
-        if ratio < 1:
-            break
 
         gram_counts = defaultdict(int)
         for i in range(mN):
             gram_counts[text[i:i + m]] += 1
 
         observed = sum(v * (v - 1) // 2 for v in gram_counts.values())
-        expected = ratio / 2
+        expected = mN * (mN - 1) / (2 * cm)
         ic = cm / (mN * (mN - 1)) * 2 * observed if observed > 0 else 0.0
         sigmage = mN * (ic - 1) / math.sqrt(2 * (cm - 1))
 
@@ -74,7 +56,6 @@ def run(ct: CiphertextData) -> PolygraphicResult:
             ic=round(ic, 2),
             sigmage=round(sigmage, 1),
         ))
-        m += 1
 
     expected_list = ct.expected_results.get('polygraphic_ic')
     if not expected_list:
