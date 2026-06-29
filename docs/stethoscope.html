@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STETHOSCOPE PROGRAM</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    background: #fff;
+  }
+  h1 {
+    text-align: center;
+    letter-spacing: 6px;
+    font-size: 1.4em;
+    margin-bottom: 24px;
+  }
+  .row {
+    display: flex;
+    align-items: flex-start;
+    margin: 8px 0;
+    gap: 12px;
+  }
+  .lbl {
+    min-width: 220px;
+    padding-top: 5px;
+    font-weight: bold;
+    text-align: right;
+  }
+  .ctrl { flex: 1; }
+  textarea#ciphertext {
+    width: 100%;
+    height: 110px;
+    resize: both;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+  input#description { width: 100%; }
+  #run-btn {
+    margin: 14px 0 4px 232px;
+    padding: 7px 30px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  #run-btn:disabled { cursor: wait; opacity: 0.6; }
+  #output {
+    display: block;
+    width: 100%;
+    height: 680px;
+    font-family: monospace;
+    font-size: 0.82em;
+    line-height: 1.35;
+    background: #f6f6f6;
+    border: 1px solid #ccc;
+    padding: 8px;
+    resize: vertical;
+    white-space: pre;
+    overflow: auto;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+<h1>STETHOSCOPE PROGRAM</h1>
+
+<div class="row">
+  <span class="lbl">Ciphertext:</span>
+  <div class="ctrl">
+    <textarea id="ciphertext" placeholder="Paste ciphertext here..."></textarea>
+  </div>
+</div>
+
+<div class="row">
+  <span class="lbl">Description (optional):</span>
+  <div class="ctrl">
+    <input type="text" id="description" />
+  </div>
+</div>
+
+<div class="row">
+  <span class="lbl">Character set:</span>
+  <div class="ctrl">
+    <select id="charset">
+      <option value="[A-Za-z]">[A-Za-z] -- 26 characters (default)</option>
+      <option value="[0-9]">[0-9] -- 10 characters</option>
+      <option value="[A-Za-z0-9]">[A-Za-z0-9] -- 36 characters</option>
+    </select>
+  </div>
+</div>
+
+<div class="row">
+  <span class="lbl"></span>
+  <div class="ctrl">
+    <label>
+      <input type="checkbox" id="display_ct">
+      Display ciphertext in output
+    </label>
+  </div>
+</div>
+
+<button id="run-btn" onclick="runTests()">Run</button>
+
+<textarea id="output" readonly></textarea>
+
+<script>
+'use strict';
+
+// ── utility ──────────────────────────────────────────────────────────────────
+
+function pyRound(x, dp) {
+    var factor = Math.pow(10, dp);
+    return Math.round((x + Number.EPSILON) * factor) / factor;
+}
+
+function pyFloatStr(val) {
+    var s = String(val);
+    return s.indexOf('.') >= 0 ? s : s + '.0';
+}
+
+// ── ciphertext ───────────────────────────────────────────────────────────────
+// Ported from ciphertext.py
+
+function expandAlphabet(charsetRe, caseSensitive) {
+    var seen = {};
+    var result = [];
+    for (var code = 32; code <= 126; code++) {
+        var ch = String.fromCharCode(code);
+        var folded = caseSensitive ? ch : ch.toUpperCase();
+        if (charsetRe.test(folded) && !seen[folded]) {
+            seen[folded] = true;
+            result.push(folded);
+        }
+    }
+    return result.join('');
+}
+
+function createFromText(raw, charsetPattern, caseSensitive, description) {
+    var flags = caseSensitive ? '' : 'i';
+    var charsetRe = new RegExp('^(?:' + charsetPattern + ')$', flags);
+    var ignoreRe  = new RegExp('^(?:\\s)$');
+    var ditschar  = '-';
+
+    var alphabet = expandAlphabet(charsetRe, caseSensitive);
+    if (!alphabet) throw new Error("charset '" + charsetPattern + "' matched no characters");
+
+    var letters = [];
+    var ditscount = 0;
+    var errors = [];
+
+    for (var i = 0; i < raw.length; i++) {
+        var ch = raw[i];
+        var folded = caseSensitive ? ch : ch.toUpperCase();
+        if (charsetRe.test(folded)) {
+            letters.push(folded);
+        } else if (folded === ditschar) {
+            ditscount++;
+        } else if (ignoreRe.test(ch)) {
+            // skip
+        } else {
+            if (errors.length < 20)
+                errors.push("Invalid character '" + ch + "' at position " + i);
+        }
+    }
+
+    if (errors.length > 0)
+        throw new Error('Ciphertext contains invalid characters:\n' + errors.join('\n'));
+
+    return {
+        description: description || '',
+        raw: raw,
+        alphabet: alphabet,
+        caseSensitive: caseSensitive,
+        ditschar: ditschar,
+        letters: letters.join(''),
+        ditscount: ditscount,
+    };
+}
+
+// ── mono_count ───────────────────────────────────────────────────────────────
+// Ported from tests/mono_count.py
+
+function runMonoCount(ct) {
+    var counts = {};
+    for (var i = 0; i < ct.alphabet.length; i++) counts[ct.alphabet[i]] = 0;
+    for (var j = 0; j < ct.letters.length; j++) counts[ct.letters[j]]++;
+    return { counts: counts, totalLetters: ct.letters.length };
+}
+
+// ── compute_ic_mono ──────────────────────────────────────────────────────────
+// Ported from tests/compute_ic_mono.py
+
+function runIcMono(ct, counts) {
+    var N = ct.letters.length;
+    var c = ct.alphabet.length;
+    var S = 0;
+    var vals = Object.values(counts);
+    for (var i = 0; i < vals.length; i++) S += vals[i] * (vals[i] - 1);
+    var ic       = pyRound(S * c / (N * (N - 1)), 4);
+    var sd       = Math.sqrt(2 * (c - 1) / (N * (N - 1)));
+    var sigmage  = pyRound((ic - 1.0) / sd, 1);
+    var hitsObserved = Math.round(S / 2);
+    var hitsExpected = Math.floor(N * (N - 1) / (2 * c));
+    return { ic: ic, sigmage: sigmage, total: N, hitsObserved: hitsObserved, hitsExpected: hitsExpected };
+}
+
+// ── digraphic_ic ─────────────────────────────────────────────────────────────
+// Ported from tests/digraphic_ic.py
+
+function _computeDigraphic(ct, bigrams, sigmageType) {
+    var C = ct.alphabet.length;
+    var M = bigrams.length;
+    var countMap = {};
+    for (var i = 0; i < M; i++) {
+        var key = bigrams[i][0] + bigrams[i][1];
+        countMap[key] = (countMap[key] || 0) + 1;
+    }
+    var vals = Object.values(countMap);
+    var sumF2 = 0;
+    for (var j = 0; j < vals.length; j++) sumF2 += vals[j] * vals[j];
+    var ic = pyRound(Math.pow(C, 2) / (M * (M - 1)) * (sumF2 - M), 3);
+    var sigmage;
+    if (sigmageType === 'overall') {
+        sigmage = pyRound((M * (ic - 1)) / Math.sqrt(2 * C * (C + 2)), 1);
+    } else {
+        sigmage = pyRound((M * (ic - 1)) / Math.sqrt(2 * (Math.pow(C, 2) - 1)), 1);
+    }
+    var hitsObserved = 0;
+    for (var k = 0; k < vals.length; k++) hitsObserved += vals[k] * (vals[k] - 1);
+    hitsObserved = Math.floor(hitsObserved / 2);
+    var hitsExpected = Math.round(M * (M - 1) / (2 * Math.pow(C, 2)));
+    return { ic: ic, sigmage: sigmage, total: M, hitsObserved: hitsObserved, hitsExpected: hitsExpected };
+}
+
+function runDigraphicOverall(ct) {
+    var text = ct.letters, bigrams = [];
+    for (var i = 0; i < text.length - 1; i++) bigrams.push([text[i], text[i+1]]);
+    return _computeDigraphic(ct, bigrams, 'overall');
+}
+
+function runDigraphicCutA(ct) {
+    var text = ct.letters, bigrams = [];
+    for (var i = 0; i < text.length - 1; i += 2) bigrams.push([text[i], text[i+1]]);
+    return _computeDigraphic(ct, bigrams, 'onoff');
+}
+
+function runDigraphicCutB(ct) {
+    var text = ct.letters, bigrams = [];
+    for (var i = 1; i < text.length - 1; i += 2) bigrams.push([text[i], text[i+1]]);
+    return _computeDigraphic(ct, bigrams, 'onoff');
+}
+
+// ── trigraphic_ic ────────────────────────────────────────────────────────────
+// Ported from tests/trigraphic_ic.py
+
+function _computeTrigraphic(ct, trigrams) {
+    var C = ct.alphabet.length;
+    var M = trigrams.length;
+    var countMap = {};
+    for (var i = 0; i < M; i++) {
+        var key = trigrams[i][0] + trigrams[i][1] + trigrams[i][2];
+        countMap[key] = (countMap[key] || 0) + 1;
+    }
+    var vals = Object.values(countMap);
+    var sumF2 = 0;
+    for (var j = 0; j < vals.length; j++) sumF2 += vals[j] * vals[j];
+    var C3 = Math.pow(C, 3);
+    var icPrecise       = C3 / (M * (M - 1)) * (sumF2 - M);
+    var sigmagePrecise  = (M * (icPrecise - 1)) / Math.sqrt(2 * (C3 - 1));
+    var hitsExpPrec     = (M * (M - 1)) / (2 * C3);
+    var ic = pyRound(icPrecise, 2);
+    var sigmage = pyRound(sigmagePrecise, 1);
+    var hitsObserved = 0;
+    for (var k = 0; k < vals.length; k++) hitsObserved += vals[k] * (vals[k] - 1);
+    hitsObserved = Math.floor(hitsObserved / 2);
+    var hitsExpected = pyRound(hitsExpPrec, 2);
+    return { ic: ic, sigmage: sigmage, total: M, hitsObserved: hitsObserved, hitsExpected: hitsExpected };
+}
+
+function runTrigraphicOverall(ct) {
+    var text = ct.letters, tgs = [];
+    for (var i = 0; i < text.length - 2; i++) tgs.push([text[i], text[i+1], text[i+2]]);
+    return _computeTrigraphic(ct, tgs);
+}
+
+function runTrigraphicCutA(ct) {
+    var text = ct.letters, tgs = [];
+    for (var i = 0; i < text.length - 2; i += 3) tgs.push([text[i], text[i+1], text[i+2]]);
+    return _computeTrigraphic(ct, tgs);
+}
+
+function runTrigraphicCutB(ct) {
+    var text = ct.letters, tgs = [];
+    for (var i = 1; i < text.length - 2; i += 3) tgs.push([text[i], text[i+1], text[i+2]]);
+    return _computeTrigraphic(ct, tgs);
+}
+
+function runTrigraphicCutC(ct) {
+    var text = ct.letters, tgs = [];
+    for (var i = 2; i < text.length - 2; i += 3) tgs.push([text[i], text[i+1], text[i+2]]);
+    return _computeTrigraphic(ct, tgs);
+}
+
+// ── local_roughness ──────────────────────────────────────────────────────────
+// Ported from tests/local_roughness.py
+
+function runLocalRoughness(ct, counts) {
+    var text = ct.letters;
+    var N = text.length;
+    var s = ct.alphabet.length;
+    var S = 0;
+    var vals = Object.values(counts);
+    for (var i = 0; i < vals.length; i++) S += vals[i] * (vals[i] - 1);
+    var icPrecise = S * s / (N * (N - 1));
+    var maxOffset = Math.min(33, N - 1);
+    var entries = [];
+    for (var offset = 1; offset <= maxOffset; offset++) {
+        var P = N - offset;
+        var observed = 0;
+        for (var j = 0; j < P; j++) {
+            if (text[j] === text[j + offset]) observed++;
+        }
+        var expectedPrecise = icPrecise * P / s;
+        var sigmage = (s * (observed - expectedPrecise)) / Math.sqrt(P * icPrecise * (s - icPrecise));
+        entries.push({
+            offset: offset,
+            observed: observed,
+            expected: Math.round(expectedPrecise),
+            sigmage: pyRound(sigmage, 1),
+        });
+    }
+    return { entries: entries };
+}
+
+// ── width_tests ──────────────────────────────────────────────────────────────
+// Ported from tests/width_tests.py
+
+function runWidthTests(ct, counts) {
+    var text = ct.letters;
+    var N = text.length;
+    var c = ct.alphabet.length;
+    var S = 0;
+    var vals = Object.values(counts);
+    for (var i = 0; i < vals.length; i++) S += vals[i] * (vals[i] - 1);
+    var deltaMono = S * c / (N * (N - 1));
+    var entries = [];
+    for (var w = 2; w <= 51; w++) {
+        var totalHits = 0, totalComps = 0;
+        for (var k = 0; k < w; k++) {
+            var colCounts = {};
+            var Mk = 0;
+            for (var j = k; j < N; j += w) {
+                var ch = text[j];
+                colCounts[ch] = (colCounts[ch] || 0) + 1;
+                Mk++;
+            }
+            var colVals = Object.values(colCounts);
+            for (var m = 0; m < colVals.length; m++)
+                totalHits += Math.floor(colVals[m] * (colVals[m] - 1) / 2);
+            totalComps += Math.floor(Mk * (Mk - 1) / 2);
+        }
+        if (totalComps === 0) break;
+        var avgIcPrecise = c * totalHits / totalComps;
+        var sigmage = N * (avgIcPrecise - deltaMono) / Math.sqrt(2 * (c - 1) * w);
+        entries.push({
+            width: w,
+            hits: totalHits,
+            comparisons: totalComps,
+            averageIc: pyRound(avgIcPrecise, 3),
+            sigmage: pyRound(sigmage, 2),
+        });
+    }
+    return { entries: entries };
+}
+
+// ── polygraphic_ic ───────────────────────────────────────────────────────────
+// Ported from tests/polygraphic_ic.py
+
+function runPolygraphicIc(ct) {
+    var text = ct.letters;
+    var N = text.length;
+    var c = ct.alphabet.length;
+    var entries = [];
+    for (var m = 3; m <= 5; m++) {
+        var mN = N - m + 1;
+        if (mN < 2) break;
+        var cm = Math.pow(c, m);
+        var gramCounts = {};
+        for (var i = 0; i < mN; i++) {
+            var key = text.slice(i, i + m);
+            gramCounts[key] = (gramCounts[key] || 0) + 1;
+        }
+        var gVals = Object.values(gramCounts);
+        var observed = 0;
+        for (var j = 0; j < gVals.length; j++)
+            observed += Math.floor(gVals[j] * (gVals[j] - 1) / 2);
+        var expected = mN * (mN - 1) / (2 * cm);
+        var ic = observed > 0 ? cm / (mN * (mN - 1)) * 2 * observed : 0.0;
+        var sigmage = mN * (ic - 1) / Math.sqrt(2 * (cm - 1));
+        entries.push({
+            length: m,
+            total: mN,
+            observed: observed,
+            expected: pyRound(expected, 2),
+            ic: pyRound(ic, 2),
+            sigmage: pyRound(sigmage, 1),
+        });
+    }
+    return { entries: entries };
+}
+
+// ── list_of_repeats ──────────────────────────────────────────────────────────
+// Ported from tests/list_of_repeats.py
+
+var MAX_REPEATS = 50;
+var MIN_LENGTH  = 4;
+
+function _findRepeats(letters) {
+    var n = letters.length;
+    var repeats = [];
+    for (var offset = 2; offset < n - 2; offset++) {
+        var i = 0;
+        while (i <= n - offset - 1) {
+            if (letters[i] === letters[i + offset]) {
+                var length = 1;
+                while ((i + length < n - offset) && (letters[i + length] === letters[i + offset + length]))
+                    length++;
+                if (length >= MIN_LENGTH) {
+                    repeats.push({ length: length, position: i + 1, offset: offset, text: letters.slice(i, i + length) });
+                    i += length;
+                } else {
+                    i++;
+                }
+            } else {
+                i++;
+            }
+        }
+    }
+    return repeats;
+}
+
+function _sortedRepeats(repeats) {
+    repeats.sort(function(a, b) {
+        if (a.text < b.text) return -1;
+        if (a.text > b.text) return  1;
+        return a.position - b.position || a.offset - b.offset;
+    });
+    var result = [];
+    var i = 0;
+    while (i < repeats.length) {
+        var prefix = repeats[i].text.slice(0, 4);
+        var j = i;
+        while (j < repeats.length && repeats[j].text.slice(0, 4) === prefix) j++;
+        var block = repeats.slice(i, j);
+        block.sort(function(a, b) { return a.position - b.position || a.offset - b.offset; });
+        for (var k = 0; k < block.length; k++) result.push(block[k]);
+        i = j;
+    }
+    return result;
+}
+
+function runListOfRepeats(ct) {
+    var raw    = _findRepeats(ct.letters);
+    var sorted = _sortedRepeats(raw);
+    return { repeats: sorted.slice(0, MAX_REPEATS), totalFound: sorted.length };
+}
+
+// ── format_report ─────────────────────────────────────────────────────────────
+// Ported from format_report.py
+
+function _icRow(label, icStr, sigmage, N, obs, expStr) {
+    var pad = '';
+    for (var i = 0; i < Math.max(0, 8 - icStr.length); i++) pad += ' ';
+    var sig = pyFloatStr(sigmage);
+    while (sig.length < 7) sig = ' ' + sig;
+    return _padEnd(label, 13) + 'IC  ' + icStr + pad + 'SIGMAGE ' + sig + ' ' + _padStart(String(N), 4) + '    ' + _padStart(String(obs), 8) + '    ' + expStr;
+}
+
+function _fmtExpFloat(val, dp) {
+    if (dp === undefined) dp = 2;
+    var s = val.toFixed(dp);
+    var dot = s.indexOf('.');
+    return _padStart(s.slice(0, dot), 4) + s.slice(dot);
+}
+
+function _wtRow(e) {
+    return _padStart(String(e.width), 2) + '  ' + _padStart(String(e.hits), 5) + '  ' +
+           _padStart(String(e.comparisons), 6) + '  ' + _padStart(e.averageIc.toFixed(3), 6) +
+           '  ' + _padStart(e.sigmage.toFixed(2), 7);
+}
+
+function _padStart(s, n) { while (s.length < n) s = ' ' + s; return s; }
+function _padEnd(s, n)   { while (s.length < n) s = s + ' '; return s; }
+function _repeat(ch, n)  { var s = ''; for (var i = 0; i < n; i++) s += ch; return s; }
+
+function formatListing(ct, mc, icResult,
+        digOverall, digCutA, digCutB,
+        trigOverall, trigCutA, trigCutB, trigCutC,
+        lrResult, wtResult, polyResult, repeatsResult) {
+
+    var out      = [];
+    var alphabet = ct.alphabet;
+    var counts   = mc.counts;
+    var N        = ct.letters.length;
+
+    var lrEntries = lrResult ? lrResult.entries : [];
+    var maxOffset = lrEntries.length > 0 ? lrEntries[lrEntries.length - 1].offset : 0;
+    var entryByOffset = {};
+    for (var ei = 0; ei < lrEntries.length; ei++) entryByOffset[lrEntries[ei].offset] = lrEntries[ei];
+
+    var body = [];
+    for (var bi = 0; bi < 26; bi++) body.push('');
+
+    var totalDitsLine = 'TOTAL ' + N + '  DITS ' + ct.ditscount;
+    body[0] = _repeat(' ', 51) + 'HITS' + _repeat(' ', 8) + 'HITS';
+    body[1] = 'IC TESTS FOR SIGNIFICANCE' + _repeat(' ', 15) + 'TOTAL    OBSERVED    EXPECTED';
+
+    if (icResult)
+        body[2] = _icRow(' MONO', icResult.ic.toFixed(4), icResult.sigmage,
+                         icResult.total, icResult.hitsObserved, _padStart(String(icResult.hitsExpected), 4));
+    if (digOverall) {
+        body[3] = ' DIGRAPHIC TESTS';
+        body[4] = _icRow('  DIGRAPH', digOverall.ic.toFixed(3), digOverall.sigmage,
+                         digOverall.total, digOverall.hitsObserved, _padStart(String(digOverall.hitsExpected), 4));
+    }
+    if (digCutA)
+        body[5] = _icRow('  CUT A', digCutA.ic.toFixed(3), digCutA.sigmage,
+                         digCutA.total, digCutA.hitsObserved, _padStart(String(digCutA.hitsExpected), 4));
+    if (digCutB)
+        body[6] = _icRow('  CUT B', digCutB.ic.toFixed(3), digCutB.sigmage,
+                         digCutB.total, digCutB.hitsObserved, _padStart(String(digCutB.hitsExpected), 4));
+    if (trigOverall) {
+        body[7] = ' TRIGRAPHIC TESTS';
+        body[8] = _icRow('  TRIGRAPH', trigOverall.ic.toFixed(2), trigOverall.sigmage,
+                         trigOverall.total, trigOverall.hitsObserved, _fmtExpFloat(trigOverall.hitsExpected));
+    }
+    if (trigCutA)
+        body[9]  = _icRow('  CUT A', trigCutA.ic.toFixed(2), trigCutA.sigmage,
+                          trigCutA.total, trigCutA.hitsObserved, _fmtExpFloat(trigCutA.hitsExpected));
+    if (trigCutB)
+        body[10] = _icRow('  CUT B', trigCutB.ic.toFixed(2), trigCutB.sigmage,
+                          trigCutB.total, trigCutB.hitsObserved, _fmtExpFloat(trigCutB.hitsExpected));
+    if (trigCutC)
+        body[11] = _icRow('  CUT C', trigCutC.ic.toFixed(2), trigCutC.sigmage,
+                          trigCutC.total, trigCutC.hitsObserved, _fmtExpFloat(trigCutC.hitsExpected));
+
+    if (lrEntries.length > 0) {
+        body[12] = 'LOCAL ROUGHNESS  OFFSETS 1 TO ' + maxOffset;
+        body[13] = 'OFF  OBS  EXP  SIGMAGE | OFF  OBS  EXP  SIGMAGE | OFF  OBS  EXP  SIGMAGE';
+        for (var li = 0; li < 11; li++) {
+            var parts = [];
+            for (var col = 0; col < 3; col++) {
+                var off = li + 1 + col * 11;
+                var e   = entryByOffset[off];
+                if (e) {
+                    parts.push(_padStart(String(off), 3) + _padStart(String(e.observed), 5) +
+                               _padStart(String(e.expected), 5) + _padStart(pyFloatStr(e.sigmage), 9));
+                } else {
+                    parts.push(_repeat(' ', 22));
+                }
+            }
+            body[14 + li] = parts.join(' | ');
+        }
+    }
+    body[25] = 'WIDTH TESTS  2 TO 51  INCLUDING NO. OF COMPARISONS FOR EACH W';
+
+    out.push('MONO');
+    out.push('COUNT');
+    out.push(_repeat(' ', 24) + totalDitsLine);
+    for (var i = 0; i < 26; i++) {
+        var left;
+        if (i < alphabet.length) {
+            var ch = alphabet[i];
+            left = ch + ' ' + _padStart(String(counts[ch] || 0), 5);
+        } else {
+            left = _repeat(' ', 7);
+        }
+        out.push(left + '   ' + body[i]);
+    }
+
+    // Width tests
+    if (wtResult && wtResult.entries.length > 0) {
+        var wtHdr = _padStart('W', 2) + '  ' + _padStart('HITS', 5) + '  ' + _padStart('COMPS', 6) +
+                    '  ' + _padStart('AVG IC', 6) + '  ' + _padStart('SIGMAGE', 7);
+        var leftEnt  = wtResult.entries.slice(0, 25);
+        var rightEnt = wtResult.entries.slice(25);
+        var hasRight = rightEnt.length > 0;
+        out.push(_repeat(' ', 7) + '   ' + wtHdr + (hasRight ? ' | ' + wtHdr : ''));
+        for (var wi = 0; wi < leftEnt.length; wi++) {
+            var row = _repeat(' ', 7) + '   ' + _wtRow(leftEnt[wi]);
+            if (rightEnt[wi] !== undefined) row += ' | ' + _wtRow(rightEnt[wi]);
+            out.push(row);
+        }
+    }
+
+    // Polygraphic IC
+    if (polyResult && polyResult.entries.length > 0) {
+        out.push('');
+        out.push('POLYGRAPHIC HITS AND IC');
+        out.push(_padStart('LENGTH', 6) + '  ' + _padStart('TOTAL', 5) + '  ' +
+                 _padStart('OBSERVED', 8) + '  ' + _padStart('EXPECTED', 8) + '  ' +
+                 _padStart('IC', 10) + '  ' + _padStart('SIGMAGE', 7));
+        for (var pi = 0; pi < polyResult.entries.length; pi++) {
+            var pe = polyResult.entries[pi];
+            out.push(_padStart(String(pe.length), 6) + '  ' + _padStart(String(pe.total), 5) + '  ' +
+                     _padStart(String(pe.observed), 8) + '  ' + _padStart(pe.expected.toFixed(2), 8) + '  ' +
+                     _padStart(pyFloatStr(pe.ic), 10) + '  ' + _padStart(pyFloatStr(pe.sigmage), 7));
+        }
+    }
+
+    // List of repeats
+    if (repeatsResult) {
+        out.push('');
+        out.push('LIST OF HITS OF LENGTH 4 OR LONGER');
+        out.push(_padStart('LENGTH', 6) + '  ' + _padStart('POSITION', 8) + '  ' +
+                 _padStart('OFFSET', 6) + '    REPEATED TEXT');
+        for (var ri = 0; ri < repeatsResult.repeats.length; ri++) {
+            var r = repeatsResult.repeats[ri];
+            out.push(_padStart(String(r.length), 6) + '  ' + _padStart(String(r.position), 8) + '  ' +
+                     _padStart(String(r.offset), 6) + '    ' + r.text.toLowerCase().split('').join('  '));
+        }
+        var remaining = repeatsResult.totalFound - repeatsResult.repeats.length;
+        if (remaining > 0) out.push('MORE (' + remaining + ' remaining)');
+    }
+
+    return out.join('\n');
+}
+
+// ── main runner ───────────────────────────────────────────────────────────────
+
+var CHARSET_MAP = {
+    '[A-Za-z]':    { pattern: '[A-Z]',       caseSensitive: false },
+    '[0-9]':       { pattern: '[0-9]',        caseSensitive: true  },
+    '[A-Za-z0-9]': { pattern: '[A-Za-z0-9]', caseSensitive: false },
+};
+
+function runSuite(ct, displayCt) {
+    var parts = [];
+    if (displayCt) {
+        var text   = ct.letters;
+        var groups = [];
+        for (var gi = 0; gi < text.length; gi += 5) groups.push(text.slice(gi, gi + 5));
+        var rows = [];
+        for (var ri = 0; ri < groups.length; ri += 10) rows.push(groups.slice(ri, ri + 10).join(' '));
+        parts.push('CIPHERTEXT:');
+        for (var rj = 0; rj < rows.length; rj++) parts.push(rows[rj]);
+        parts.push('');
+    }
+    var mc          = runMonoCount(ct);
+    var icResult    = runIcMono(ct, mc.counts);
+    var lr          = runLocalRoughness(ct, mc.counts);
+    var wt          = runWidthTests(ct, mc.counts);
+    var poly        = runPolygraphicIc(ct);
+    var lor         = runListOfRepeats(ct);
+    var digOverall  = runDigraphicOverall(ct);
+    var digCutA     = runDigraphicCutA(ct);
+    var digCutB     = runDigraphicCutB(ct);
+    var trigOverall = runTrigraphicOverall(ct);
+    var trigCutA    = runTrigraphicCutA(ct);
+    var trigCutB    = runTrigraphicCutB(ct);
+    var trigCutC    = runTrigraphicCutC(ct);
+    parts.push(formatListing(ct, mc, icResult,
+        digOverall, digCutA, digCutB,
+        trigOverall, trigCutA, trigCutB, trigCutC,
+        lr, wt, poly, lor));
+    return parts.join('\n');
+}
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+
+var _MONTHS = ['January','February','March','April','May','June',
+               'July','August','September','October','November','December'];
+
+function runHeader() {
+    var n    = new Date();
+    var dd   = String(n.getDate()).padStart(2, '0');
+    var mon  = _MONTHS[n.getMonth()];
+    var yyyy = n.getFullYear();
+    var hh   = String(n.getHours()).padStart(2, '0');
+    var mm   = String(n.getMinutes()).padStart(2, '0');
+    var ss   = String(n.getSeconds()).padStart(2, '0');
+    return 'STETHOSCOPE PROGRAM (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+}
+
+function runTests() {
+    var btn = document.getElementById('run-btn');
+    btn.disabled = true;
+    var out = document.getElementById('output');
+    out.value = 'Running...';
+    try {
+        var rawText    = document.getElementById('ciphertext').value;
+        var desc       = document.getElementById('description').value.trim();
+        var charsetKey = document.getElementById('charset').value;
+        var displayCt  = document.getElementById('display_ct').checked;
+
+        var charsetCfg = CHARSET_MAP[charsetKey] || CHARSET_MAP['[A-Za-z]'];
+        var ct = createFromText(rawText, charsetCfg.pattern, charsetCfg.caseSensitive, desc);
+
+        if (ct.letters.length < 4) {
+            out.value = 'ERROR: Too few cipher characters (' + ct.letters.length + '); need at least 4.';
+            btn.disabled = false;
+            return;
+        }
+
+        var output   = runSuite(ct, displayCt);
+        var descLine = desc ? 'Description: ' + desc : '';
+        var text;
+        if (displayCt && descLine) {
+            var cut       = output.indexOf('\n\n');
+            var ctBlock   = cut >= 0 ? output.slice(0, cut)    : output;
+            var repBlock  = cut >= 0 ? output.slice(cut + 2)   : '';
+            text = runHeader() + '\n\n' + ctBlock + '\n\n' + descLine + '\n\n' + repBlock;
+        } else {
+            text = runHeader() + '\n\n';
+            if (descLine) text += descLine + '\n\n';
+            text += output;
+        }
+        out.value = text;
+    } catch (e) {
+        out.value = 'ERROR: ' + e.message;
+    }
+    btn.disabled = false;
+}
+</script>
+<script data-goatcounter="https://mosherubin.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
