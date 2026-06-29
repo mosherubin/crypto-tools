@@ -215,6 +215,7 @@ def run():
     description = payload.get('description', '')
     charset_key = payload.get('charset', '[A-Za-z]')
     display_ct  = payload.get('display_ciphertext', False)
+    max_repeats = int(payload.get('max_repeats', 50))
 
     charset_pattern, casesensitive = CHARSET_MAP.get(charset_key, ('[A-Z]', False))
 
@@ -232,14 +233,14 @@ def run():
         return jsonify({'error': f'Too few cipher characters ({len(ct.letters)}); need at least 4.'})
 
     try:
-        output = _run_suite(ct, display_ct)
+        output = _run_suite(ct, display_ct, max_repeats)
     except Exception:
         return jsonify({'error': traceback.format_exc()})
 
     return jsonify({'output': output})
 
 
-def _run_suite(ct, display_ct: bool) -> str:
+def _run_suite(ct, display_ct: bool, max_repeats: int = 50) -> str:
     parts = []
 
     if display_ct:
@@ -255,7 +256,7 @@ def _run_suite(ct, display_ct: bool) -> str:
     lr_result    = local_roughness.run(ct, mc_result.counts)
     wt_result    = width_tests.run(ct, mc_result.counts)
     poly_result  = polygraphic_ic.run(ct)
-    lor_result   = list_of_repeats.run(ct)
+    lor_result   = list_of_repeats.run(ct, max_repeats)
     dig_overall  = digraphic_ic.run_overall(ct)
     dig_cut_a    = digraphic_ic.run_cut_a(ct)
     dig_cut_b    = digraphic_ic.run_cut_b(ct)

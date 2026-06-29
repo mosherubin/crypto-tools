@@ -13,7 +13,6 @@ from typing import Optional
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from ciphertext import CiphertextData
 
-MAX_REPEATS = 50
 MIN_LENGTH = 4
 
 
@@ -79,11 +78,11 @@ def _sorted_repeats(repeats: list) -> list:
     return result
 
 
-def run(ct: CiphertextData) -> RepeatsResult:
+def run(ct: CiphertextData, max_repeats: int = 50) -> RepeatsResult:
     raw_repeats = _find_repeats(ct.letters)
     sorted_rep = _sorted_repeats(raw_repeats)
     total = len(sorted_rep)
-    displayed = sorted_rep[:MAX_REPEATS]
+    displayed = sorted_rep if max_repeats == 0 else sorted_rep[:max_repeats]
 
     expected_list = ct.expected_results.get('list_of_repeats')
     if not expected_list:

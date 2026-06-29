@@ -102,6 +102,13 @@
   </div>
 </div>
 
+<div class="row">
+  <span class="lbl">Max repeats (0 = all):</span>
+  <div class="ctrl">
+    <input type="number" id="max_repeats" value="50" min="0" style="width:6em;">
+  </div>
+</div>
+
 <button id="run-btn" onclick="runTests()">Run</button>
 
 <textarea id="output" readonly></textarea>
@@ -462,10 +469,11 @@ function _sortedRepeats(repeats) {
     return result;
 }
 
-function runListOfRepeats(ct) {
+function runListOfRepeats(ct, maxRepeats) {
     var raw    = _findRepeats(ct.letters);
     var sorted = _sortedRepeats(raw);
-    return { repeats: sorted.slice(0, MAX_REPEATS), totalFound: sorted.length };
+    var displayed = (maxRepeats === 0) ? sorted : sorted.slice(0, maxRepeats);
+    return { repeats: displayed, totalFound: sorted.length };
 }
 
 // ── format_report ─────────────────────────────────────────────────────────────
@@ -637,7 +645,7 @@ var CHARSET_MAP = {
     '[A-Za-z0-9]': { pattern: '[A-Za-z0-9]', caseSensitive: false },
 };
 
-function runSuite(ct, displayCt) {
+function runSuite(ct, displayCt, maxRepeats) {
     var parts = [];
     if (displayCt) {
         var text   = ct.letters;
@@ -654,7 +662,7 @@ function runSuite(ct, displayCt) {
     var lr          = runLocalRoughness(ct, mc.counts);
     var wt          = runWidthTests(ct, mc.counts);
     var poly        = runPolygraphicIc(ct);
-    var lor         = runListOfRepeats(ct);
+    var lor         = runListOfRepeats(ct, maxRepeats);
     var digOverall  = runDigraphicOverall(ct);
     var digCutA     = runDigraphicCutA(ct);
     var digCutB     = runDigraphicCutB(ct);
@@ -705,7 +713,8 @@ function runTests() {
             return;
         }
 
-        var output   = runSuite(ct, displayCt);
+        var maxRepeats = parseInt(document.getElementById('max_repeats').value, 10) || 0;
+        var output   = runSuite(ct, displayCt, maxRepeats);
         var descLine = desc ? 'Description: ' + desc : '';
         var text;
         if (displayCt && descLine) {
