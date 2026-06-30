@@ -101,7 +101,7 @@
 <div class="row">
   <span class="lbl">Character set:</span>
   <div class="ctrl">
-    <select id="charset">
+    <select id="charset" onchange="onCharsetChange()">
       <option value="[A-Za-z]">[A-Za-z] -- 26 characters (default)</option>
       <option value="[0-9]">[0-9] -- 10 characters</option>
       <option value="[A-Za-z0-9]">[A-Za-z0-9] -- 36 characters</option>
@@ -127,9 +127,27 @@
 </div>
 
 <div class="row">
-  <span class="lbl">Delta stream offsets:</span>
+  <span class="lbl"></span>
   <div class="ctrl">
-    <input type="text" id="delta_offsets" placeholder="e.g. 1,2,3 (leave blank to skip)" style="width:22em;">
+    <label>
+      <input type="checkbox" id="delta_enabled" onchange="toggleDelta()">
+      Analyze delta stream
+    </label>
+  </div>
+</div>
+
+<div id="delta-section" style="display:none">
+  <div class="row">
+    <span class="lbl">Offset:</span>
+    <div class="ctrl">
+      <input type="number" id="delta_offset" value="1" min="1" style="width:6em;">
+    </div>
+  </div>
+  <div class="row">
+    <span class="lbl">Alphabet:</span>
+    <div class="ctrl">
+      <input type="text" id="delta_alphabet" style="width:32em; font-family:monospace;">
+    </div>
   </div>
 </div>
 
@@ -524,20 +542,12 @@ function computeDeltaStream(letters, alphabet, offset) {
     return result.join('');
 }
 
-function runDeltaStream(ct, charsetKey, offsets) {
-    var alphabet = DEFAULT_ALPHABETS[charsetKey] || ct.alphabet;
+function runDeltaStream(ct, offset, alphabet) {
     var N = ct.letters.length;
     var entries = [];
-    for (var i = 0; i < offsets.length; i++) {
-        var offset = offsets[i];
-        if (offset >= 1 && offset <= N - 1) {
-            entries.push({
-                offset: offset,
-                alphabet: alphabet,
-                stream: computeDeltaStream(ct.letters, alphabet, offset),
-            });
-        }
-    }
+    if (offset >= 1 && offset <= N - 1)
+        entries.push({ offset: offset, alphabet: alphabet,
+                       stream: computeDeltaStream(ct.letters, alphabet, offset) });
     return { entries: entries };
 }
 
@@ -725,7 +735,7 @@ var CHARSET_MAP = {
     '[A-Za-z0-9]': { pattern: '[A-Za-z0-9]', caseSensitive: false },
 };
 
-function runSuite(ct, displayCt, maxRepeats, charsetKey, deltaOffsets) {
+function runSuite(ct, displayCt, maxRepeats, deltaConfig) {
     var parts = [];
     if (displayCt) {
         var text   = ct.letters;
@@ -743,7 +753,9 @@ function runSuite(ct, displayCt, maxRepeats, charsetKey, deltaOffsets) {
     var wt          = runWidthTests(ct, mc.counts);
     var poly        = runPolygraphicIc(ct);
     var lor         = runListOfRepeats(ct, maxRepeats);
-    var ds          = runDeltaStream(ct, charsetKey, deltaOffsets || []);
+    var ds          = deltaConfig
+                      ? runDeltaStream(ct, deltaConfig.offset, deltaConfig.alphabet)
+                      : { entries: [] };
     var digOverall  = runDigraphicOverall(ct);
     var digCutA     = runDigraphicCutA(ct);
     var digCutB     = runDigraphicCutB(ct);
@@ -774,6 +786,26 @@ function runHeader() {
     return 'STETHOSCOPE PROGRAM (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
+var _DEFAULT_ALPHABETS = {
+    '[A-Za-z]':    'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    '[0-9]':       '0123456789',
+    '[A-Za-z0-9]': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+};
+
+function toggleDelta() {
+    var show = document.getElementById('delta_enabled').checked;
+    document.getElementById('delta-section').style.display = show ? '' : 'none';
+}
+
+function onCharsetChange() {
+    var charsetKey = document.getElementById('charset').value;
+    var alphaField = document.getElementById('delta_alphabet');
+    var newDefault = _DEFAULT_ALPHABETS[charsetKey] || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    var cur = alphaField.value;
+    var isDefault = Object.values(_DEFAULT_ALPHABETS).indexOf(cur) >= 0 || cur === '';
+    if (isDefault) alphaField.value = newDefault;
+}
+
 function savePdf() {
     var content = document.getElementById('output').value;
     if (!content || content === 'Running...') return;
@@ -802,10 +834,14 @@ function runTests() {
         }
 
         var maxRepeats = parseInt(document.getElementById('max_repeats').value, 10) || 0;
-        var deltaOffsets = document.getElementById('delta_offsets').value
-            .split(',').map(function(s) { return parseInt(s.trim(), 10); })
-            .filter(function(n) { return !isNaN(n) && n >= 1; });
-        var output   = runSuite(ct, displayCt, maxRepeats, charsetKey, deltaOffsets);
+        var deltaConfig = null;
+        if (document.getElementById('delta_enabled').checked) {
+            deltaConfig = {
+                offset:   parseInt(document.getElementById('delta_offset').value, 10) || 1,
+                alphabet: document.getElementById('delta_alphabet').value.trim().toUpperCase(),
+            };
+        }
+        var output   = runSuite(ct, displayCt, maxRepeats, deltaConfig);
         var descLine = desc ? 'Description: ' + desc : '';
         var text;
         if (displayCt && descLine) {
@@ -824,6 +860,10 @@ function runTests() {
     }
     btn.disabled = false;
 }
+
+// Initialise alphabet field to match the default charset on page load
+document.getElementById('delta_alphabet').value =
+    _DEFAULT_ALPHABETS[document.getElementById('charset').value] || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 </script>
 <script data-goatcounter="https://mosherubin.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
