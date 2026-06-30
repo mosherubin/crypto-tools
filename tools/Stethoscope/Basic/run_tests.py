@@ -6,6 +6,7 @@ Usage: python run_tests.py <input.json> [<input.json> ...]
 import sys
 import ciphertext
 import format_report
+import version as _version
 import tests.mono_count as mono_count
 import tests.compute_ic_mono as compute_ic_mono
 import tests.digraphic_ic as digraphic_ic
@@ -19,6 +20,7 @@ import tests.delta_stream as delta_stream
 
 def run_file(path: str):
     print(f"=== {path} ===")
+    print(f"  STETHOSCOPE PROGRAM (version {_version.get()})")
     try:
         ct = ciphertext.load(path)
     except Exception as e:
