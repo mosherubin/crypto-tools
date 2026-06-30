@@ -137,7 +137,50 @@ def run_file(path: str):
             print(f"  [format_report] RUNTIME ERROR: {e}")
             import traceback; traceback.print_exc()
 
+    if ds_result and ds_result.entries:
+        for entry in ds_result.entries:
+            try:
+                sep = '=' * 80
+                delta_ct = ciphertext.create_from_text(
+                    entry.stream,
+                    charset_pattern=ct.charset,
+                    casesensitive=ct.casesensitive,
+                    description=f'Delta stream offset={entry.offset}',
+                )
+                print()
+                print(sep)
+                print(f'STETHOSCOPE ANALYSIS OF DELTA STREAM  OFFSET {entry.offset:>2}'
+                      f'  ALPHABET  {entry.alphabet}')
+                print(sep)
+                _run_full_listing(delta_ct)
+            except Exception as e:
+                print(f"  [delta_stream second pass] RUNTIME ERROR: {e}")
+                import traceback; traceback.print_exc()
+
     print()
+
+
+def _run_full_listing(ct) -> None:
+    """Run and print the full STETHOSCOPE suite on ct without fixture validation."""
+    mc  = mono_count.run(ct)
+    ic  = compute_ic_mono.run(ct, mc.counts)
+    lr  = local_roughness.run(ct, mc.counts)
+    wt  = width_tests.run(ct, mc.counts)
+    poly = polygraphic_ic.run(ct)
+    lor  = list_of_repeats.run(ct)
+    dig_overall = digraphic_ic.run_overall(ct)
+    dig_cut_a   = digraphic_ic.run_cut_a(ct)
+    dig_cut_b   = digraphic_ic.run_cut_b(ct)
+    trig_overall = trigraphic_ic.run_overall(ct)
+    trig_cut_a   = trigraphic_ic.run_cut_A(ct)
+    trig_cut_b   = trigraphic_ic.run_cut_B(ct)
+    trig_cut_c   = trigraphic_ic.run_cut_C(ct)
+    print(format_report.format_listing(
+        ct, mc, ic,
+        dig_overall, dig_cut_a, dig_cut_b,
+        trig_overall, trig_cut_a, trig_cut_b, trig_cut_c,
+        lr, wt, poly, lor,
+    ))
 
 
 def _report(name: str, result) -> None:

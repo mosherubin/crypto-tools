@@ -217,6 +217,12 @@ def run():
     charset_key = payload.get('charset', '[A-Za-z]')
     display_ct  = payload.get('display_ciphertext', False)
     max_repeats = int(payload.get('max_repeats', 50))
+    delta_config = None
+    if payload.get('delta_enabled'):
+        delta_config = {
+            'offset':   int(payload.get('delta_offset', 1)),
+            'alphabet': payload.get('delta_alphabet', '').upper(),
+        }
 
     charset_pattern, casesensitive = CHARSET_MAP.get(charset_key, ('[A-Z]', False))
 
@@ -234,14 +240,16 @@ def run():
         return jsonify({'error': f'Too few cipher characters ({len(ct.letters)}); need at least 4.'})
 
     try:
-        output = _run_suite(ct, display_ct, max_repeats)
+        output = _run_suite(ct, display_ct, max_repeats, delta_config,
+                            charset_pattern=charset_pattern, casesensitive=casesensitive)
     except Exception:
         return jsonify({'error': traceback.format_exc()})
 
     return jsonify({'output': output})
 
 
-def _run_suite(ct, display_ct: bool, max_repeats: int = 50) -> str:
+def _run_suite(ct, display_ct: bool, max_repeats: int = 50,
+               delta_config=None, charset_pattern='[A-Z]', casesensitive=False) -> str:
     parts = []
 
     if display_ct:
@@ -258,7 +266,6 @@ def _run_suite(ct, display_ct: bool, max_repeats: int = 50) -> str:
     wt_result    = width_tests.run(ct, mc_result.counts)
     poly_result  = polygraphic_ic.run(ct)
     lor_result   = list_of_repeats.run(ct, max_repeats)
-    ds_result    = delta_stream.run(ct)
     dig_overall  = digraphic_ic.run_overall(ct)
     dig_cut_a    = digraphic_ic.run_cut_a(ct)
     dig_cut_b    = digraphic_ic.run_cut_b(ct)
@@ -267,12 +274,44 @@ def _run_suite(ct, display_ct: bool, max_repeats: int = 50) -> str:
     trig_cut_b   = trigraphic_ic.run_cut_B(ct)
     trig_cut_c   = trigraphic_ic.run_cut_C(ct)
 
+    ds_result = None
+    if delta_config:
+        offset   = delta_config['offset']
+        alphabet = delta_config['alphabet']
+        N = len(ct.letters)
+        if 1 <= offset <= N - 1:
+            from tests.delta_stream import DeltaEntry, DeltaResult, compute_stream
+            stream = compute_stream(ct.letters, alphabet, offset)
+            ds_result = DeltaResult(
+                entries=[DeltaEntry(offset=offset, alphabet=alphabet, stream=stream)],
+                passed=None,
+            )
+    else:
+        ds_result = delta_stream.run(ct)
+
     parts.append(format_report.format_listing(
         ct, mc_result, ic_result,
         dig_overall, dig_cut_a, dig_cut_b,
         trig_overall, trig_cut_a, trig_cut_b, trig_cut_c,
         lr_result, wt_result, poly_result, lor_result, ds_result,
     ))
+
+    if ds_result and ds_result.entries:
+        entry = ds_result.entries[0]
+        sep = '=' * 80
+        delta_ct = ct_module.create_from_text(
+            entry.stream,
+            charset_pattern=charset_pattern,
+            casesensitive=casesensitive,
+            description=f'Delta stream offset={entry.offset}',
+        )
+        parts.append('')
+        parts.append(sep)
+        parts.append(f'STETHOSCOPE ANALYSIS OF DELTA STREAM  OFFSET {entry.offset:>2}'
+                     f'  ALPHABET  {entry.alphabet}')
+        parts.append(sep)
+        parts.append(_run_suite(delta_ct, False, max_repeats))
+
     return '\n'.join(parts)
 
 

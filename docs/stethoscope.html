@@ -767,6 +767,21 @@ function runSuite(ct, displayCt, maxRepeats, deltaConfig) {
         digOverall, digCutA, digCutB,
         trigOverall, trigCutA, trigCutB, trigCutC,
         lr, wt, poly, lor, ds));
+
+    if (ds && ds.entries.length > 0 && deltaConfig) {
+        var entry = ds.entries[0];
+        var sep = _repeat('=', 80);
+        parts.push('');
+        parts.push(sep);
+        parts.push('STETHOSCOPE ANALYSIS OF DELTA STREAM  OFFSET ' +
+                   _padStart(String(entry.offset), 2) + '  ALPHABET  ' + entry.alphabet);
+        parts.push(sep);
+        var deltaCt = createFromText(entry.stream,
+                          deltaConfig.charsetPattern, deltaConfig.caseSensitive,
+                          'Delta stream offset=' + entry.offset);
+        parts.push(runSuite(deltaCt, false, maxRepeats, null));
+    }
+
     return parts.join('\n');
 }
 
@@ -837,8 +852,10 @@ function runTests() {
         var deltaConfig = null;
         if (document.getElementById('delta_enabled').checked) {
             deltaConfig = {
-                offset:   parseInt(document.getElementById('delta_offset').value, 10) || 1,
-                alphabet: document.getElementById('delta_alphabet').value.trim().toUpperCase(),
+                offset:         parseInt(document.getElementById('delta_offset').value, 10) || 1,
+                alphabet:       document.getElementById('delta_alphabet').value.trim().toUpperCase(),
+                charsetPattern: charsetCfg.pattern,
+                caseSensitive:  charsetCfg.caseSensitive,
             };
         }
         var output   = runSuite(ct, displayCt, maxRepeats, deltaConfig);
