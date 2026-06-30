@@ -5,7 +5,7 @@ Finds all repeated sequences of length >= 4 in the ciphertext.
 For each offset (2..N-3), scans left-to-right for maximal-length matches.
 Sorts by repeated string, then within blocks sharing the same first 4 characters
 re-sorts by (position, offset).
-Prints up to MAX_REPEATS entries; if more exist prints "MORE (# remaining)".
+Prints up to max_repeats entries (0 = all); if more exist prints "MORE (# remaining)".
 """
 
 from dataclasses import dataclass, field
@@ -89,7 +89,7 @@ def run(ct: CiphertextData, max_repeats: int = 50) -> RepeatsResult:
         return RepeatsResult(repeats=displayed, total_found=total)
 
     errors = []
-    exp_displayed = expected_list[:MAX_REPEATS]
+    exp_displayed = expected_list[:max_repeats] if max_repeats else expected_list
     if len(displayed) != len(exp_displayed):
         errors.append(
             f"displayed count: computed {len(displayed)}, expected {len(exp_displayed)}"
