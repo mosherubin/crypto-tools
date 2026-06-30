@@ -62,6 +62,23 @@
     overflow: auto;
     margin-top: 10px;
   }
+  #pdf-btn {
+    margin: 6px 0 0 232px;
+    padding: 7px 30px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  #print-area { display: none; }
+  @media print {
+    body > * { display: none !important; }
+    #print-area {
+      display: block !important;
+      font-family: monospace;
+      font-size: 0.75em;
+      line-height: 1.35;
+      white-space: pre;
+    }
+  }
 </style>
 </head>
 <body>
@@ -110,8 +127,10 @@
 </div>
 
 <button id="run-btn" onclick="runTests()">Run</button>
+<button id="pdf-btn" onclick="savePdf()">Save as PDF</button>
 
 <textarea id="output" readonly></textarea>
+<pre id="print-area"></pre>
 
 <script>
 'use strict';
@@ -691,6 +710,13 @@ function runHeader() {
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
     return 'STETHOSCOPE PROGRAM (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+}
+
+function savePdf() {
+    var content = document.getElementById('output').value;
+    if (!content || content === 'Running...') return;
+    document.getElementById('print-area').textContent = content;
+    window.print();
 }
 
 function runTests() {
