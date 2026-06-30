@@ -20,6 +20,7 @@ class CiphertextData:
     letters: str           # cleaned text: only charset symbols (dits removed)
     ditscount: int         # number of dits found in the raw (after case-fold)
     expected_results: dict = field(default_factory=dict)
+    delta_stream: list = field(default_factory=list)
 
 
 def _expand_alphabet(charset_re: re.Pattern, casesensitive: bool) -> str:
@@ -105,6 +106,7 @@ def load(path: str) -> CiphertextData:
         )
 
     expected_results: dict = data.get('expected_results', {})
+    delta_stream: list = data.get('delta_stream', [])
 
     return CiphertextData(
         test_case_id=data.get('test_case_id', ''),
@@ -117,6 +119,7 @@ def load(path: str) -> CiphertextData:
         letters=''.join(letters),
         ditscount=ditscount,
         expected_results=expected_results,
+        delta_stream=delta_stream,
     )
 
 

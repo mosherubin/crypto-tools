@@ -126,6 +126,13 @@
   </div>
 </div>
 
+<div class="row">
+  <span class="lbl">Delta stream offsets:</span>
+  <div class="ctrl">
+    <input type="text" id="delta_offsets" placeholder="e.g. 1,2,3 (leave blank to skip)" style="width:22em;">
+  </div>
+</div>
+
 <button id="run-btn" onclick="runTests()">Run</button>
 <button id="pdf-btn" onclick="savePdf()">Print</button>
 
@@ -495,6 +502,45 @@ function runListOfRepeats(ct, maxRepeats) {
     return { repeats: displayed, totalFound: sorted.length };
 }
 
+// ── delta_stream ─────────────────────────────────────────────────────────────
+// Ported from tests/delta_stream.py
+
+var DEFAULT_ALPHABETS = {
+    '[A-Z]':       'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    '[0-9]':       '0123456789',
+    '[A-Za-z0-9]': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+};
+
+function computeDeltaStream(letters, alphabet, offset) {
+    var c = letters.length - offset;
+    var val = {};
+    for (var i = 0; i < alphabet.length; i++) val[alphabet[i]] = i;
+    var result = [];
+    var mod = alphabet.length;
+    for (var j = 0; j < c; j++) {
+        var d = ((val[letters[j + offset]] - val[letters[j]]) % mod + mod) % mod;
+        result.push(alphabet[d]);
+    }
+    return result.join('');
+}
+
+function runDeltaStream(ct, charsetKey, offsets) {
+    var alphabet = DEFAULT_ALPHABETS[charsetKey] || ct.alphabet;
+    var N = ct.letters.length;
+    var entries = [];
+    for (var i = 0; i < offsets.length; i++) {
+        var offset = offsets[i];
+        if (offset >= 1 && offset <= N - 1) {
+            entries.push({
+                offset: offset,
+                alphabet: alphabet,
+                stream: computeDeltaStream(ct.letters, alphabet, offset),
+            });
+        }
+    }
+    return { entries: entries };
+}
+
 // ── format_report ─────────────────────────────────────────────────────────────
 // Ported from format_report.py
 
@@ -526,7 +572,7 @@ function _repeat(ch, n)  { var s = ''; for (var i = 0; i < n; i++) s += ch; retu
 function formatListing(ct, mc, icResult,
         digOverall, digCutA, digCutB,
         trigOverall, trigCutA, trigCutB, trigCutC,
-        lrResult, wtResult, polyResult, repeatsResult) {
+        lrResult, wtResult, polyResult, repeatsResult, dsResult) {
 
     var out      = [];
     var alphabet = ct.alphabet;
@@ -653,6 +699,21 @@ function formatListing(ct, mc, icResult,
         if (remaining > 0) out.push('MORE (' + remaining + ' remaining)');
     }
 
+    // Delta stream
+    if (dsResult && dsResult.entries.length > 0) {
+        out.push('');
+        out.push('DELTA STREAM');
+        for (var di = 0; di < dsResult.entries.length; di++) {
+            var de = dsResult.entries[di];
+            out.push('OFFSET ' + _padStart(String(de.offset), 2) + '  ALPHABET  ' + de.alphabet);
+            var dgroups = [];
+            for (var dg = 0; dg < de.stream.length; dg += 5)
+                dgroups.push(de.stream.slice(dg, dg + 5));
+            for (var dr = 0; dr < dgroups.length; dr += 10)
+                out.push(dgroups.slice(dr, dr + 10).join(' '));
+        }
+    }
+
     return out.join('\n');
 }
 
@@ -664,7 +725,7 @@ var CHARSET_MAP = {
     '[A-Za-z0-9]': { pattern: '[A-Za-z0-9]', caseSensitive: false },
 };
 
-function runSuite(ct, displayCt, maxRepeats) {
+function runSuite(ct, displayCt, maxRepeats, charsetKey, deltaOffsets) {
     var parts = [];
     if (displayCt) {
         var text   = ct.letters;
@@ -682,6 +743,7 @@ function runSuite(ct, displayCt, maxRepeats) {
     var wt          = runWidthTests(ct, mc.counts);
     var poly        = runPolygraphicIc(ct);
     var lor         = runListOfRepeats(ct, maxRepeats);
+    var ds          = runDeltaStream(ct, charsetKey, deltaOffsets || []);
     var digOverall  = runDigraphicOverall(ct);
     var digCutA     = runDigraphicCutA(ct);
     var digCutB     = runDigraphicCutB(ct);
@@ -692,7 +754,7 @@ function runSuite(ct, displayCt, maxRepeats) {
     parts.push(formatListing(ct, mc, icResult,
         digOverall, digCutA, digCutB,
         trigOverall, trigCutA, trigCutB, trigCutC,
-        lr, wt, poly, lor));
+        lr, wt, poly, lor, ds));
     return parts.join('\n');
 }
 
@@ -740,7 +802,10 @@ function runTests() {
         }
 
         var maxRepeats = parseInt(document.getElementById('max_repeats').value, 10) || 0;
-        var output   = runSuite(ct, displayCt, maxRepeats);
+        var deltaOffsets = document.getElementById('delta_offsets').value
+            .split(',').map(function(s) { return parseInt(s.trim(), 10); })
+            .filter(function(n) { return !isNaN(n) && n >= 1; });
+        var output   = runSuite(ct, displayCt, maxRepeats, charsetKey, deltaOffsets);
         var descLine = desc ? 'Description: ' + desc : '';
         var text;
         if (displayCt && descLine) {

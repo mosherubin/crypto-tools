@@ -13,7 +13,8 @@ import sys, os; sys.path.insert(0, os.path.dirname(__file__))
 def format_listing(ct, mc_result, ic_result,
                    dig_overall, dig_cut_a, dig_cut_b,
                    trig_overall, trig_cut_a, trig_cut_b, trig_cut_c,
-                   lr_result, wt_result, poly_result, repeats_result):
+                   lr_result, wt_result, poly_result, repeats_result,
+                   ds_result=None):
     out = []
     alphabet = ct.alphabet
     counts = mc_result.counts
@@ -127,6 +128,17 @@ def format_listing(ct, mc_result, ic_result,
         remaining = repeats_result.total_found - len(repeats_result.repeats)
         if remaining > 0:
             out.append(f'MORE ({remaining} remaining)')
+
+    # Delta stream
+    if ds_result and ds_result.entries:
+        out.append('')
+        out.append('DELTA STREAM')
+        for e in ds_result.entries:
+            out.append(f'OFFSET {e.offset:>2}  ALPHABET  {e.alphabet}')
+            groups = [e.stream[i:i + 5] for i in range(0, len(e.stream), 5)]
+            rows = [' '.join(groups[i:i + 10]) for i in range(0, len(groups), 10)]
+            for row in rows:
+                out.append(row)
 
     return '\n'.join(out)
 

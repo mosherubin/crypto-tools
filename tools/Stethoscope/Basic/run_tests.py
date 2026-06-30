@@ -14,6 +14,7 @@ import tests.local_roughness as local_roughness
 import tests.width_tests as width_tests
 import tests.polygraphic_ic as polygraphic_ic
 import tests.list_of_repeats as list_of_repeats
+import tests.delta_stream as delta_stream
 
 
 def run_file(path: str):
@@ -30,7 +31,7 @@ def run_file(path: str):
     print(f"  ditscount     : {ct.ditscount}")
     print()
 
-    mc_result = ic_result = lr_result = wt_result = poly_result = lor_result = None
+    mc_result = ic_result = lr_result = wt_result = poly_result = lor_result = ds_result = None
     dig_overall = dig_cut_a = dig_cut_b = None
     trig_overall = trig_cut_a = trig_cut_b = trig_cut_c = None
 
@@ -72,6 +73,12 @@ def run_file(path: str):
         _report('list_of_repeats', lor_result)
     except Exception as e:
         print(f"  [list_of_repeats] RUNTIME ERROR: {e}")
+
+    try:
+        ds_result = delta_stream.run(ct)
+        _report('delta_stream', ds_result)
+    except Exception as e:
+        print(f"  [delta_stream] RUNTIME ERROR: {e}")
 
     try:
         dig_overall = digraphic_ic.run_overall(ct)
@@ -123,7 +130,7 @@ def run_file(path: str):
                 ct, mc_result, ic_result,
                 dig_overall, dig_cut_a, dig_cut_b,
                 trig_overall, trig_cut_a, trig_cut_b, trig_cut_c,
-                lr_result, wt_result, poly_result, lor_result,
+                lr_result, wt_result, poly_result, lor_result, ds_result,
             )
             print(listing)
         except Exception as e:

@@ -6,6 +6,11 @@
     "charset": "[A-Z]",
     "notes": "NOTE: Due to a probable NSA coding bug (the ciphertext is input as groups of 3?), (a) The two digraphic cuts were swapped; (b) The trigraphic cuts were rotated: cut_B -> cut_A -> cut_C -> cut_B.  5. The cryptogram below is suspected to begin with the stereotype 'REFERRING TO YOUR MESSAGE' OR 'REFERENCE YOUR MESSAGE'. Solve the text and recover all keys.  BUG: The positions in the repeated text list were all one too many (e.g., 104, rather than the correct 103)."
   },
+  "delta_stream": [
+    { "offset": 1, "stream": "FJDJHNWGQK" },
+    { "offset": 2, "stream": "OMMQUJCWA" },
+    { "offset": 7, "alphabet": "FRIEDMANBCGHJKLOPQSTUVWXYZ", "stream": "DRSYTJPRMC" }
+  ],
   "expected_results": {
     "ditscount": 0,
     "total_letters": 405,
