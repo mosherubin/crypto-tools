@@ -151,14 +151,15 @@ function addRectGeometry(topName, topAlpha, botName, botAlpha, col1, col2, recta
   }
 }
 
-function findRectangles(rows) {
+function findRectangles(rows, isK3) {
+  const activeRows = isK3 ? rows : rows.filter(([name]) => name !== '0');
   const rectangles = [];
   const rectIndex = new Map();
   const rectGeometries = new Set();
-  const numRows = rows.length;
+  const numRows = activeRows.length;
 
   for (let topIdx = 0; topIdx < numRows - 1; topIdx++) {
-    const [topName, topAlpha] = rows[topIdx];
+    const [topName, topAlpha] = activeRows[topIdx];
     const topPositions = [];
     for (let i = 0; i < topAlpha.length; i++) if (topAlpha[i] !== '.') topPositions.push(i);
 
@@ -167,7 +168,7 @@ function findRectangles(rows) {
       for (let b = a + 1; b < topPositions.length; b++) {
         const col2 = topPositions[b];
         for (let botIdx = topIdx + 1; botIdx < numRows; botIdx++) {
-          const [botName, botAlpha] = rows[botIdx];
+          const [botName, botAlpha] = activeRows[botIdx];
           if (botAlpha[col1] === '.' || botAlpha[col2] === '.') continue;
           addRectGeometry(topName, topAlpha, botName, botAlpha, col1, col2, rectangles, rectIndex, rectGeometries);
         }
@@ -178,15 +179,16 @@ function findRectangles(rows) {
   return { rectangles, rectIndex };
 }
 
-function findIncompleteRectangles(rows) {
+function findIncompleteRectangles(rows, isK3) {
+  const activeRows = isK3 ? rows : rows.filter(([name]) => name !== '0');
   const incomplete = [];
-  const numRows = rows.length;
-  const n = rows[0][1].length;
+  const numRows = activeRows.length;
+  const n = activeRows.length > 0 ? activeRows[0][1].length : 0;
 
   for (let topIdx = 0; topIdx < numRows - 1; topIdx++) {
-    const [topName, topAlpha] = rows[topIdx];
+    const [topName, topAlpha] = activeRows[topIdx];
     for (let botIdx = topIdx + 1; botIdx < numRows; botIdx++) {
-      const [botName, botAlpha] = rows[botIdx];
+      const [botName, botAlpha] = activeRows[botIdx];
 
       for (let col1 = 0; col1 < n; col1++) {
         const tlCh = topAlpha[col1];
@@ -331,21 +333,30 @@ function applyIndirectSymmetry(rows, rectangles, rectIndex, incomplete, allowRow
     if (current === '*') continue;
 
     const rowLetters = alphabets[rowIdx];
-    if (!allowRowDups && rowLetters.includes(inferredLetter)) {
-      const dupCol = rowLetters.indexOf(inferredLetter);
-      throw new MatrixContradiction(
-        `DUPLICATION ERROR (row): inserting '${inferredLetter}' at ${unknownRef} would duplicate the letter already at 1-based col ${dupCol + 1} in row '${unknownRowName}'.\n` +
-        `  Complete:   ${rectStr(matchedRect)}\n  Incomplete: ${rectStr(incRect)}`);
-    }
-
-    for (let chkRowIdx = 0; chkRowIdx < alphabets.length; chkRowIdx++) {
-      const chkRowName = rows[chkRowIdx][0];
-      if (!allowColDups && alphabets[chkRowIdx][unknownCol] === inferredLetter && chkRowName !== '0') {
+    if (rowLetters.includes(inferredLetter)) {
+      if (!allowRowDups) {
+        const dupCol = rowLetters.indexOf(inferredLetter);
         throw new MatrixContradiction(
-          `DUPLICATION ERROR (column): inserting '${inferredLetter}' at ${unknownRef} would duplicate the letter already at row '${chkRowName}', 1-based col ${unknownCol + 1}.\n` +
+          `DUPLICATION ERROR (row): inserting '${inferredLetter}' at ${unknownRef} would duplicate the letter already at 1-based col ${dupCol + 1} in row '${unknownRowName}'.\n` +
           `  Complete:   ${rectStr(matchedRect)}\n  Incomplete: ${rectStr(incRect)}`);
       }
+      continue; // skip: would create a row duplicate
     }
+
+    let skipColDup = false;
+    for (let chkRowIdx = 0; chkRowIdx < alphabets.length; chkRowIdx++) {
+      const chkRowName = rows[chkRowIdx][0];
+      if (alphabets[chkRowIdx][unknownCol] === inferredLetter && chkRowName !== '0') {
+        if (!allowColDups) {
+          throw new MatrixContradiction(
+            `DUPLICATION ERROR (column): inserting '${inferredLetter}' at ${unknownRef} would duplicate the letter already at row '${chkRowName}', 1-based col ${unknownCol + 1}.\n` +
+            `  Complete:   ${rectStr(matchedRect)}\n  Incomplete: ${rectStr(incRect)}`);
+        }
+        skipColDup = true;
+        break;
+      }
+    }
+    if (skipColDup) continue; // skip: would create a column duplicate
 
     if (isK3 && nameToIdx.has('0')) {
       const row0Alpha = alphabets[nameToIdx.get('0')];
@@ -493,10 +504,16 @@ function deduplicateColumns(rows) {
     const nCols = origIdx.length;
     for (let i = 0; i < nCols; i++) {
       for (let j = i + 1; j < nCols; j++) {
+        let sharedLetter = false;
+        let conflict = false;
         for (let r = 0; r < nRows; r++) {
           const a = grid[r][i], b = grid[r][j];
-          if (a !== '.' && b !== '.' && a === b) return [i, j];
+          if (a !== '.' && b !== '.') {
+            if (a === b) sharedLetter = true;
+            else { conflict = true; break; }
+          }
         }
+        if (sharedLetter && !conflict) return [i, j];
       }
     }
     return null;

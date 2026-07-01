@@ -126,10 +126,10 @@ function runCompleteTable(matrixText, options) {
     passNum++;
     output.push(`=== Pass ${passNum} ===`);
 
-    const { rectangles, rectIndex } = findRectangles(rows);
+    const { rectangles, rectIndex } = findRectangles(rows, options.k3);
     output.push(`Complete rectangles: ${rectangles.length}`);
 
-    const incomplete = findIncompleteRectangles(rows);
+    const incomplete = findIncompleteRectangles(rows, options.k3);
     output.push(`Incomplete rectangles: ${incomplete.length}`);
     output.push('');
 

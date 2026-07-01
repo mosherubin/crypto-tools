@@ -111,10 +111,10 @@ def main():
         pass_num += 1
         print("=== Pass {} ===".format(pass_num))
 
-        rectangles, rect_index, _ = find_rectangles(rows)
+        rectangles, rect_index, _ = find_rectangles(rows, is_k3=is_k3)
         print("Complete rectangles: {}".format(len(rectangles)))
 
-        incomplete = find_incomplete_rectangles(rows)
+        incomplete = find_incomplete_rectangles(rows, is_k3=is_k3)
         print("Incomplete rectangles: {}".format(len(incomplete)))
         print()
 

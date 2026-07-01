@@ -242,7 +242,7 @@ def _add_rect_geometry(top_name, top_alpha, bot_name, bot_alpha,
             rect_index[key].append(offset)
 
 
-def find_rectangles(rows):
+def find_rectangles(rows, is_k3=False):
     """
     Find all complete rectangles and return them as a flat list of
     pre-parsed tuples, along with an index dictionary for O(1) lookup
@@ -260,15 +260,19 @@ def find_rectangles(rows):
 
     Positions are 1-based.
 
+    When is_k3 is False (default), row '0' is excluded: the indicator alphabet
+    obeys a different structure and must not participate in rectangle inferences.
+
     Returns: (rectangles, rect_index, rect_geometries)
     """
+    active_rows = rows if is_k3 else [(n, a) for n, a in rows if n != '0']
     rectangles     = []
     rect_index     = {}
     rect_geometries = set()
-    num_rows = len(rows)
+    num_rows = len(active_rows)
 
     for top_idx in range(num_rows - 1):
-        top_name, top_alpha = rows[top_idx]
+        top_name, top_alpha = active_rows[top_idx]
         top_positions = [i for i, ch in enumerate(top_alpha) if ch != '.']
 
         for a in range(len(top_positions)):
@@ -278,7 +282,7 @@ def find_rectangles(rows):
                 col2 = top_positions[b]
 
                 for bot_idx in range(top_idx + 1, num_rows):
-                    bot_name, bot_alpha = rows[bot_idx]
+                    bot_name, bot_alpha = active_rows[bot_idx]
 
                     if bot_alpha[col1] == '.' or bot_alpha[col2] == '.':
                         continue
@@ -290,7 +294,7 @@ def find_rectangles(rows):
     return rectangles, rect_index, rect_geometries
 
 
-def _update_rect_index(matrix, rectangles, rect_index, rect_geometries, dirty_rows):
+def _update_rect_index(matrix, rectangles, rect_index, rect_geometries, dirty_rows, is_k3=False):
     """
     Extend `rectangles` / `rect_index` with any newly-complete rectangles
     that involve at least one row in `dirty_rows`.
@@ -303,8 +307,9 @@ def _update_rect_index(matrix, rectangles, rect_index, rect_geometries, dirty_ro
     Cost: O(D × R × C²) where D = |dirty_rows|, vs O(R² × C²) for a full
     rebuild.  Mutates rectangles, rect_index, and rect_geometries in place.
     """
-    name_to_row = {name: alpha for name, alpha in matrix}
-    matrix_names = [name for name, _ in matrix]   # preserves row order
+    active_matrix = matrix if is_k3 else [(n, a) for n, a in matrix if n != '0']
+    name_to_row = {name: alpha for name, alpha in active_matrix}
+    matrix_names = [name for name, _ in active_matrix]   # preserves row order
 
     for dirty_name in dirty_rows:
         if dirty_name not in name_to_row:
@@ -342,7 +347,7 @@ def _update_rect_index(matrix, rectangles, rect_index, rect_geometries, dirty_ro
                                        rectangles, rect_index, rect_geometries)
 
 
-def find_incomplete_rectangles(rows, dirty_rows=None):
+def find_incomplete_rectangles(rows, dirty_rows=None, is_k3=False):
     """
     Find all incomplete rectangles (exactly 3 known corners, 1 unknown).
 
@@ -354,17 +359,20 @@ def find_incomplete_rectangles(rows, dirty_rows=None):
     at least one row is in the dirty set are examined.  Row-pairs that have
     not changed since the last pass cannot produce new inferences, so they
     are skipped entirely.  Pass dirty_rows=None to scan all pairs (default).
+
+    When is_k3 is False (default), row '0' is excluded from all pairs.
     """
+    active_rows = rows if is_k3 else [(nm, a) for nm, a in rows if nm != '0']
     incomplete = []
-    num_rows = len(rows)
-    n = len(rows[0][1])
+    num_rows = len(active_rows)
+    n = len(active_rows[0][1]) if active_rows else 0
 
     for top_idx in range(num_rows - 1):
-        top_name, top_alpha = rows[top_idx]
+        top_name, top_alpha = active_rows[top_idx]
         top_dirty = dirty_rows is None or top_name in dirty_rows
 
         for bot_idx in range(top_idx + 1, num_rows):
-            bot_name, bot_alpha = rows[bot_idx]
+            bot_name, bot_alpha = active_rows[bot_idx]
 
             # Skip pairs where neither row has changed since the last pass —
             # any inference they could yield was already made.
@@ -659,7 +667,7 @@ def expand_matrix(matrix, allow_row_dups=False, allow_col_dups=False,
     """
     # Build the complete-rectangle index once; update it incrementally each pass
     # instead of rebuilding from scratch (O(R²×C²) → O(D×R×C²) per pass).
-    rectangles, rect_index, rect_geometries = find_rectangles(matrix)
+    rectangles, rect_index, rect_geometries = find_rectangles(matrix, is_k3=is_k3)
 
     # First pass: always scan all row-pairs so that newly-available complete
     # rectangles (found by the fresh find_rectangles call above) are not missed.
@@ -669,7 +677,7 @@ def expand_matrix(matrix, allow_row_dups=False, allow_col_dups=False,
         effective_dirty = None if first_pass else dirty_rows
         first_pass      = False
 
-        incomplete  = find_incomplete_rectangles(matrix, dirty_rows=effective_dirty)
+        incomplete  = find_incomplete_rectangles(matrix, dirty_rows=effective_dirty, is_k3=is_k3)
         prev_matrix = matrix
         matrix, new_letters = apply_indirect_symmetry(
                                   matrix, rectangles, rect_index, incomplete,
@@ -687,7 +695,7 @@ def expand_matrix(matrix, allow_row_dups=False, allow_col_dups=False,
         }
         # Extend the rectangle index with geometries made complete by those rows.
         _update_rect_index(matrix, rectangles, rect_index, rect_geometries,
-                           dirty_rows)
+                           dirty_rows, is_k3=is_k3)
     return matrix
 
 
@@ -766,27 +774,35 @@ def apply_indirect_symmetry(rows, rectangles, rect_index, incomplete,
 
         # Rule 1: inferred letter must not already appear in the same row
         row_letters = alphabets[row_idx]
-        if not allow_row_dups and inferred_letter in row_letters:
-            dup_col = row_letters.index(inferred_letter)
-            raise MatrixContradiction(
-                "DUPLICATION ERROR (row): inserting '{}' at {} would duplicate "
-                "the letter already at 1-based col {} in row '{}'.\n"
-                "  Complete:   {}\n  Incomplete: {}".format(
-                    inferred_letter, unknown_ref,
-                    dup_col + 1, unknown_row_name,
-                    _rect_str(matched_rect), _rect_str(inc_rect)))
-
-        # Rule 2: inferred letter must not already appear in the same column
-        for chk_row_idx, chk_alpha in enumerate(alphabets):
-            chk_row_name = rows[chk_row_idx][0]
-            if not allow_col_dups and (chk_alpha[unknown_col] == inferred_letter) and (chk_row_name != "0"):
+        if inferred_letter in row_letters:
+            if not allow_row_dups:
+                dup_col = row_letters.index(inferred_letter)
                 raise MatrixContradiction(
-                    "DUPLICATION ERROR (column): inserting '{}' at {} would duplicate "
-                    "the letter already at row '{}', 1-based col {}.\n"
+                    "DUPLICATION ERROR (row): inserting '{}' at {} would duplicate "
+                    "the letter already at 1-based col {} in row '{}'.\n"
                     "  Complete:   {}\n  Incomplete: {}".format(
                         inferred_letter, unknown_ref,
-                        chk_row_name, unknown_col + 1,
+                        dup_col + 1, unknown_row_name,
                         _rect_str(matched_rect), _rect_str(inc_rect)))
+            continue  # skip: would create a row duplicate
+
+        # Rule 2: inferred letter must not already appear in the same column
+        skip_col_dup = False
+        for chk_row_idx, chk_alpha in enumerate(alphabets):
+            chk_row_name = rows[chk_row_idx][0]
+            if chk_alpha[unknown_col] == inferred_letter and chk_row_name != "0":
+                if not allow_col_dups:
+                    raise MatrixContradiction(
+                        "DUPLICATION ERROR (column): inserting '{}' at {} would duplicate "
+                        "the letter already at row '{}', 1-based col {}.\n"
+                        "  Complete:   {}\n  Incomplete: {}".format(
+                            inferred_letter, unknown_ref,
+                            chk_row_name, unknown_col + 1,
+                            _rect_str(matched_rect), _rect_str(inc_rect)))
+                skip_col_dup = True
+                break
+        if skip_col_dup:
+            continue  # skip: would create a column duplicate
 
         # K3 check 1: if inferred letter matches line "0" at this column,
         # all other known letters in the target row must also match line "0".
