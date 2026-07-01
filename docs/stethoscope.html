@@ -13,11 +13,24 @@
     padding: 24px 20px;
     background: #fff;
   }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 24px;
+  }
   h1 {
-    text-align: center;
     letter-spacing: 6px;
     font-size: 1.4em;
-    margin-bottom: 24px;
+    margin: 0;
+  }
+  #guide-btn {
+    position: absolute;
+    right: 0;
+    padding: 5px 14px;
+    font-size: 0.85em;
+    cursor: pointer;
   }
   .row {
     display: flex;
@@ -83,23 +96,26 @@
 </head>
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
-<h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.3)</span></h1>
+<div class="header-row">
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.4)</span></h1>
+  <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
+</div>
 
-<div class="row">
+<div class="row" data-tooltip="Enter or paste the ciphertext here. Spaces, punctuation, and dashes (dits) are handled automatically; only characters matching the selected character set are extracted for analysis.">
   <span class="lbl">Ciphertext:</span>
   <div class="ctrl">
     <textarea id="ciphertext" placeholder="Paste ciphertext here..."></textarea>
   </div>
 </div>
 
-<div class="row">
+<div class="row" data-tooltip="Optional label for this analysis run. Appears in the header of the output report.">
   <span class="lbl">Description (optional):</span>
   <div class="ctrl">
     <input type="text" id="description" />
   </div>
 </div>
 
-<div class="row">
+<div class="row" data-tooltip="The set of valid cipher symbols. [A-Za-z] for standard 26-letter alphabets, [0-9] for digit ciphers, [A-Za-z0-9] for alphanumeric ciphers.">
   <span class="lbl">Character set:</span>
   <div class="ctrl">
     <select id="charset" onchange="onCharsetChange()">
@@ -113,14 +129,14 @@
 <div class="row">
   <span class="lbl"></span>
   <div class="ctrl">
-    <label>
+    <label data-tooltip="When checked, the extracted ciphertext is printed in groups of five at the top of the output report.">
       <input type="checkbox" id="display_ct">
       Display ciphertext in output
     </label>
   </div>
 </div>
 
-<div class="row">
+<div class="row" data-tooltip="Maximum number of repeated sequences to display in the List of Hits section. Enter 0 to show all repeats.">
   <span class="lbl">Max repeats (0 = all):</span>
   <div class="ctrl">
     <input type="number" id="max_repeats" value="50" min="0" style="width:6em;">
@@ -130,7 +146,7 @@
 <div class="row">
   <span class="lbl"></span>
   <div class="ctrl">
-    <label>
+    <label data-tooltip="When checked, runs STETHOSCOPE again on the difference (delta) stream — formed by subtracting each ciphertext letter from the letter d positions ahead, modulo the alphabet size. Reveals hidden period structure.">
       <input type="checkbox" id="delta_enabled" onchange="toggleDelta()">
       Analyze delta stream
     </label>
@@ -138,13 +154,13 @@
 </div>
 
 <div id="delta-section" style="display:none">
-  <div class="row">
+  <div class="row" data-tooltip="The lag d for the delta stream: delta[i] = ct[i+d] − ct[i] (mod alphabet size). Values from 1 up to the suspected period are most informative.">
     <span class="lbl">Offset:</span>
     <div class="ctrl">
       <input type="number" id="delta_offset" value="1" min="1" style="width:6em;">
     </div>
   </div>
-  <div class="row">
+  <div class="row" data-tooltip="The ordered alphabet that assigns numerical values for the delta computation. Default is the standard order for the selected character set; change this for a keyed alphabet such as FRIEDMANBCGHJKLOPQSTUVWXYZ.">
     <span class="lbl">Alphabet:</span>
     <div class="ctrl">
       <input type="text" id="delta_alphabet" style="width:32em; font-family:monospace;">
@@ -152,8 +168,8 @@
   </div>
 </div>
 
-<button id="run-btn" onclick="runTests()">Run</button>
-<button id="pdf-btn" onclick="savePdf()">Print</button>
+<button id="run-btn" onclick="runTests()" data-tooltip="Run the full STETHOSCOPE cryptanalytic test battery on the ciphertext.">Run</button>
+<button id="pdf-btn" onclick="savePdf()" data-tooltip="Open the browser print dialog to save the output report as a PDF or send to a printer.">Print</button>
 
 <textarea id="output" readonly></textarea>
 <pre id="print-area"></pre>
@@ -799,7 +815,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.3)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.4)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
@@ -882,6 +898,57 @@ function runTests() {
 // Initialise alphabet field to match the default charset on page load
 document.getElementById('delta_alphabet').value =
     _DEFAULT_ALPHABETS[document.getElementById('charset').value] || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+// ── tooltip ──────────────────────────────────────────────────────────────────
+(function() {
+    var tip = document.createElement('div');
+    tip.style.cssText = 'position:fixed;background:#222;color:#fff;padding:6px 10px;'
+        + 'border-radius:4px;font-size:0.82em;font-family:Arial,sans-serif;'
+        + 'letter-spacing:normal;line-height:1.4;white-space:normal;max-width:300px;'
+        + 'z-index:9999;pointer-events:none;display:none;'
+        + 'box-shadow:0 2px 6px rgba(0,0,0,0.35);';
+    document.body.appendChild(tip);
+
+    var _tipTimer = null;
+
+    function cancelTip() {
+        clearTimeout(_tipTimer);
+        _tipTimer = null;
+        tip.style.display = 'none';
+    }
+
+    document.addEventListener('mouseover', function(e) {
+        var el = e.target.closest('[data-tooltip]');
+        if (el) {
+            clearTimeout(_tipTimer);
+            _tipTimer = setTimeout(function() {
+                tip.textContent = el.dataset.tooltip;
+                tip.style.display = 'block';
+            }, 1000);
+        } else {
+            cancelTip();
+        }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (tip.style.display !== 'none') {
+            var x = e.clientX + 14;
+            var y = e.clientY + 14;
+            if (x + 310 > window.innerWidth)  x = e.clientX - 320;
+            if (y + tip.offsetHeight + 10 > window.innerHeight) y = e.clientY - tip.offsetHeight - 10;
+            tip.style.left = x + 'px';
+            tip.style.top  = y + 'px';
+        }
+    });
+
+    document.addEventListener('mouseout', function(e) {
+        if (!e.relatedTarget || !e.relatedTarget.closest('[data-tooltip]')) {
+            cancelTip();
+        }
+    });
+
+    document.addEventListener('mousedown', function() { cancelTip(); });
+})();
 </script>
 <script data-goatcounter="https://mosherubin.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

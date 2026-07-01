@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Moshe Rubin" />
+  <title>STETHOSCOPE Guide</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">STETHOSCOPE Guide</h1>
+<p class="author">Moshe Rubin</p>
+</header>
+<h1 id="stethoscope-complete-guide">STETHOSCOPE — Complete Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>STETHOSCOPE is a cryptanalytic diagnostic tool for analyzing
+polyalphabetic ciphers. Like the medical instrument it is named for,
+STETHOSCOPE “listens” to a ciphertext and reports what it hears —
+statistical patterns that reveal the type of cipher, its probable
+period, and other structural properties that guide further
+cryptanalysis.</p>
+<p>STETHOSCOPE does not decrypt ciphers. It produces a battery of
+statistical measurements that, read together, narrow the field of
+hypotheses about what kind of cipher produced the text and what period
+it likely operates on.</p>
+<hr />
+<h2 id="historical-background">Historical Background</h2>
+<p>STETHOSCOPE was developed at the National Security Agency (NSA) as a
+practical tool for the cryptanalytic workbench. It embodies techniques
+pioneered by William F. Friedman and refined over decades of operational
+cryptanalysis.</p>
+<p>Friedman’s <em>Index of Coincidence</em> (1922) provided the
+theoretical foundation for distinguishing monoalphabetic from
+polyalphabetic substitution by measuring the “roughness” of a
+letter-frequency distribution. STETHOSCOPE extends this principle across
+multiple test dimensions — monographic, digraphic, trigraphic, and
+polygraphic — and adds period-detection tests (width tests, Kasiski
+repeated-sequence analysis, and the delta stream) to give the analyst a
+complete picture from a single run.</p>
+<p>The FRIEDMAN keyed alphabet — <code>FRIEDMANBCGHJKLOPQSTUVWXYZ</code>
+— is named in his honor and is used as a canonical example of a
+non-standard ordered alphabet throughout this tool.</p>
+<hr />
+<h2 id="how-to-use-the-tool">How to Use the Tool</h2>
+<h3 id="basic-workflow">Basic Workflow</h3>
+<ol type="1">
+<li><p><strong>Paste the ciphertext</strong> into the Ciphertext box.
+Spaces, punctuation, and dashes (dits, used as null placeholders) are
+silently ignored; only letters matching the selected character set are
+extracted.</p></li>
+<li><p><strong>Set the character set</strong> to match the cipher’s
+symbol set:</p>
+<ul>
+<li><code>[A-Za-z]</code> — standard 26-letter alphabet (the
+default)</li>
+<li><code>[0-9]</code> — digit-only ciphertext</li>
+<li><code>[A-Za-z0-9]</code> — alphanumeric</li>
+</ul></li>
+<li><p><strong>Add a description</strong> (optional) to label the run in
+the output report.</p></li>
+<li><p><strong>Check “Display ciphertext in output”</strong> if you want
+the cleaned ciphertext printed in groups of five at the top of the
+report — useful for double-checking that the right text was
+submitted.</p></li>
+<li><p><strong>Set Max repeats</strong> to cap the List of Hits section.
+50 is a reasonable default; use 0 to show all repeated
+sequences.</p></li>
+<li><p><strong>Click Run.</strong> The full battery of tests executes
+immediately in the browser; no data is sent to any server.</p></li>
+<li><p>Optionally <strong>check “Analyze delta stream”</strong> and
+click Run again to see a second full analysis pass on the difference
+stream (see the Delta Stream section below).</p></li>
+<li><p><strong>Click Print</strong> to open the browser print dialog and
+save the report as a PDF.</p></li>
+</ol>
+<h3 id="minimum-ciphertext-length">Minimum Ciphertext Length</h3>
+<p>STETHOSCOPE requires at least 4 cipher characters. Meaningful
+statistics generally require at least a few hundred characters; the
+digraphic and trigraphic tests become reliable above roughly 400–500
+characters.</p>
+<hr />
+<h2 id="the-tests">The Tests</h2>
+<h3 id="monographic-frequency-count">Monographic Frequency Count</h3>
+<p>The simplest measurement: a count and percentage of each letter’s
+occurrences in the ciphertext.</p>
+<p><strong>What to look for:</strong></p>
+<ul>
+<li>In a monoalphabetic substitution cipher, the frequency distribution
+is skewed — a few letters dominate. The distribution mirrors the
+plaintext language’s letter frequencies, merely with different
+labels.</li>
+<li>In a well-mixed polyalphabetic cipher, the distribution flattens
+toward uniform. The flatter the distribution, the higher the period or
+the more thorough the mixing.</li>
+<li>Severe spikes in a supposedly polyalphabetic cipher can indicate a
+short period, a weak key, or a null-heavy plaintext.</li>
+</ul>
+<hr />
+<h3 id="index-of-coincidence-ic-monographic">Index of Coincidence (IC) —
+Monographic</h3>
+<p>The IC is the probability that two letters drawn randomly from the
+ciphertext are the same letter. For a 26-letter alphabet:</p>
+<ul>
+<li><strong>Random text</strong> (perfectly flat distribution): IC ≈
+0.0385</li>
+<li><strong>English plaintext</strong> (monoalphabetic substitution): IC
+≈ 0.065</li>
+<li><strong>Polyalphabetic ciphertext</strong>: IC falls between these
+extremes; the more alphabets used (i.e., the longer the period), the
+closer the IC approaches 0.0385.</li>
+</ul>
+<p>The IC is the single most important single-number summary of a
+ciphertext. An IC near 0.065 strongly suggests monoalphabetic
+substitution or a very short period. An IC below 0.042 suggests a
+long-period or aperiodic cipher.</p>
+<p>The formula for a ciphertext of <em>N</em> characters with letter
+counts <em>f₁, f₂, …, f_c</em> over an alphabet of size <em>c</em>
+is:</p>
+<pre><code>IC = Σ fᵢ(fᵢ − 1) / (N(N − 1))</code></pre>
+<hr />
+<h3 id="local-roughness">Local Roughness</h3>
+<p>Local roughness measures the “lumpiness” of the frequency
+distribution by summing the squared deviations of each letter frequency
+from the expected uniform frequency.</p>
+<p>Where the IC gives a single global probability, local roughness
+captures the same information in a form that is easier to compare across
+texts of different lengths. A high local roughness value indicates an
+uneven (monoalphabetic-like) distribution; a low value indicates a flat
+(polyalphabetic-like) distribution.</p>
+<hr />
+<h3 id="width-tests">Width Tests</h3>
+<p>Width tests attempt to identify the cipher period by slicing the
+ciphertext into columns (as if written into a rectangle of a given
+width) and measuring the IC of each column.</p>
+<p>If the ciphertext was enciphered with a Vigenère-type cipher of
+period <em>d</em>, then slicing at width <em>d</em> puts letters
+enciphered by the same alphabet into the same column. Each column then
+behaves like monoalphabetic text, and its IC rises toward the plaintext
+IC (~0.065 for English). At all other widths, the columns remain mixed
+and their ICs stay low.</p>
+<p><strong>Reading the width-test table:</strong></p>
+<ul>
+<li>Look for a row (period <em>d</em>) where <em>all</em> column ICs are
+elevated, not just one or two.</li>
+<li>A period <em>d</em> will also cause elevated ICs at widths that are
+multiples of <em>d</em> (2<em>d</em>, 3<em>d</em>, …), though typically
+weaker. The true period is the smallest <em>d</em> with consistently
+high column ICs.</li>
+<li>Very high IC at width 1 (treating the whole text as one column)
+confirms monoalphabetic substitution.</li>
+</ul>
+<hr />
+<h3 id="digraphic-index-of-coincidence">Digraphic Index of
+Coincidence</h3>
+<p>The digraphic IC extends the coincidence test to pairs of consecutive
+letters (digraphs). Three variants are computed:</p>
+<ul>
+<li><strong>Overall</strong>: coincidences across all adjacent pairs in
+the ciphertext.</li>
+<li><strong>Cut A</strong>: pairs formed by letters at positions (0,1),
+(2,3), (4,5), … — the even-offset digraphs.</li>
+<li><strong>Cut B</strong>: pairs formed by letters at positions (1,2),
+(3,4), (5,6), … — the odd-offset digraphs.</li>
+</ul>
+<p><strong>What to look for:</strong></p>
+<p>Digraphic ICs amplify the signal from the monographic IC. In a
+monoalphabetic cipher the digraphic IC is markedly elevated relative to
+random; in a well-mixed polyalphabetic cipher it stays near the random
+baseline. Comparing Cut A and Cut B can reveal structural asymmetries —
+for example, a transposition cipher will often show different values for
+the two cuts.</p>
+<hr />
+<h3 id="trigraphic-index-of-coincidence">Trigraphic Index of
+Coincidence</h3>
+<p>The trigraphic IC extends the analysis to triples of consecutive
+letters (trigraphs). Four variants are computed:</p>
+<ul>
+<li><strong>Overall</strong>: all consecutive triples.</li>
+<li><strong>Cut A</strong>: triples starting at positions 0, 3, 6,
+…</li>
+<li><strong>Cut B</strong>: triples starting at positions 1, 4, 7,
+…</li>
+<li><strong>Cut C</strong>: triples starting at positions 2, 5, 8,
+…</li>
+</ul>
+<p>Trigraphic ICs are most useful for distinguishing cipher families.
+Simple substitution and short-period polyalphabetic ciphers show
+elevated trigraphic ICs; long-period and transposition ciphers do
+not.</p>
+<hr />
+<h3 id="polygraphic-index-of-coincidence">Polygraphic Index of
+Coincidence</h3>
+<p>The polygraphic IC computes coincidences for polygraphs of increasing
+length (2-grams, 3-grams, 4-grams, …) and reports how the IC falls off
+as the polygon length increases.</p>
+<p>In a monoalphabetic cipher, the polygraphic IC remains elevated
+regardless of polygon length. In a polyalphabetic cipher of period
+<em>d</em>, the polygraphic IC drops sharply when the polygon length
+exceeds <em>d</em>, because longer polygraphs straddle multiple
+alphabets and the repetition structure breaks down.</p>
+<p>Tracking the polygraphic IC as a function of length therefore
+provides another estimate of the period.</p>
+<hr />
+<h3 id="list-of-hits-repeated-sequences">List of Hits (Repeated
+Sequences)</h3>
+<p>The List of Hits is a Kasiski-style analysis: it enumerates every
+repeated sequence of 3 or more characters, records the positions at
+which each occurs, and computes the distances (gaps) between
+occurrences.</p>
+<p><strong>How to read it:</strong></p>
+<ul>
+<li>Long repeated sequences are unlikely to be coincidental. A sequence
+that repeats multiple times strongly suggests that the same plaintext
+letters were enciphered by the same alphabet(s).</li>
+<li>The <em>gaps</em> between occurrences of the same sequence are key.
+If many gaps share a common factor <em>d</em>, that factor is a
+candidate for the cipher period.</li>
+<li>Short sequences (3–4 letters) repeat by chance more often; favor
+longer sequences when drawing conclusions.</li>
+<li>In a random or very long-period cipher, few or no repetitions
+appear.</li>
+</ul>
+<p><strong>Setting Max Repeats:</strong> use a small value (10–20) for a
+quick scan; use 0 to see everything when you are hunting for a specific
+sequence.</p>
+<hr />
+<h3 id="delta-stream">Delta Stream</h3>
+<p>The delta stream (also called the difference stream) is a transformed
+version of the ciphertext formed by subtracting each letter from the
+letter <em>d</em> positions ahead, modulo the alphabet size:</p>
+<pre><code>delta[i] = alphabet[ (val(ct[i+d]) − val(ct[i])) mod c ]</code></pre>
+<p>where <em>val(x)</em> is the numerical value of letter <em>x</em> in
+the chosen alphabet, <em>c</em> is the alphabet size, and <em>d</em> is
+the chosen offset.</p>
+<p><strong>Why compute the delta stream?</strong></p>
+<p>For a running-key or Vigenère-type cipher, the delta stream
+“differentiates” the key. If the plaintext has strong regularities
+(e.g., natural language), those regularities survive into the delta
+stream, making period structure visible even when it is masked in the
+original ciphertext. The delta stream is particularly effective at
+revealing the period of autokey ciphers and long-key Vigenère
+variants.</p>
+<p>When you check <strong>Analyze delta stream</strong>,
+STETHOSCOPE:</p>
+<ol type="1">
+<li>Computes the delta stream at the specified offset <em>d</em> using
+the specified alphabet.</li>
+<li>Runs the complete STETHOSCOPE battery again on the delta stream as
+though it were a new ciphertext.</li>
+</ol>
+<p>The second-pass report appears below the first in the output,
+separated by a double rule, and labelled with the offset and alphabet
+used.</p>
+<p><strong>Choosing the offset:</strong> start with <em>d</em> = 1
+(adjacent letters). If you have a hypothesis about the period, try
+<em>d</em> equal to the suspected period — this can dramatically enhance
+the periodicity signal.</p>
+<p><strong>Choosing the alphabet:</strong> the default is the standard
+ordered alphabet for the selected character set. Use a keyed alphabet
+(e.g., <code>FRIEDMANBCGHJKLOPQSTUVWXYZ</code>) when the cipher is known
+or suspected to use one, since the delta computation depends on the
+numerical order of letters, not just their identities.</p>
+<hr />
+<h2 id="tips-for-interpretation">Tips for Interpretation</h2>
+<h3 id="reading-a-stethoscope-report-at-a-glance">Reading a STETHOSCOPE
+Report at a Glance</h3>
+<ol type="1">
+<li><p><strong>Check the monographic IC first.</strong> IC near 0.065 →
+monoalphabetic or very short period. IC near 0.038 → long period or
+random. IC between 0.045 and 0.060 → medium-period polyalphabetic; look
+at width tests.</p></li>
+<li><p><strong>Scan the width-test table for a period
+candidate.</strong> Look for the smallest width where all column ICs
+rise together.</p></li>
+<li><p><strong>Confirm with the List of Hits.</strong> Do the distances
+between repeated sequences share a common factor that matches your
+period candidate?</p></li>
+<li><p><strong>Use digraphic and trigraphic ICs to classify the cipher
+family.</strong> Elevated digraphic IC + low trigraphic IC →
+transposition is possible. Both elevated → monoalphabetic or short
+polyalphabetic.</p></li>
+<li><p><strong>Run the delta stream at the candidate period.</strong> A
+strong IC spike in the delta-stream second pass confirms the period
+hypothesis.</p></li>
+</ol>
+<h3 id="common-pitfalls">Common Pitfalls</h3>
+<ul>
+<li><strong>Short ciphertexts</strong> produce unreliable statistics.
+Under ~100 characters, treat all results as suggestive, not
+conclusive.</li>
+<li><strong>Nulls and dits</strong> are stripped before analysis. A
+ciphertext with many nulls will have a lower effective letter count;
+factor this in when the letter count seems unexpectedly small.</li>
+<li><strong>Non-standard alphabets</strong> affect delta-stream results
+but not the other tests, which operate on the alphabet defined by the
+character set alone.</li>
+<li><strong>Mixed cipher types</strong> (e.g., a transposition applied
+after substitution) produce anomalous readings. If no single
+interpretation fits all the test results, consider the possibility of a
+compound cipher.</li>
+</ul>
+<hr />
+<h2 id="quick-reference-test-baseline-values">Quick Reference: Test
+Baseline Values</h2>
+<p>All values are approximate and assume a 26-letter alphabet with
+English plaintext.</p>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Random text</th>
+<th>English plaintext (monoalph.)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Monographic IC</td>
+<td>0.0385</td>
+<td>~0.065</td>
+</tr>
+<tr>
+<td>Digraphic IC (overall)</td>
+<td>~0.0015</td>
+<td>elevated</td>
+</tr>
+<tr>
+<td>Trigraphic IC (overall)</td>
+<td>~0.000059</td>
+<td>elevated</td>
+</tr>
+<tr>
+<td>Width-test column IC</td>
+<td>0.0385</td>
+<td>~0.065 (at true period)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li>Friedman, W. F. <em>The Index of Coincidence and Its Applications in
+Cryptanalysis</em>. Riverbank Laboratories, 1922. (Reprinted by Aegean
+Park Press.)</li>
+<li>Kasiski, F. W. <em>Die Geheimschriften und die
+Dechiffrir-Kunst</em>. Berlin, 1863.</li>
+<li>Sinkov, A. <em>Elementary Cryptanalysis: A Mathematical
+Approach</em>. Mathematical Association of America, 1966.</li>
+<li>Beker, H. and Piper, F. <em>Cipher Systems: The Protection of
+Communications</em>. Wiley, 1982.</li>
+</ul>
+</body>
+</html>
