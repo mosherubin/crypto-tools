@@ -342,14 +342,14 @@ All values are approximate and assume a 26-letter alphabet with English plaintex
 
 \[1\] Samuel S. Snyder, National Security Agency, "ABNER: The ASA Computer, Part II: Fabrication, Operation, and Impact,"
 Defense Technical Information Center, 2021.
-Available: https://media.defense.gov/2021/Jul/01/2002754529/-1/-1/0/6586518-ABNER-THE-ASA-COMPUTER-PART-II.PDF
+Available: <https://media.defense.gov/2021/Jul/01/2002754529/-1/-1/0/6586518-ABNER-THE-ASA-COMPUTER-PART-II.PDF>
 
 \[2\] John H. Tiltman, National Security Agency, "Some Reminiscences", 1966.
-Available: https://www.nsa.gov/portals/75/documents/news-features/declassified-documents/tech-journals/some-reminiscences.pdf
+Available: <https://www.nsa.gov/portals/75/documents/news-features/declassified-documents/tech-journals/some-reminiscences.pdf>
 
 \[3\] National Security Agency (NSA) Lambros D. Callimahos: Cryptanalytic Diagnosis with the Aid of a Computer (A
 Collection of 147 Stethoscope Listings), 1965.
-Available: https://www.governmentattic.org/59docs/NSAlDCCDAC1965.pdf
+Available: <https://www.governmentattic.org/59docs/NSAlDCCDAC1965.pdf>
 
 
 - Friedman, W. F. *The Index of Coincidence and Its Applications in Cryptanalysis*.
