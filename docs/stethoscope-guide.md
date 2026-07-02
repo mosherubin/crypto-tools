@@ -1,6 +1,7 @@
 ---
 title: "STETHOSCOPE — Complete Guide"
 author: "Moshe Rubin"
+toc: true
 ---
 
 # STETHOSCOPE — Complete Guide
@@ -10,16 +11,22 @@ author: "Moshe Rubin"
 STETHOSCOPE is a cryptanalytic diagnostic tool originally developed at the 
 NSA that applies a battery of statistical tests — monographic, digraphic, 
 trigraphic, and polygraphic index of coincidence, local roughness, width 
-tests, and repeat analysis — to a ciphertext to reveal its underlying structure. 
-Like a doctor's stethoscope listening for signs of life, it listens for 
-statistical patterns that betray the type of cipher used, guiding the 
+tests, and repeat analysis — to an unknown ciphertext to reveal its underlying 
+structure. Like a doctor's stethoscope listening for signs of life, it listens 
+for statistical patterns that betray the type of cipher used, guiding the 
 cryptanalyst toward the most promising line of attack.
 
 ---
 
 ## Historical Background
 
-STETHOSCOPE was developed at the National Security Agency (NSA) as a practical
+STETHOSCOPE was a spectacularly successful software program written for the 
+ABNER computer.  Developed in the late 1940s and early 1950s, ABNER was one 
+of the NSA’s earliest electronic computers built specifically for cryptanalytic 
+work \[1\].
+
+
+developed at the National Security Agency (NSA) as a practical
 tool for the cryptanalytic workbench. It embodies techniques pioneered by William
 F. Friedman and refined over decades of operational cryptanalysis.
 
@@ -29,10 +36,6 @@ distinguishing monoalphabetic from polyalphabetic substitution by measuring the
 across multiple test dimensions — monographic, digraphic, trigraphic, and polygraphic
 — and adds period-detection tests (width tests, Kasiski repeated-sequence analysis,
 and the delta stream) to give the analyst a complete picture from a single run.
-
-The FRIEDMAN keyed alphabet — `FRIEDMANBCGHJKLOPQSTUVWXYZ` — is named in his
-honor and is used as a canonical example of a non-standard ordered alphabet throughout
-this tool.
 
 ---
 
@@ -315,6 +318,11 @@ All values are approximate and assume a 26-letter alphabet with English plaintex
 
 ## References
 
+\[1\] Samuel S. Snyder, National Security Agency, "ABNER: The ASA Computer, Part II: Fabrication, Operation, and Impact,"
+Defense Technical Information Center, 2021.
+Available: https://media.defense.gov/2021/Jul/01/2002754529/-1/-1/0/6586518-ABNER-THE-ASA-COMPUTER-PART-II.PDF
+\[2\] National Security Agency (NSA) Lambros D. Callimahos: Cryptanalytic Diagnosis with the Aid of a Computer (A
+Collection of 147 Stethoscope Listings), 1965
 - Friedman, W. F. *The Index of Coincidence and Its Applications in Cryptanalysis*.
   Riverbank Laboratories, 1922. (Reprinted by Aegean Park Press.)
 - Kasiski, F. W. *Die Geheimschriften und die Dechiffrir-Kunst*. Berlin, 1863.
