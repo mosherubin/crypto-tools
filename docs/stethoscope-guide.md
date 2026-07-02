@@ -7,14 +7,13 @@ author: "Moshe Rubin"
 
 ## Overview
 
-STETHOSCOPE is a cryptanalytic diagnostic tool for analyzing polyalphabetic ciphers.
-Like the medical instrument it is named for, STETHOSCOPE "listens" to a ciphertext
-and reports what it hears — statistical patterns that reveal the type of cipher,
-its probable period, and other structural properties that guide further cryptanalysis.
-
-STETHOSCOPE does not decrypt ciphers. It produces a battery of statistical measurements
-that, read together, narrow the field of hypotheses about what kind of cipher produced
-the text and what period it likely operates on.
+STETHOSCOPE is a cryptanalytic diagnostic tool originally developed at the 
+NSA that applies a battery of statistical tests — monographic, digraphic, 
+trigraphic, and polygraphic index of coincidence, local roughness, width 
+tests, and repeat analysis — to a ciphertext to reveal its underlying structure. 
+Like a doctor's stethoscope listening for signs of life, it listens for 
+statistical patterns that betray the type of cipher used, guiding the 
+cryptanalyst toward the most promising line of attack.
 
 ---
 
