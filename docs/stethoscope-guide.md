@@ -25,17 +25,37 @@ ABNER computer.  Developed in the late 1940s and early 1950s, ABNER was one
 of the NSA’s earliest electronic computers built specifically for cryptanalytic 
 work \[1\].
 
+In June 1953, Samuel L. Snyder and Frank Lewis, two top NSA cryptanalysts, 
+discussed the idea of a computer program that would perform the tedious initial
+tests needed to analyze an unknown cipher system.  Brainstorming with other NSA 
+cryptanalysts (Tom Leahy, Bill Lutwiniak, John Riise, Wilur Peterson, and Jerry 
+Kimble), a list of cryptanalytic operations was created and implemented, becoming 
+the "Stethoscope" program.
 
-developed at the National Security Agency (NSA) as a practical
-tool for the cryptanalytic workbench. It embodies techniques pioneered by William
-F. Friedman and refined over decades of operational cryptanalysis.
+First demonstrated on ABNER in October 1953, it became the most successful program
+run by cryptanalysts.  Stethoscope very efficiently applied all major statistical 
+attacks against cipher text in unknown systems.
 
-Friedman's *Index of Coincidence* (1922) provided the theoretical foundation for
-distinguishing monoalphabetic from polyalphabetic substitution by measuring the
-"roughness" of a letter-frequency distribution. STETHOSCOPE extends this principle
-across multiple test dimensions — monographic, digraphic, trigraphic, and polygraphic
-— and adds period-detection tests (width tests, Kasiski repeated-sequence analysis,
-and the delta stream) to give the analyst a complete picture from a single run.
+The value of Stethoscope can be inferred from the following quote from Brigadier 
+John H. Tiltman's 1966 NSA article "Some Reminiscences" \[2\]:
+
+> To return to my quotation. "I have always been rather a lone
+> hand, preferring whenever possible to do my own preliminary analysis,
+> registration and indexing. I prefer not to embark on machine runs
+> any more complicated than the simplest sorting and listing, unless
+> there is some very good reasons to believe that they will be profitable."
+> By way of comment on that sentence, I ought to have said that a
+> special exception should be made in the case of runs of the type of
+> the Rob Roy Stethoscope, which, of course, saves a lot of time in
+> those cases where repetitious and non-random features within a
+> message may provide an immediate clue \[2\].
+
+The first opportunity to see an actual Stethoscope listing occurred when
+NSA declassified Lambros D. Callimahos's publication "Cryptanalytic 
+Diagnosis with the Aid of a Computer - A Collection of 147 Stethoscope 
+Listings" in August 2025 \[3\].  Here is 
+
+![alt text](graphics/MC-I-lesson-2-problem-7.page-1.jpg "Military Cryptanalytics Part I, Lesson 2, Prolem 7, page 1")
 
 ---
 
@@ -321,8 +341,15 @@ All values are approximate and assume a 26-letter alphabet with English plaintex
 \[1\] Samuel S. Snyder, National Security Agency, "ABNER: The ASA Computer, Part II: Fabrication, Operation, and Impact,"
 Defense Technical Information Center, 2021.
 Available: https://media.defense.gov/2021/Jul/01/2002754529/-1/-1/0/6586518-ABNER-THE-ASA-COMPUTER-PART-II.PDF
-\[2\] National Security Agency (NSA) Lambros D. Callimahos: Cryptanalytic Diagnosis with the Aid of a Computer (A
-Collection of 147 Stethoscope Listings), 1965
+
+\[2\] John H. Tiltman, National Security Agency, "Some Reminiscences", 1966.
+Available: https://www.nsa.gov/portals/75/documents/news-features/declassified-documents/tech-journals/some-reminiscences.pdf
+
+\[3\] National Security Agency (NSA) Lambros D. Callimahos: Cryptanalytic Diagnosis with the Aid of a Computer (A
+Collection of 147 Stethoscope Listings), 1965.
+Available: https://www.governmentattic.org/59docs/NSAlDCCDAC1965.pdf
+
+
 - Friedman, W. F. *The Index of Coincidence and Its Applications in Cryptanalysis*.
   Riverbank Laboratories, 1922. (Reprinted by Aegean Park Press.)
 - Kasiski, F. W. *Die Geheimschriften und die Dechiffrir-Kunst*. Berlin, 1863.
