@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.4)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.5)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -115,14 +115,17 @@
   </div>
 </div>
 
-<div class="row" data-tooltip="The set of valid cipher symbols. [A-Za-z] for standard 26-letter alphabets, [0-9] for digit ciphers, [A-Za-z0-9] for alphanumeric ciphers.">
+<div class="row" data-tooltip="The set of valid cipher symbols. [A-Za-z] for standard 26-letter alphabets, [0-9] for digit ciphers, [A-Za-z0-9] for alphanumeric ciphers. Choose 'Other' to enter a custom character set as a regular expression.">
   <span class="lbl">Character set:</span>
-  <div class="ctrl">
+  <div class="ctrl" style="display:flex; align-items:center; gap:8px;">
     <select id="charset" onchange="onCharsetChange()">
       <option value="[A-Za-z]">[A-Za-z] -- 26 characters (default)</option>
       <option value="[0-9]">[0-9] -- 10 characters</option>
       <option value="[A-Za-z0-9]">[A-Za-z0-9] -- 36 characters</option>
+      <option value="[Other]">Other...</option>
     </select>
+    <input type="text" id="custom_charset" style="display:none; font-family:monospace; width:16em;"
+           placeholder="e.g. ab or adfgvx or A-IK-Z" oninput="onCustomCharsetChange()">
   </div>
 </div>
 
@@ -815,7 +818,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.4)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.5)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
@@ -829,13 +832,38 @@ function toggleDelta() {
     document.getElementById('delta-section').style.display = show ? '' : 'none';
 }
 
+function normalizeCustomCharset(raw) {
+    var s = raw.trim();
+    if (!s) return null;
+    if (s[0] !== '[') s = '[' + s + ']';
+    try { new RegExp('^(?:' + s + ')$'); } catch(e) { return null; }
+    return s;
+}
+
+function onCustomCharsetChange() {
+    var normalized = normalizeCustomCharset(document.getElementById('custom_charset').value);
+    if (!normalized) return;
+    var alphaField = document.getElementById('delta_alphabet');
+    var isDefault = Object.values(_DEFAULT_ALPHABETS).indexOf(alphaField.value) >= 0 || alphaField.value === '';
+    if (isDefault) {
+        try {
+            var alpha = expandAlphabet(new RegExp('^(?:' + normalized + ')$', 'i'), false);
+            if (alpha) alphaField.value = alpha;
+        } catch(e) {}
+    }
+}
+
 function onCharsetChange() {
     var charsetKey = document.getElementById('charset').value;
     var alphaField = document.getElementById('delta_alphabet');
-    var newDefault = _DEFAULT_ALPHABETS[charsetKey] || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    var cur = alphaField.value;
-    var isDefault = Object.values(_DEFAULT_ALPHABETS).indexOf(cur) >= 0 || cur === '';
-    if (isDefault) alphaField.value = newDefault;
+    var customEl   = document.getElementById('custom_charset');
+    customEl.style.display = charsetKey === '[Other]' ? '' : 'none';
+    if (charsetKey !== '[Other]') {
+        var newDefault = _DEFAULT_ALPHABETS[charsetKey] || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var cur = alphaField.value;
+        var isDefault = Object.values(_DEFAULT_ALPHABETS).indexOf(cur) >= 0 || cur === '';
+        if (isDefault) alphaField.value = newDefault;
+    }
 }
 
 function savePdf() {
@@ -856,7 +884,18 @@ function runTests() {
         var charsetKey = document.getElementById('charset').value;
         var displayCt  = document.getElementById('display_ct').checked;
 
-        var charsetCfg = CHARSET_MAP[charsetKey] || CHARSET_MAP['[A-Za-z]'];
+        var charsetCfg;
+        if (charsetKey === '[Other]') {
+            var normalized = normalizeCustomCharset(document.getElementById('custom_charset').value);
+            if (!normalized) {
+                out.value = 'ERROR: Invalid or empty custom character set.';
+                btn.disabled = false;
+                return;
+            }
+            charsetCfg = { pattern: normalized, caseSensitive: false };
+        } else {
+            charsetCfg = CHARSET_MAP[charsetKey] || CHARSET_MAP['[A-Za-z]'];
+        }
         var ct = createFromText(rawText, charsetCfg.pattern, charsetCfg.caseSensitive, desc);
 
         if (ct.letters.length < 4) {
