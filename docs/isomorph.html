@@ -612,7 +612,9 @@ function runIsomorphSearch() {
         }
 
         var parts = [runHeader(), ''];
-        if (desc) { parts.push('Description: ' + desc); parts.push(''); }
+        if (desc) parts.push('Description: ' + desc);
+        parts.push('Character set: ' + charsetCfg.pattern + ' (' + alphabet.length + ' characters)');
+        parts.push('');
 
         if (displayCt) {
             for (var b = 0; b < ciphertexts.length; b++) {
