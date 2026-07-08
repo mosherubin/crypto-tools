@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISOMORPH SEARCH</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    background: #fff;
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 24px;
+  }
+  h1 {
+    letter-spacing: 6px;
+    font-size: 1.4em;
+    margin: 0;
+  }
+  #guide-btn {
+    position: absolute;
+    right: 0;
+    padding: 5px 14px;
+    font-size: 0.85em;
+    cursor: pointer;
+  }
+  .row {
+    display: flex;
+    align-items: flex-start;
+    margin: 8px 0;
+    gap: 12px;
+  }
+  .lbl {
+    min-width: 220px;
+    padding-top: 5px;
+    font-weight: bold;
+    text-align: right;
+  }
+  .ctrl { flex: 1; }
+  textarea.ciphertext-box {
+    display: block;
+    width: 100%;
+    height: 110px;
+    resize: both;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+  .ct-btn-row {
+    margin-top: 6px;
+    display: flex;
+    gap: 6px;
+  }
+  .ct-btn-row button {
+    width: 30px;
+    height: 26px;
+    font-family: monospace;
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+  }
+  input#description { width: 100%; }
+  #run-btn {
+    margin: 14px 0 4px 232px;
+    padding: 7px 30px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  #run-btn:disabled { cursor: wait; opacity: 0.6; }
+  #output {
+    display: block;
+    width: 100%;
+    height: 680px;
+    font-family: monospace;
+    font-size: 0.82em;
+    line-height: 1.35;
+    background: #f6f6f6;
+    border: 1px solid #ccc;
+    padding: 8px;
+    resize: vertical;
+    white-space: pre;
+    overflow: auto;
+    margin-top: 10px;
+  }
+  #pdf-btn {
+    margin: 6px 0 0 232px;
+    padding: 7px 30px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  #print-area { display: none; }
+  @media print {
+    body > * { display: none !important; }
+    #print-area {
+      display: block !important;
+      font-family: monospace;
+      font-size: 0.75em;
+      line-height: 1.35;
+      white-space: pre;
+    }
+  }
+</style>
+</head>
+<body>
+<p><a href="index.html">&larr; back to tools</a></p>
+<div class="header-row">
+  <h1>Isomorph Search <span style="letter-spacing:normal; font-size:0.75em;">(version 0.1)</span></h1>
+  <button id="guide-btn" onclick="window.open('isomorph-guide.html', '_blank')">Guide</button>
+</div>
+
+<div id="ciphertext-container"></div>
+
+<div class="row" data-tooltip="Optional label for this analysis run. Appears in the header of the output report.">
+  <span class="lbl">Description (optional):</span>
+  <div class="ctrl">
+    <input type="text" id="description" />
+  </div>
+</div>
+
+<div class="row" data-tooltip="The set of valid cipher symbols. [A-Za-z] for standard 26-letter alphabets, [0-9] for digit ciphers, [A-Za-z0-9] for alphanumeric ciphers. Choose 'Other' to enter a custom character set as a regular expression.">
+  <span class="lbl">Character set:</span>
+  <div class="ctrl" style="display:flex; align-items:center; gap:8px;">
+    <select id="charset" onchange="onCharsetChange()">
+      <option value="[A-Za-z]">[A-Za-z] -- 26 characters (default)</option>
+      <option value="[0-9]">[0-9] -- 10 characters</option>
+      <option value="[A-Za-z0-9]">[A-Za-z0-9] -- 36 characters</option>
+      <option value="[Other]">Other...</option>
+    </select>
+    <input type="text" id="custom_charset" style="display:none; font-family:monospace; width:16em;"
+           placeholder="e.g. ab or adfgvx or A-IK-Z">
+  </div>
+</div>
+
+<div class="row">
+  <span class="lbl"></span>
+  <div class="ctrl">
+    <label data-tooltip="When checked, the extracted letters of every ciphertext are printed in groups of five at the top of the output report.">
+      <input type="checkbox" id="display_ct">
+      Display ciphertext(s) in output
+    </label>
+  </div>
+</div>
+
+<div class="row" data-tooltip="Isomorphic sequences shorter than this length are ignored -- every alphabet has trivially isomorphic single characters and short pairs, so a floor is needed.">
+  <span class="lbl">Minimum Sequence Length:</span>
+  <div class="ctrl">
+    <input type="number" id="min_isolen" value="4" min="1" style="width:6em;"> (default: 4)
+  </div>
+</div>
+
+<div class="row" data-tooltip="An isomorph is reported only when the expected number of coincidental occurrences of its pattern shape, across every alignment tried, is at most this value. Lower values mean stricter significance.">
+  <span class="lbl">Maximum expected:</span>
+  <div class="ctrl">
+    <input type="number" id="max_expected" value="0.5" min="0" step="0.01" style="width:8em;"> (default: 0.5)
+  </div>
+</div>
+
+<button id="run-btn" onclick="runIsomorphSearch()" data-tooltip="Locate and evaluate all statistically significant isomorphs across the ciphertext(s) above.">Run</button>
+<button id="pdf-btn" onclick="savePdf()" data-tooltip="Open the browser print dialog to save the output report as a PDF or send to a printer.">Print</button>
+
+<textarea id="output" readonly></textarea>
+<pre id="print-area"></pre>
+
+<script>
+'use strict';
+
+// ── utility ──────────────────────────────────────────────────────────────────
+
+function padStart(s, n) { s = String(s); while (s.length < n) s = ' ' + s; return s; }
+function padEnd(s, n)   { s = String(s); while (s.length < n) s = s + ' '; return s; }
+function repeatChar(ch, n) { var s = ''; for (var i = 0; i < n; i++) s += ch; return s; }
+
+// ── ciphertext cleaning ──────────────────────────────────────────────────────
+// Ported from ciphertext.py / stethoscope.html's createFromText
+
+function expandAlphabet(charsetRe, caseSensitive) {
+    var seen = {};
+    var result = [];
+    for (var code = 32; code <= 126; code++) {
+        var ch = String.fromCharCode(code);
+        var folded = caseSensitive ? ch : ch.toUpperCase();
+        if (charsetRe.test(folded) && !seen[folded]) {
+            seen[folded] = true;
+            result.push(folded);
+        }
+    }
+    return result.join('');
+}
+
+function cleanCiphertext(raw, charsetPattern, caseSensitive) {
+    var flags = caseSensitive ? '' : 'i';
+    var charsetRe = new RegExp('^(?:' + charsetPattern + ')$', flags);
+    var ignoreRe  = new RegExp('^(?:\\s)$');
+    var ditschar  = '-';
+
+    var letters = [];
+    var errors = [];
+
+    for (var i = 0; i < raw.length; i++) {
+        var ch = raw[i];
+        var folded = caseSensitive ? ch : ch.toUpperCase();
+        if (charsetRe.test(folded)) {
+            letters.push(folded);
+        } else if (folded === ditschar) {
+            // dits (null placeholders) are silently dropped
+        } else if (ignoreRe.test(ch)) {
+            // whitespace silently dropped
+        } else {
+            if (errors.length < 20)
+                errors.push("Invalid character '" + ch + "' at position " + i);
+        }
+    }
+
+    if (errors.length > 0)
+        throw new Error('Ciphertext contains invalid characters:\n' + errors.join('\n'));
+
+    return letters.join('');
+}
+
+// ── isomorph_search.py port ──────────────────────────────────────────────────
+
+function buildDelta(letters) {
+    var delta = new Array(letters.length).fill(null);
+    var lastSeen = {};
+    for (var i = 0; i < letters.length; i++) {
+        var ch = letters[i];
+        if (lastSeen.hasOwnProperty(ch)) {
+            delta[lastSeen[ch]] = i - lastSeen[ch];
+        }
+        lastSeen[ch] = i;
+    }
+    return delta;
+}
+
+function extendIsomorph(deltaA, deltaB, startA, startB, maxExtent) {
+    var limit = maxExtent;
+    var length = 0;
+    while (length < limit) {
+        var da = deltaA[startA + length];
+        var db = deltaB[startB + length];
+        if (da !== db) {
+            var nearestRepeat = (da === null) ? db : (db === null ? da : Math.min(da, db));
+            var newLimit = length + nearestRepeat;
+            if (newLimit < limit) limit = newLimit;
+            if (length >= limit) break;
+        }
+        length++;
+    }
+    return length;
+}
+
+function scanAlignment(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, selfSearch) {
+    var lenA = lettersA.length, lenB = lettersB.length;
+    var candidates = [];
+
+    var positionA = Math.max(0, -offset);
+    var positionB = positionA + offset;
+
+    while (positionA < lenA && positionB < lenB) {
+        var room = Math.min(lenA - positionA, lenB - positionB);
+        if (selfSearch) room = Math.min(room, offset);
+
+        var length = extendIsomorph(deltaA, deltaB, positionA, positionB, room);
+        if (length >= minIsolen) {
+            candidates.push({
+                messageA: 0, messageB: 0,
+                positionA: positionA, positionB: positionB, length: length,
+                textA: lettersA.slice(positionA, positionA + length),
+                textB: lettersB.slice(positionB, positionB + length),
+            });
+        }
+
+        positionA++;
+        positionB++;
+    }
+
+    return candidates;
+}
+
+function findIsomorphsBetween(lettersA, deltaA, lettersB, deltaB, minIsolen, selfSearch) {
+    var lenA = lettersA.length, lenB = lettersB.length;
+    var candidates = [];
+
+    if (selfSearch) {
+        for (var offset = minIsolen; offset < lenA; offset++) {
+            candidates = candidates.concat(scanAlignment(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, true));
+        }
+    } else {
+        for (var offset = -(lenA - 1); offset < lenB; offset++) {
+            candidates = candidates.concat(scanAlignment(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, false));
+        }
+    }
+
+    return candidates;
+}
+
+function filterMaximal(candidates) {
+    // Discard any candidate whose span is entirely contained within another
+    // candidate's span at the same alignment (same message pair and offset).
+    // Sliding the scan forward one position at a time necessarily re-reports every
+    // suffix of an isomorph that has no room left to grow past the earlier one's
+    // right edge -- those suffixes carry no information beyond the longer isomorph
+    // that already covers them, so only the maximal ones are kept.
+    var groups = {};
+    for (var i = 0; i < candidates.length; i++) {
+        var c = candidates[i];
+        var offset = c.positionB - c.positionA;
+        var key = c.messageA + ',' + c.messageB + ',' + offset;
+        if (!groups.hasOwnProperty(key)) groups[key] = [];
+        groups[key].push(c);
+    }
+
+    var maximal = [];
+    for (var key2 in groups) {
+        if (!groups.hasOwnProperty(key2)) continue;
+        var group = groups[key2];
+        for (var a = 0; a < group.length; a++) {
+            var candidate = group[a];
+            var contained = false;
+            for (var b = 0; b < group.length; b++) {
+                var other = group[b];
+                if (other === candidate) continue;
+                if (other.positionA <= candidate.positionA &&
+                    other.positionA + other.length >= candidate.positionA + candidate.length) {
+                    contained = true;
+                    break;
+                }
+            }
+            if (!contained) maximal.push(candidate);
+        }
+    }
+
+    return maximal;
+}
+
+function locateIsomorphs(ciphertexts, minIsolen) {
+    var deltas = [];
+    for (var d = 0; d < ciphertexts.length; d++) deltas.push(buildDelta(ciphertexts[d]));
+
+    var results = [];
+    for (var i = 0; i < ciphertexts.length; i++) {
+        for (var j = i; j < ciphertexts.length; j++) {
+            var selfSearch = (i === j);
+            var found = findIsomorphsBetween(ciphertexts[i], deltas[i], ciphertexts[j], deltas[j], minIsolen, selfSearch);
+            for (var k = 0; k < found.length; k++) {
+                found[k].messageA = i;
+                found[k].messageB = j;
+            }
+            results = results.concat(found);
+        }
+    }
+    return filterMaximal(results);
+}
+
+// ── isomorph_evaluation.py port ──────────────────────────────────────────────
+
+var _stirlingCache = {};
+
+function stirlingSecondKind(n, k) {
+    if (k > n) return 0;
+    if (k === 0) return (n === 0) ? 1 : 0;
+    if (k === n || k === 1) return 1;
+
+    var key = n + ',' + k;
+    if (_stirlingCache.hasOwnProperty(key)) return _stirlingCache[key];
+
+    var value = k * stirlingSecondKind(n - 1, k) + stirlingSecondKind(n - 1, k - 1);
+    _stirlingCache[key] = value;
+    return value;
+}
+
+function logFactorial(n) {
+    var s = 0;
+    for (var k = 2; k <= n; k++) s += Math.log(k);
+    return s;
+}
+
+// Keyed on (isolen, numDistinct, alphabetSize) only -- valid for the whole run,
+// since the shape probability does not depend on message length or self-search.
+var _shapeProbabilityCache = {};
+
+function probabilityOfShape(isolen, numDistinct, alphabetSize) {
+    var key = isolen + ',' + numDistinct + ',' + alphabetSize;
+    if (_shapeProbabilityCache.hasOwnProperty(key)) return _shapeProbabilityCache[key];
+
+    var logFallingFactorial = logFactorial(alphabetSize) - logFactorial(alphabetSize - numDistinct);
+    var logSinglePatternMatch = logFallingFactorial - isolen * Math.log(alphabetSize);
+
+    var probability = stirlingSecondKind(isolen, numDistinct) * Math.exp(2 * logSinglePatternMatch);
+
+    _shapeProbabilityCache[key] = probability;
+    return probability;
+}
+
+function evaluateIsomorph(text, alphabetSize, messageLengthA, messageLengthB, selfSearch, maxExpected) {
+    if (maxExpected === undefined) maxExpected = 10.0;
+
+    var isolen = text.length;
+    var seen = {};
+    for (var i = 0; i < text.length; i++) seen[text[i]] = true;
+    var numDistinct = Object.keys(seen).length;
+
+    var probability = probabilityOfShape(isolen, numDistinct, alphabetSize);
+
+    var comparisons;
+    if (selfSearch) {
+        var k = messageLengthA - (2 * isolen) + 1;
+        comparisons = k > 0 ? (k * (k + 1)) / 2 : 0;
+    } else {
+        comparisons = (messageLengthA - isolen + 1) * (messageLengthB - isolen + 1);
+    }
+
+    var expectedOccurrences = probability * comparisons;
+
+    return {
+        numDistinctChars: numDistinct,
+        probability: probability,
+        expectedOccurrences: expectedOccurrences,
+        significant: expectedOccurrences <= maxExpected,
+    };
+}
+
+// ── ciphertext box management ────────────────────────────────────────────────
+
+var _ctNextUid = 0;
+
+function ctBlockHtml(uid) {
+    return (
+        '<div class="row ct-row" data-uid="' + uid + '" data-tooltip="Enter or paste one ciphertext here. Spaces, punctuation, and dashes (dits) are handled automatically; only characters matching the selected character set are extracted for analysis.">' +
+        '<span class="lbl ct-label"></span>' +
+        '<div class="ctrl">' +
+        '<textarea class="ciphertext-box" placeholder="Paste ciphertext here..."></textarea>' +
+        '<div class="ct-btn-row">' +
+        '<button type="button" class="ct-add-btn" onclick="addCiphertextBox()" title="Add another ciphertext">+</button>' +
+        '<button type="button" class="ct-remove-btn" onclick="removeCiphertextBox(' + uid + ')" title="Remove this ciphertext">&minus;</button>' +
+        '</div>' +
+        '</div>' +
+        '</div>'
+    );
+}
+
+function addCiphertextBox() {
+    var uid = _ctNextUid++;
+    var container = document.getElementById('ciphertext-container');
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = ctBlockHtml(uid);
+    container.appendChild(wrapper.firstChild);
+    renumberCiphertextBoxes();
+}
+
+function removeCiphertextBox(uid) {
+    var row = document.querySelector('.ct-row[data-uid="' + uid + '"]');
+    if (row) row.parentNode.removeChild(row);
+    renumberCiphertextBoxes();
+}
+
+function renumberCiphertextBoxes() {
+    var rows = document.querySelectorAll('.ct-row');
+    for (var i = 0; i < rows.length; i++) {
+        rows[i].querySelector('.ct-label').textContent = 'Ciphertext ' + (i + 1) + ':';
+        rows[i].querySelector('.ct-remove-btn').style.display = (i === 0) ? 'none' : '';
+    }
+}
+
+// ── charset UI ────────────────────────────────────────────────────────────────
+
+var CHARSET_MAP = {
+    '[A-Za-z]':    { pattern: '[A-Z]',       caseSensitive: false },
+    '[0-9]':       { pattern: '[0-9]',        caseSensitive: true  },
+    '[A-Za-z0-9]': { pattern: '[A-Za-z0-9]', caseSensitive: false },
+};
+
+function normalizeCustomCharset(raw) {
+    var s = raw.trim();
+    if (!s) return null;
+    if (s[0] !== '[') s = '[' + s + ']';
+    try { new RegExp('^(?:' + s + ')$'); } catch (e) { return null; }
+    return s;
+}
+
+function onCustomCharsetChange() {
+    // placeholder hook, mirrors stethoscope.html's structure; no dependent fields here
+}
+
+function onCharsetChange() {
+    var charsetKey = document.getElementById('charset').value;
+    document.getElementById('custom_charset').style.display = (charsetKey === '[Other]') ? '' : 'none';
+}
+
+// ── formatting ────────────────────────────────────────────────────────────────
+
+var _MONTHS = ['January','February','March','April','May','June',
+               'July','August','September','October','November','December'];
+
+function runHeader() {
+    var n    = new Date();
+    var dd   = String(n.getDate()).padStart(2, '0');
+    var mon  = _MONTHS[n.getMonth()];
+    var yyyy = n.getFullYear();
+    var hh   = String(n.getHours()).padStart(2, '0');
+    var mm   = String(n.getMinutes()).padStart(2, '0');
+    var ss   = String(n.getSeconds()).padStart(2, '0');
+    return 'ISOMORPH SEARCH (version 0.1)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+}
+
+function formatCiphertextBlock(letters, label) {
+    var lines = [label + ' (' + letters.length + ' letters):'];
+    var groups = [];
+    for (var gi = 0; gi < letters.length; gi += 5) groups.push(letters.slice(gi, gi + 5));
+    var rows = [];
+    for (var ri = 0; ri < groups.length; ri += 10) rows.push(groups.slice(ri, ri + 10).join(' '));
+    for (var rj = 0; rj < rows.length; rj++) lines.push(rows[rj]);
+    return lines.join('\n');
+}
+
+function formatResults(results, minIsolen, maxExpected) {
+    var lines = [];
+    lines.push('SIGNIFICANT ISOMORPHS  (minimum length ' + minIsolen + ', maximum expected ' + maxExpected + ')');
+    lines.push(padStart('MSG A', 6) + ' ' + padStart('MSG B', 6) + ' ' + padStart('POS A', 6) + ' ' +
+               padStart('POS B', 6) + ' ' + padStart('LEN', 4) + ' ' + padStart('EXPECTED', 12) + '   STRINGS');
+
+    results.sort(function(a, b) { return a.significance.expectedOccurrences - b.significance.expectedOccurrences; });
+
+    for (var i = 0; i < results.length; i++) {
+        var r = results[i];
+        lines.push(
+            padStart(r.candidate.messageA + 1, 6) + ' ' + padStart(r.candidate.messageB + 1, 6) + ' ' +
+            padStart(r.candidate.positionA + 1, 6) + ' ' + padStart(r.candidate.positionB + 1, 6) + ' ' +
+            padStart(r.candidate.length, 4) + ' ' + padStart(r.significance.expectedOccurrences.toFixed(4), 12) + '   ' +
+            r.candidate.textA + ' / ' + r.candidate.textB
+        );
+    }
+
+    if (results.length === 0) lines.push('(none found)');
+    else {
+        lines.push('');
+        lines.push('Total significant isomorphs found: ' + results.length);
+    }
+
+    return lines.join('\n');
+}
+
+// ── main run ──────────────────────────────────────────────────────────────────
+
+function runIsomorphSearch() {
+    var btn = document.getElementById('run-btn');
+    btn.disabled = true;
+    var out = document.getElementById('output');
+    out.value = 'Running...';
+
+    try {
+        var charsetKey = document.getElementById('charset').value;
+        var charsetCfg;
+        if (charsetKey === '[Other]') {
+            var normalized = normalizeCustomCharset(document.getElementById('custom_charset').value);
+            if (!normalized) {
+                out.value = 'ERROR: Invalid or empty custom character set.';
+                btn.disabled = false;
+                return;
+            }
+            charsetCfg = { pattern: normalized, caseSensitive: false };
+        } else {
+            charsetCfg = CHARSET_MAP[charsetKey] || CHARSET_MAP['[A-Za-z]'];
+        }
+
+        var alphabet = expandAlphabet(new RegExp('^(?:' + charsetCfg.pattern + ')$', charsetCfg.caseSensitive ? '' : 'i'), charsetCfg.caseSensitive);
+        if (!alphabet) {
+            out.value = "ERROR: charset '" + charsetCfg.pattern + "' matched no characters.";
+            btn.disabled = false;
+            return;
+        }
+
+        var boxes = document.querySelectorAll('.ciphertext-box');
+        var ciphertexts = [];
+        for (var i = 0; i < boxes.length; i++) {
+            var letters = cleanCiphertext(boxes[i].value, charsetCfg.pattern, charsetCfg.caseSensitive);
+            if (letters.length > 0) ciphertexts.push(letters);
+        }
+
+        if (ciphertexts.length === 0) {
+            out.value = 'ERROR: Please enter at least one ciphertext.';
+            btn.disabled = false;
+            return;
+        }
+
+        var minIsolen = parseInt(document.getElementById('min_isolen').value, 10) || 4;
+        var maxExpected = parseFloat(document.getElementById('max_expected').value);
+        if (isNaN(maxExpected)) maxExpected = 0.5;
+        var displayCt = document.getElementById('display_ct').checked;
+        var desc = document.getElementById('description').value.trim();
+
+        var candidates = locateIsomorphs(ciphertexts, minIsolen);
+
+        var results = [];
+        for (var c = 0; c < candidates.length; c++) {
+            var candidate = candidates[c];
+            var selfSearch = candidate.messageA === candidate.messageB;
+            var significance = evaluateIsomorph(
+                candidate.textA, alphabet.length,
+                ciphertexts[candidate.messageA].length, ciphertexts[candidate.messageB].length,
+                selfSearch, maxExpected
+            );
+            if (significance.significant) results.push({ candidate: candidate, significance: significance });
+        }
+
+        var parts = [runHeader(), ''];
+        if (desc) { parts.push('Description: ' + desc); parts.push(''); }
+
+        if (displayCt) {
+            for (var b = 0; b < ciphertexts.length; b++) {
+                parts.push(formatCiphertextBlock(ciphertexts[b], 'Ciphertext ' + (b + 1)));
+                parts.push('');
+            }
+        }
+
+        parts.push(formatResults(results, minIsolen, maxExpected));
+
+        out.value = parts.join('\n');
+    } catch (e) {
+        out.value = 'ERROR: ' + e.message;
+    }
+
+    btn.disabled = false;
+}
+
+function savePdf() {
+    var content = document.getElementById('output').value;
+    if (!content || content === 'Running...') return;
+    document.getElementById('print-area').textContent = content;
+    window.print();
+}
+
+// ── init ──────────────────────────────────────────────────────────────────────
+
+addCiphertextBox();
+
+// ── tooltip ──────────────────────────────────────────────────────────────────
+(function() {
+    var tip = document.createElement('div');
+    tip.style.cssText = 'position:fixed;background:#222;color:#fff;padding:6px 10px;'
+        + 'border-radius:4px;font-size:0.82em;font-family:Arial,sans-serif;'
+        + 'letter-spacing:normal;line-height:1.4;white-space:normal;max-width:300px;'
+        + 'z-index:9999;pointer-events:none;display:none;'
+        + 'box-shadow:0 2px 6px rgba(0,0,0,0.35);';
+    document.body.appendChild(tip);
+
+    var _tipTimer = null;
+
+    function cancelTip() {
+        clearTimeout(_tipTimer);
+        _tipTimer = null;
+        tip.style.display = 'none';
+    }
+
+    document.addEventListener('mouseover', function(e) {
+        var el = e.target.closest('[data-tooltip]');
+        if (el) {
+            clearTimeout(_tipTimer);
+            _tipTimer = setTimeout(function() {
+                tip.textContent = el.dataset.tooltip;
+                tip.style.display = 'block';
+            }, 1000);
+        } else {
+            cancelTip();
+        }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (tip.style.display !== 'none') {
+            var x = e.clientX + 14;
+            var y = e.clientY + 14;
+            if (x + 310 > window.innerWidth)  x = e.clientX - 320;
+            if (y + tip.offsetHeight + 10 > window.innerHeight) y = e.clientY - tip.offsetHeight - 10;
+            tip.style.left = x + 'px';
+            tip.style.top  = y + 'px';
+        }
+    });
+
+    document.addEventListener('mouseout', function(e) {
+        if (!e.relatedTarget || !e.relatedTarget.closest('[data-tooltip]')) {
+            cancelTip();
+        }
+    });
+
+    document.addEventListener('mousedown', function() { cancelTip(); });
+})();
+</script>
+</body>
+</html>
