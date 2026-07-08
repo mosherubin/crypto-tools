@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convert Polyalphabetic to Monoalphabetic</title>
+<style>
+  body { font-family: monospace; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: sans-serif; }
+  p, label { font-family: sans-serif; }
+  textarea { font-family: monospace; font-size: 0.95rem; width: 100%; box-sizing: border-box; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: sans-serif; cursor: pointer; }
+  #output {
+    background: #f4f4f4;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    height: 28rem;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    border: 1px solid #ccc;
+  }
+  a { font-family: sans-serif; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">&larr; back to tools</a></p>
+  <h1>Convert Polyalphabetic to Monoalphabetic</h1>
+  <p>
+    Convert a periodic polyalphabetic ciphertext to monoalphabetic form using a reconstruction matrix.
+    Each ciphertext letter is mapped through its period-indexed alphabet row to the line-0 reference alphabet.
+    Unknown positions (no entry in the matrix row) are shown as <code>.</code>.
+  </p>
+  <p>
+    Matrix format: one row per line, <code>&lt;name&gt; &lt;alphabet&gt;</code>.
+    Line <code>0</code> is the reference plaintext alphabet (defaults to <code>ABCDEFGHIJKLMNOPQRSTUVWXYZ</code> if absent).
+    Lines <code>1</code>&ndash;<code>N</code> are the cipher alphabets; their count determines the period.
+    Use <code>.</code> for unknown positions. Blank lines and lines starting with <code>#</code> are ignored.
+  </p>
+
+  <label for="ciphertext">Ciphertext (non-alphabetic characters are ignored)</label>
+  <textarea id="ciphertext" rows="4"></textarea>
+
+  <label for="matrix" style="margin-top:1rem; display:block;">Reconstruction matrix</label>
+  <textarea id="matrix" rows="14" placeholder="0  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+1  ....YU..A....B...VQH......
+2  Y.WDX........R...T.EV.J...
+3  .G......I...E.J...WM......
+4  .NJ.KQ.V......u..E..H.....
+5  H.CKE......W.Y.....O......
+6  X..Z...U.....I...QN.T.....
+7  ....D...F...C.H..XVKY....."></textarea>
+
+  <button id="run">Run</button>
+
+  <pre id="output"></pre>
+
+<script src="js/reconstruction-matrix.js"></script>
+<script>
+const { parseAndValidate } = ReconstructionMatrix;
+
+const DEFAULT_LINE0 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+function parseMatrix(matrixText) {
+  const rows = parseAndValidate(matrixText.split(/\r?\n/));
+
+  const numericRows = rows.filter(([name]) => /^\d+$/.test(name));
+  if (numericRows.length === 0) throw new Error('Matrix contains no numeric lines.');
+
+  const line0row = numericRows.find(([name]) => name === '0');
+  const line0 = line0row ? line0row[1] : DEFAULT_LINE0;
+
+  const cipherRows = numericRows.filter(([name]) => name !== '0');
+  if (cipherRows.length === 0) throw new Error('Matrix contains no cipher alphabet lines (1..N).');
+
+  const period = Math.max(...cipherRows.map(([name]) => parseInt(name, 10)));
+  for (let i = 1; i <= period; i++) {
+    if (!cipherRows.find(([name]) => parseInt(name, 10) === i))
+      throw new Error(`Matrix is missing line ${i}.`);
+  }
+
+  // Build per-line lookup: letter -> column index
+  const lookup = new Map();
+  for (const [name, alpha] of cipherRows) {
+    const map = {};
+    for (let col = 0; col < alpha.length; col++) {
+      if (alpha[col] !== '.') map[alpha[col]] = col;
+    }
+    lookup.set(parseInt(name, 10), map);
+  }
+
+  return { period, line0, lookup };
+}
+
+function convert(ciphertext, period, line0, lookup) {
+  const letters = ciphertext.toUpperCase().split('').filter(c => /[A-Z]/.test(c));
+  const plaintext = letters.map((c, i) => {
+    const m = (i % period) + 1;
+    const col = lookup.get(m)[c];
+    return col !== undefined ? line0[col] : '.';
+  });
+  return { letters, plaintext };
+}
+
+function formatOutput(letters, plaintext, period) {
+  const groupsPerLine = Math.floor(51 / (period + 1));
+  const ptGroups = [];
+  const ctGroups = [];
+  for (let i = 0; i < plaintext.length; i += period) {
+    ptGroups.push(plaintext.slice(i, i + period).join(''));
+    ctGroups.push(letters.slice(i, i + period).join(''));
+  }
+
+  const lines = [];
+  for (let i = 0; i < ptGroups.length; i += groupsPerLine) {
+    lines.push(ptGroups.slice(i, i + groupsPerLine).join(' '));
+    lines.push(ctGroups.slice(i, i + groupsPerLine).join(' '));
+    if (i + groupsPerLine < ptGroups.length) lines.push('');
+  }
+  return lines.join('\n');
+}
+
+document.getElementById('run').addEventListener('click', () => {
+  const output = document.getElementById('output');
+  output.textContent = 'Working ...';
+  output.scrollTop = 0;
+
+  setTimeout(() => {
+    try {
+      const matrixText = document.getElementById('matrix').value;
+      const ciphertextRaw = document.getElementById('ciphertext').value;
+
+      const { period, line0, lookup } = parseMatrix(matrixText);
+      const { letters, plaintext } = convert(ciphertextRaw, period, line0, lookup);
+
+      if (letters.length === 0) throw new Error('Ciphertext contains no alphabetic characters.');
+
+      output.textContent = '\n' + formatOutput(letters, plaintext, period);
+    } catch (e) {
+      output.textContent = `ERROR: ${e.message}`;
+    }
+    output.scrollTop = 0;
+  }, 0);
+});
+</script>
+<script data-goatcounter="https://mosherubin.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
