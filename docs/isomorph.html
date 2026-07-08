@@ -521,6 +521,12 @@ function formatCiphertextBlock(letters, label) {
     return lines.join('\n');
 }
 
+function formatResultRowPrefix(candidate, significance) {
+    return padStart(candidate.messageA + 1, 6) + ' ' + padStart(candidate.messageB + 1, 6) + ' ' +
+           padStart(candidate.positionA + 1, 6) + ' ' + padStart(candidate.positionB + 1, 6) + ' ' +
+           padStart(candidate.length, 4) + ' ' + padStart(significance.expectedOccurrences.toFixed(4), 12) + '   ';
+}
+
 function formatResults(results, minIsolen, maxExpected) {
     var lines = [];
     lines.push('SIGNIFICANT ISOMORPHS  (minimum length ' + minIsolen + ', maximum expected ' + maxExpected + ')');
@@ -531,12 +537,10 @@ function formatResults(results, minIsolen, maxExpected) {
 
     for (var i = 0; i < results.length; i++) {
         var r = results[i];
-        lines.push(
-            padStart(r.candidate.messageA + 1, 6) + ' ' + padStart(r.candidate.messageB + 1, 6) + ' ' +
-            padStart(r.candidate.positionA + 1, 6) + ' ' + padStart(r.candidate.positionB + 1, 6) + ' ' +
-            padStart(r.candidate.length, 4) + ' ' + padStart(r.significance.expectedOccurrences.toFixed(4), 12) + '   ' +
-            r.candidate.textA + ' / ' + r.candidate.textB
-        );
+        var prefix = formatResultRowPrefix(r.candidate, r.significance);
+        lines.push(prefix + r.candidate.textA);
+        lines.push(repeatChar(' ', prefix.length) + r.candidate.textB);
+        if (i < results.length - 1) lines.push('');
     }
 
     if (results.length === 0) lines.push('(none found)');
