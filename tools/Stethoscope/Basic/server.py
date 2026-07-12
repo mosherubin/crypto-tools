@@ -11,6 +11,22 @@ import os
 import traceback
 
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'Library'))
+from isomorph_search import locate_isomorphs as _locate_isomorphs
+from isomorph_evaluation import evaluate_isomorph as _evaluate_isomorph
+
+_ISO_MIN_LEN = 4
+_ISO_MAX_EXPECTED = 0.5
+
+def _find_significant_isomorphs(letters: str, alphabet_size: int) -> list:
+    candidates = _locate_isomorphs([letters], _ISO_MIN_LEN)
+    results = []
+    for c in candidates:
+        sig = _evaluate_isomorph(c.text_a, alphabet_size, len(letters), len(letters),
+                                 True, _ISO_MAX_EXPECTED)
+        if sig.significant:
+            results.append((c, sig))
+    return results
 
 from flask import Flask, request, jsonify
 
@@ -101,7 +117,7 @@ _HTML = """\
 </style>
 </head>
 <body>
-<h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.5)</span></h1>
+<h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.6)</span></h1>
 
 <div class="row">
   <span class="lbl">Ciphertext:</span>
@@ -154,7 +170,7 @@ function runHeader() {
   const hh   = String(n.getHours()).padStart(2, '0');
   const mm   = String(n.getMinutes()).padStart(2, '0');
   const ss   = String(n.getSeconds()).padStart(2, '0');
-  return `STETHOSCOPE PROGRAM (version 0.5)  (Moshe Rubin)  Timestamp  ${dd} ${mon} ${yyyy}  -  ${hh}:${mm}:${ss}`;
+  return `STETHOSCOPE PROGRAM (version 0.6)  (Moshe Rubin)  Timestamp  ${dd} ${mon} ${yyyy}  -  ${hh}:${mm}:${ss}`;
 }
 
 async function runTests() {
@@ -249,7 +265,8 @@ def run():
 
 
 def _run_suite(ct, display_ct: bool, max_repeats: int = 50,
-               delta_config=None, charset_pattern='[A-Z]', casesensitive=False) -> str:
+               delta_config=None, charset_pattern='[A-Z]', casesensitive=False,
+               include_isomorphs: bool = True) -> str:
     parts = []
 
     if display_ct:
@@ -274,6 +291,8 @@ def _run_suite(ct, display_ct: bool, max_repeats: int = 50,
     trig_cut_b   = trigraphic_ic.run_cut_B(ct)
     trig_cut_c   = trigraphic_ic.run_cut_C(ct)
 
+    iso_result = _find_significant_isomorphs(ct.letters, len(ct.alphabet)) if include_isomorphs else None
+
     ds_result = None
     if delta_config:
         offset   = delta_config['offset']
@@ -293,7 +312,7 @@ def _run_suite(ct, display_ct: bool, max_repeats: int = 50,
         ct, mc_result, ic_result,
         dig_overall, dig_cut_a, dig_cut_b,
         trig_overall, trig_cut_a, trig_cut_b, trig_cut_c,
-        lr_result, wt_result, poly_result, lor_result, ds_result,
+        lr_result, wt_result, poly_result, lor_result, ds_result, iso_result,
     ))
 
     if ds_result and ds_result.entries:
@@ -310,7 +329,7 @@ def _run_suite(ct, display_ct: bool, max_repeats: int = 50,
         parts.append(f'STETHOSCOPE ANALYSIS OF DELTA STREAM  OFFSET {entry.offset:>2}'
                      f'  ALPHABET  {entry.alphabet}')
         parts.append(sep)
-        parts.append(_run_suite(delta_ct, False, max_repeats))
+        parts.append(_run_suite(delta_ct, False, max_repeats, include_isomorphs=False))
 
     return '\n'.join(parts)
 

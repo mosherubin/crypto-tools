@@ -9,12 +9,15 @@ Width tests, polygraphic IC, and list of repeats follow below.
 
 import sys, os; sys.path.insert(0, os.path.dirname(__file__))
 
+_ISO_MIN_LEN = 4
+_ISO_MAX_EXPECTED = 0.5
+
 
 def format_listing(ct, mc_result, ic_result,
                    dig_overall, dig_cut_a, dig_cut_b,
                    trig_overall, trig_cut_a, trig_cut_b, trig_cut_c,
                    lr_result, wt_result, poly_result, repeats_result,
-                   ds_result=None):
+                   ds_result=None, iso_result=None):
     out = []
     alphabet = ct.alphabet
     counts = mc_result.counts
@@ -129,6 +132,11 @@ def format_listing(ct, mc_result, ic_result,
         if remaining > 0:
             out.append(f'MORE ({remaining} remaining)')
 
+    # Significant isomorphs
+    if iso_result is not None:
+        out.append('')
+        out.append(_format_iso_section(iso_result))
+
     # Delta stream
     if ds_result and ds_result.entries:
         out.append('')
@@ -141,6 +149,26 @@ def format_listing(ct, mc_result, ic_result,
                 out.append(row)
 
     return '\n'.join(out)
+
+
+def _format_iso_section(iso_pairs):
+    lines = [f'SIGNIFICANT ISOMORPHS  (minimum length {_ISO_MIN_LEN}, maximum expected {_ISO_MAX_EXPECTED})']
+    lines.append(f'{"MSG A":>6} {"MSG B":>6} {"POS A":>6} {"POS B":>6} {"LEN":>4} {"EXPECTED":>12}   STRINGS')
+    sorted_pairs = sorted(iso_pairs, key=lambda r: r[1].expected_occurrences)
+    for i, (candidate, significance) in enumerate(sorted_pairs):
+        prefix = (f'{candidate.message_a + 1:>6} {candidate.message_b + 1:>6} '
+                  f'{candidate.position_a + 1:>6} {candidate.position_b + 1:>6} '
+                  f'{candidate.length:>4} {significance.expected_occurrences:>12.4f}   ')
+        lines.append(prefix + candidate.text_a)
+        lines.append(' ' * len(prefix) + candidate.text_b)
+        if i < len(sorted_pairs) - 1:
+            lines.append('')
+    if not sorted_pairs:
+        lines.append('(none found)')
+    else:
+        lines.append('')
+        lines.append(f'Total significant isomorphs found: {len(sorted_pairs)}')
+    return '\n'.join(lines)
 
 
 def _ic_row(label, ic_str, sigmage, N, obs, exp_str):

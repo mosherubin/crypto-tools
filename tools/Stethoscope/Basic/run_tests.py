@@ -4,6 +4,24 @@ Usage: python run_tests.py <input.json> [<input.json> ...]
 """
 
 import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'Library'))
+from isomorph_search import locate_isomorphs as _locate_isomorphs
+from isomorph_evaluation import evaluate_isomorph as _evaluate_isomorph
+
+_ISO_MIN_LEN = 4
+_ISO_MAX_EXPECTED = 0.5
+
+def _find_significant_isomorphs(letters: str, alphabet_size: int) -> list:
+    candidates = _locate_isomorphs([letters], _ISO_MIN_LEN)
+    results = []
+    for c in candidates:
+        sig = _evaluate_isomorph(c.text_a, alphabet_size, len(letters), len(letters),
+                                 True, _ISO_MAX_EXPECTED)
+        if sig.significant:
+            results.append((c, sig))
+    return results
+
 import ciphertext
 import format_report
 import version as _version
@@ -33,7 +51,7 @@ def run_file(path: str):
     print(f"  ditscount     : {ct.ditscount}")
     print()
 
-    mc_result = ic_result = lr_result = wt_result = poly_result = lor_result = ds_result = None
+    mc_result = ic_result = lr_result = wt_result = poly_result = lor_result = ds_result = iso_result = None
     dig_overall = dig_cut_a = dig_cut_b = None
     trig_overall = trig_cut_a = trig_cut_b = trig_cut_c = None
 
@@ -81,6 +99,11 @@ def run_file(path: str):
         _report('delta_stream', ds_result)
     except Exception as e:
         print(f"  [delta_stream] RUNTIME ERROR: {e}")
+
+    try:
+        iso_result = _find_significant_isomorphs(ct.letters, len(ct.alphabet))
+    except Exception as e:
+        print(f"  [isomorphs] RUNTIME ERROR: {e}")
 
     try:
         dig_overall = digraphic_ic.run_overall(ct)
@@ -132,7 +155,7 @@ def run_file(path: str):
                 ct, mc_result, ic_result,
                 dig_overall, dig_cut_a, dig_cut_b,
                 trig_overall, trig_cut_a, trig_cut_b, trig_cut_c,
-                lr_result, wt_result, poly_result, lor_result, ds_result,
+                lr_result, wt_result, poly_result, lor_result, ds_result, iso_result,
             )
             print(listing)
         except Exception as e:

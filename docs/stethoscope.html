@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.5)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.6)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -602,7 +602,7 @@ function _repeat(ch, n)  { var s = ''; for (var i = 0; i < n; i++) s += ch; retu
 function formatListing(ct, mc, icResult,
         digOverall, digCutA, digCutB,
         trigOverall, trigCutA, trigCutB, trigCutC,
-        lrResult, wtResult, polyResult, repeatsResult, dsResult) {
+        lrResult, wtResult, polyResult, repeatsResult, dsResult, isoResult) {
 
     var out      = [];
     var alphabet = ct.alphabet;
@@ -729,6 +729,12 @@ function formatListing(ct, mc, icResult,
         if (remaining > 0) out.push('MORE (' + remaining + ' remaining)');
     }
 
+    // Significant isomorphs
+    if (isoResult !== null && isoResult !== undefined) {
+        out.push('');
+        out.push(_formatIsomorphSection(isoResult));
+    }
+
     // Delta stream
     if (dsResult && dsResult.entries.length > 0) {
         out.push('');
@@ -755,7 +761,8 @@ var CHARSET_MAP = {
     '[A-Za-z0-9]': { pattern: '[A-Za-z0-9]', caseSensitive: false },
 };
 
-function runSuite(ct, displayCt, maxRepeats, deltaConfig) {
+function runSuite(ct, displayCt, maxRepeats, deltaConfig, includeIsomorphs) {
+    if (includeIsomorphs === undefined) includeIsomorphs = true;
     var parts = [];
     if (displayCt) {
         var text   = ct.letters;
@@ -783,10 +790,11 @@ function runSuite(ct, displayCt, maxRepeats, deltaConfig) {
     var trigCutA    = runTrigraphicCutA(ct);
     var trigCutB    = runTrigraphicCutB(ct);
     var trigCutC    = runTrigraphicCutC(ct);
+    var isoResult   = includeIsomorphs ? _findSignificantIsomorphs(ct.letters, ct.alphabet.length) : null;
     parts.push(formatListing(ct, mc, icResult,
         digOverall, digCutA, digCutB,
         trigOverall, trigCutA, trigCutB, trigCutC,
-        lr, wt, poly, lor, ds));
+        lr, wt, poly, lor, ds, isoResult));
 
     if (ds && ds.entries.length > 0 && deltaConfig) {
         var entry = ds.entries[0];
@@ -799,7 +807,7 @@ function runSuite(ct, displayCt, maxRepeats, deltaConfig) {
         var deltaCt = createFromText(entry.stream,
                           deltaConfig.charsetPattern, deltaConfig.caseSensitive,
                           'Delta stream offset=' + entry.offset);
-        parts.push(runSuite(deltaCt, false, maxRepeats, null));
+        parts.push(runSuite(deltaCt, false, maxRepeats, null, false));
     }
 
     return parts.join('\n');
@@ -818,7 +826,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.5)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.6)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
@@ -937,6 +945,185 @@ function runTests() {
 // Initialise alphabet field to match the default charset on page load
 document.getElementById('delta_alphabet').value =
     _DEFAULT_ALPHABETS[document.getElementById('charset').value] || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+// ── isomorph search ──────────────────────────────────────────────────────────
+// Ported from isomorph.html (isomorph_search.py + isomorph_evaluation.py)
+
+var _ISO_MIN_LEN = 4;
+var _ISO_MAX_EXPECTED = 0.5;
+
+function _buildDelta(letters) {
+    var delta = new Array(letters.length).fill(null);
+    var lastSeen = {};
+    for (var i = 0; i < letters.length; i++) {
+        var ch = letters[i];
+        if (lastSeen.hasOwnProperty(ch)) delta[lastSeen[ch]] = i - lastSeen[ch];
+        lastSeen[ch] = i;
+    }
+    return delta;
+}
+
+function _extendIsomorph(deltaA, deltaB, startA, startB, maxExtent) {
+    var limit = maxExtent, length = 0;
+    while (length < limit) {
+        var da = deltaA[startA + length], db = deltaB[startB + length];
+        if (da !== db) {
+            var nearestRepeat = (da === null) ? db : (db === null ? da : Math.min(da, db));
+            var newLimit = length + nearestRepeat;
+            if (newLimit < limit) limit = newLimit;
+            if (length >= limit) break;
+        }
+        length++;
+    }
+    return length;
+}
+
+function _scanAlignmentIso(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, selfSearch) {
+    var lenA = lettersA.length, lenB = lettersB.length, candidates = [];
+    var posA = Math.max(0, -offset), posB = posA + offset;
+    while (posA < lenA && posB < lenB) {
+        var room = Math.min(lenA - posA, lenB - posB);
+        if (selfSearch) room = Math.min(room, offset);
+        var length = _extendIsomorph(deltaA, deltaB, posA, posB, room);
+        if (length >= minIsolen)
+            candidates.push({ messageA: 0, messageB: 0, positionA: posA, positionB: posB,
+                              length: length, textA: lettersA.slice(posA, posA + length),
+                              textB: lettersB.slice(posB, posB + length) });
+        posA++; posB++;
+    }
+    return candidates;
+}
+
+function _findIsomorphsBetweenIso(lettersA, deltaA, lettersB, deltaB, minIsolen, selfSearch) {
+    var lenA = lettersA.length, lenB = lettersB.length, candidates = [], offset;
+    if (selfSearch) {
+        for (offset = minIsolen; offset < lenA; offset++)
+            candidates = candidates.concat(_scanAlignmentIso(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, true));
+    } else {
+        for (offset = -(lenA - 1); offset < lenB; offset++)
+            candidates = candidates.concat(_scanAlignmentIso(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, false));
+    }
+    return candidates;
+}
+
+function _filterMaximalIso(candidates) {
+    var groups = {}, i, key;
+    for (i = 0; i < candidates.length; i++) {
+        var c = candidates[i];
+        key = c.messageA + ',' + c.messageB + ',' + (c.positionB - c.positionA);
+        if (!groups.hasOwnProperty(key)) groups[key] = [];
+        groups[key].push(c);
+    }
+    var maximal = [];
+    for (key in groups) {
+        if (!groups.hasOwnProperty(key)) continue;
+        var group = groups[key];
+        for (var a = 0; a < group.length; a++) {
+            var cand = group[a], contained = false;
+            for (var b = 0; b < group.length; b++) {
+                var other = group[b];
+                if (other === cand) continue;
+                if (other.positionA <= cand.positionA &&
+                    other.positionA + other.length >= cand.positionA + cand.length) {
+                    contained = true; break;
+                }
+            }
+            if (!contained) maximal.push(cand);
+        }
+    }
+    return maximal;
+}
+
+function _locateIsomorphsIso(ciphertexts, minIsolen) {
+    var deltas = [], d, i, j, k, found;
+    for (d = 0; d < ciphertexts.length; d++) deltas.push(_buildDelta(ciphertexts[d]));
+    var results = [];
+    for (i = 0; i < ciphertexts.length; i++) {
+        for (j = i; j < ciphertexts.length; j++) {
+            found = _findIsomorphsBetweenIso(ciphertexts[i], deltas[i], ciphertexts[j], deltas[j], minIsolen, i === j);
+            for (k = 0; k < found.length; k++) { found[k].messageA = i; found[k].messageB = j; }
+            results = results.concat(found);
+        }
+    }
+    return _filterMaximalIso(results);
+}
+
+var _isoStirlingCache = {};
+function _isoStirling(n, k) {
+    if (k > n) return 0;
+    if (k === 0) return (n === 0) ? 1 : 0;
+    if (k === n || k === 1) return 1;
+    var key = n + ',' + k;
+    if (_isoStirlingCache.hasOwnProperty(key)) return _isoStirlingCache[key];
+    var v = k * _isoStirling(n - 1, k) + _isoStirling(n - 1, k - 1);
+    _isoStirlingCache[key] = v;
+    return v;
+}
+
+function _isoLogFact(n) { var s = 0; for (var k = 2; k <= n; k++) s += Math.log(k); return s; }
+
+var _isoShapeCache = {};
+function _isoShapeProb(isolen, numDistinct, alphabetSize) {
+    var key = isolen + ',' + numDistinct + ',' + alphabetSize;
+    if (_isoShapeCache.hasOwnProperty(key)) return _isoShapeCache[key];
+    var logFF  = _isoLogFact(alphabetSize) - _isoLogFact(alphabetSize - numDistinct);
+    var logSPM = logFF - isolen * Math.log(alphabetSize);
+    var p = _isoStirling(isolen, numDistinct) * Math.exp(2 * logSPM);
+    _isoShapeCache[key] = p;
+    return p;
+}
+
+function _isoEvaluate(text, alphabetSize, lenA, lenB, selfSearch, maxExpected) {
+    var isolen = text.length, seen = {}, i;
+    for (i = 0; i < text.length; i++) seen[text[i]] = true;
+    var numDistinct = Object.keys(seen).length;
+    var prob = _isoShapeProb(isolen, numDistinct, alphabetSize);
+    var comparisons;
+    if (selfSearch) {
+        var k = lenA - (2 * isolen) + 1;
+        comparisons = k > 0 ? (k * (k + 1)) / 2 : 0;
+    } else {
+        comparisons = (lenA - isolen + 1) * (lenB - isolen + 1);
+    }
+    var expected = prob * comparisons;
+    return { numDistinctChars: numDistinct, probability: prob,
+             expectedOccurrences: expected, significant: expected <= maxExpected };
+}
+
+function _findSignificantIsomorphs(letters, alphabetSize) {
+    var candidates = _locateIsomorphsIso([letters], _ISO_MIN_LEN);
+    var results = [], i, c, sig;
+    for (i = 0; i < candidates.length; i++) {
+        c = candidates[i];
+        sig = _isoEvaluate(c.textA, alphabetSize, letters.length, letters.length, true, _ISO_MAX_EXPECTED);
+        if (sig.significant) results.push({ candidate: c, significance: sig });
+    }
+    return results;
+}
+
+function _formatIsomorphSection(results) {
+    var lines = ['SIGNIFICANT ISOMORPHS  (minimum length ' + _ISO_MIN_LEN + ', maximum expected ' + _ISO_MAX_EXPECTED + ')'];
+    lines.push(_padStart('MSG A', 6) + ' ' + _padStart('MSG B', 6) + ' ' +
+               _padStart('POS A', 6) + ' ' + _padStart('POS B', 6) + ' ' +
+               _padStart('LEN', 4) + ' ' + _padStart('EXPECTED', 12) + '   STRINGS');
+    results.sort(function(a, b) { return a.significance.expectedOccurrences - b.significance.expectedOccurrences; });
+    var i, r, prefix;
+    for (i = 0; i < results.length; i++) {
+        r = results[i];
+        prefix = _padStart(String(r.candidate.messageA + 1), 6) + ' ' +
+                 _padStart(String(r.candidate.messageB + 1), 6) + ' ' +
+                 _padStart(String(r.candidate.positionA + 1), 6) + ' ' +
+                 _padStart(String(r.candidate.positionB + 1), 6) + ' ' +
+                 _padStart(String(r.candidate.length), 4) + ' ' +
+                 _padStart(r.significance.expectedOccurrences.toFixed(4), 12) + '   ';
+        lines.push(prefix + r.candidate.textA);
+        lines.push(_repeat(' ', prefix.length) + r.candidate.textB);
+        if (i < results.length - 1) lines.push('');
+    }
+    if (results.length === 0) lines.push('(none found)');
+    else { lines.push(''); lines.push('Total significant isomorphs found: ' + results.length); }
+    return lines.join('\n');
+}
 
 // ── tooltip ──────────────────────────────────────────────────────────────────
 (function() {
