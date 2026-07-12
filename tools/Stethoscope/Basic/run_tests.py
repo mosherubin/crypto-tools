@@ -200,11 +200,12 @@ def _run_full_listing(ct) -> None:
     trig_cut_a   = trigraphic_ic.run_cut_A(ct)
     trig_cut_b   = trigraphic_ic.run_cut_B(ct)
     trig_cut_c   = trigraphic_ic.run_cut_C(ct)
+    iso = _find_significant_isomorphs(ct.letters, len(ct.alphabet))
     print(format_report.format_listing(
         ct, mc, ic,
         dig_overall, dig_cut_a, dig_cut_b,
         trig_overall, trig_cut_a, trig_cut_b, trig_cut_c,
-        lr, wt, poly, lor,
+        lr, wt, poly, lor, iso_result=iso,
     ))
 
 
