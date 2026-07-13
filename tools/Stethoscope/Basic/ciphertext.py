@@ -39,6 +39,47 @@ def _expand_alphabet(charset_re: re.Pattern, casesensitive: bool) -> str:
     return ''.join(ch for ch in candidates if charset_re.fullmatch(ch))
 
 
+def _strip_ignored_boundary(raw: str, remove_from_start: int, remove_from_end: int,
+                             ignore_re: re.Pattern) -> str:
+    """Strip `remove_from_start`/`remove_from_end` non-ignored characters from raw's ends.
+
+    Characters matching `ignore_re` (e.g. whitespace between groups) don't count
+    toward the removal total, so a preamble/postamble can be specified by its
+    cipher-letter length without having to also count intervening spaces.
+    """
+    start = 0
+    if remove_from_start:
+        seen = 0
+        for offset, ch in enumerate(raw):
+            if not ignore_re.fullmatch(ch):
+                seen += 1
+                if seen == remove_from_start:
+                    start = offset + 1
+                    break
+        else:
+            raise ValueError(
+                f"remove_from_start={remove_from_start} exceeds the number of "
+                f"non-ignored characters in raw ({seen} found)"
+            )
+
+    end = len(raw)
+    if remove_from_end:
+        seen = 0
+        for offset in range(len(raw) - 1, -1, -1):
+            if not ignore_re.fullmatch(raw[offset]):
+                seen += 1
+                if seen == remove_from_end:
+                    end = offset
+                    break
+        else:
+            raise ValueError(
+                f"remove_from_end={remove_from_end} exceeds the number of "
+                f"non-ignored characters in raw ({seen} found)"
+            )
+
+    return raw[start:end]
+
+
 def load(path: str) -> CiphertextData:
     """Load and parse a STETHOSCOPE JSON input file."""
     with open(path, encoding='utf-8') as f:
@@ -46,12 +87,6 @@ def load(path: str) -> CiphertextData:
 
     ct = data['ciphertext']
     raw: str = ct['raw']
-
-    remove_from_start: int = ct.get('remove_from_start', 0)
-    remove_from_end: int = ct.get('remove_from_end', 0)
-    if remove_from_start or remove_from_end:
-        end = len(raw) - remove_from_end if remove_from_end else len(raw)
-        raw = raw[remove_from_start:end]
 
     charset_pattern: str = ct.get('charset', r'[A-Z]')
     ignorechars_pattern: str = ct.get('ignorechars', r'\s')
@@ -76,6 +111,11 @@ def load(path: str) -> CiphertextData:
             f"ditschar {ditschar!r} will be ignored by the 'ignorechars' regex "
             f"'{ignorechars_pattern}'; modify one of the strings."
         )
+
+    remove_from_start: int = ct.get('remove_from_start', 0)
+    remove_from_end: int = ct.get('remove_from_end', 0)
+    if remove_from_start or remove_from_end:
+        raw = _strip_ignored_boundary(raw, remove_from_start, remove_from_end, ignore_re)
 
     alphabet = _expand_alphabet(charset_re, casesensitive)
     if not alphabet:
