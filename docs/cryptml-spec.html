@@ -593,34 +593,57 @@ can assume brackets are always present and never needs its own
 normalization step.)</li>
 </ul>
 <h2 id="shared-sub-object-shapes">Shared sub-object shapes</h2>
+<p><code>origin</code> and <code>source</code> are easy to conflate but
+answer different questions. <code>origin</code> is the one-of-a-kind
+story of how <em>this specific ciphertext</em> came to exist and how you
+came to have it — one story per ciphertext, never cascades.
+<code>source</code> is a bibliographic citation of where it’s published
+or documented, and a ciphertext can have more than one (a real intercept
+might be in a book <em>and</em> discussed on a web forum) — hence
+<code>sources</code> is a list, and it cascades (see <a href="#cascade-rules">Cascade rules</a>).</p>
 <h3 id="origin"><code>origin</code></h3>
 <table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
 <thead>
 <tr>
 <th>Field</th>
 <th>Type</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>date</code></td>
 <td>string</td>
+<td>When the message/cryptogram itself was created or transmitted — not
+when it was published.</td>
 </tr>
 <tr>
-<td><code>collector</code></td>
+<td><code>originator</code></td>
 <td>string</td>
+<td>Who composed or sent it — the puzzle’s setter, or a real message’s
+sender. Not the author of a book it later appeared in; see
+<code>source.author</code> for that.</td>
 </tr>
 <tr>
 <td><code>method</code></td>
 <td>string</td>
+<td>How this copy was produced or obtained, e.g. “transcribed from
+photo”, “typed from book”.</td>
 </tr>
 <tr>
 <td><code>location</code></td>
 <td>string</td>
+<td>Free text, e.g. where it was found or created.</td>
 </tr>
 <tr>
 <td><code>remarks</code></td>
 <td>string</td>
+<td>Anything else about the origin.</td>
 </tr>
 </tbody>
 </table>
@@ -628,13 +651,15 @@ normalization step.)</li>
 <code>sources</code> list)</h3>
 <table>
 <colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
 </colgroup>
 <thead>
 <tr>
 <th>Field</th>
 <th>Type</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
@@ -643,34 +668,44 @@ normalization step.)</li>
 <td>one of <code>book</code>, <code>web</code>, <code>letter</code>,
 <code>periodical</code>, <code>person</code>, <code>competition</code>,
 <code>other</code></td>
+<td></td>
 </tr>
 <tr>
 <td><code>title</code></td>
 <td>string</td>
+<td>Title of the book/page/periodical/etc.</td>
 </tr>
 <tr>
 <td><code>author</code></td>
 <td>string</td>
+<td>Author of the publication — not who composed the cryptogram itself;
+see <code>origin.originator</code> for that.</td>
 </tr>
 <tr>
 <td><code>publisher</code></td>
 <td>string</td>
+<td>Publisher, if applicable.</td>
 </tr>
 <tr>
 <td><code>date</code></td>
 <td>string</td>
+<td>Publication or acquisition date of this citation — not when the
+ciphertext itself was created.</td>
 </tr>
 <tr>
 <td><code>page</code></td>
 <td>string</td>
+<td>Page/section reference.</td>
 </tr>
 <tr>
 <td><code>url</code></td>
 <td>string</td>
+<td>URL, if a web source.</td>
 </tr>
 <tr>
 <td><code>note</code></td>
 <td>string</td>
+<td>Anything else about this source.</td>
 </tr>
 </tbody>
 </table>

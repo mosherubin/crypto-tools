@@ -199,28 +199,36 @@ Multiple occurrences in one `raw` are allowed; there's no cap.
 
 ## Shared sub-object shapes
 
+`origin` and `source` are easy to conflate but answer different questions.
+`origin` is the one-of-a-kind story of how *this specific ciphertext* came
+to exist and how you came to have it — one story per ciphertext, never
+cascades. `source` is a bibliographic citation of where it's published or
+documented, and a ciphertext can have more than one (a real intercept might
+be in a book *and* discussed on a web forum) — hence `sources` is a list,
+and it cascades (see [Cascade rules](#cascade-rules)).
+
 ### `origin`
 
-| Field | Type |
-|---|---|
-| `date` | string |
-| `collector` | string |
-| `method` | string |
-| `location` | string |
-| `remarks` | string |
+| Field | Type | Meaning |
+|---|---|---|
+| `date` | string | When the message/cryptogram itself was created or transmitted — not when it was published. |
+| `originator` | string | Who composed or sent it — the puzzle's setter, or a real message's sender. Not the author of a book it later appeared in; see `source.author` for that. |
+| `method` | string | How this copy was produced or obtained, e.g. "transcribed from photo", "typed from book". |
+| `location` | string | Free text, e.g. where it was found or created. |
+| `remarks` | string | Anything else about the origin. |
 
 ### `source` (item of a `sources` list)
 
-| Field | Type |
-|---|---|
-| `type` | one of `book`, `web`, `letter`, `periodical`, `person`, `competition`, `other` |
-| `title` | string |
-| `author` | string |
-| `publisher` | string |
-| `date` | string |
-| `page` | string |
-| `url` | string |
-| `note` | string |
+| Field | Type | Meaning |
+|---|---|---|
+| `type` | one of `book`, `web`, `letter`, `periodical`, `person`, `competition`, `other` | |
+| `title` | string | Title of the book/page/periodical/etc. |
+| `author` | string | Author of the publication — not who composed the cryptogram itself; see `origin.originator` for that. |
+| `publisher` | string | Publisher, if applicable. |
+| `date` | string | Publication or acquisition date of this citation — not when the ciphertext itself was created. |
+| `page` | string | Page/section reference. |
+| `url` | string | URL, if a web source. |
+| `note` | string | Anything else about this source. |
 
 ### `solution`
 
