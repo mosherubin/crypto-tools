@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Moshe Rubin" />
+  <meta name="dcterms.date" content="2026-06-22" />
+  <title>Stethoscope Listing Viability</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+white-space: pre-wrap;
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style>
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #888; padding: 6px 10px; }
+th { background-color: #f0f0f0; }
+tr:nth-child(even) { background-color: #f9f9f9; }
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Stethoscope Listing Viability</h1>
+<p class="author">Moshe Rubin</p>
+<p class="date">22 June 2026</p>
+</header>
+<h1 id="stethoscope-listing-viability">Stethoscope Listing
+Viability</h1>
+<p><em>22 June 2026</em></p>
+<p>This document records which of Callimahos’s 147 STETHOSCOPE listings
+are viable. By “viable” we mean that the listing does not have obvious
+errors in it. Any non-viable listing cannot be used for testing our
+STETHOSCOPE tool implementation.</p>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 12%" />
+<col style="width: 19%" />
+<col style="width: 31%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr>
+<th>Source</th>
+<th style="text-align: right;">Page</th>
+<th style="text-align: center;">Viable?</th>
+<th style="text-align: center;">Alph/Numeric?</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I 2 7</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Alph</td>
+<td>‘m’ and ‘n’ freq counts are +/- 1</td>
+</tr>
+<tr>
+<td>I 2 13</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Alph</td>
+<td>True length=225, listing says 208 with 18 dits</td>
+</tr>
+<tr>
+<td>I 3 5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Numeric</td>
+<td>True length 240, not 236, freq count is off</td>
+</tr>
+<tr>
+<td>I 3 6</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Numeric</td>
+<td>Listing says has 1 dit</td>
+</tr>
+<tr>
+<td>I 3 7</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Numeric</td>
+<td></td>
+</tr>
+<tr>
+<td>I 4 3</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Numeric</td>
+<td></td>
+</tr>
+<tr>
+<td>I 4 4</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Numeric</td>
+<td></td>
+</tr>
+<tr>
+<td>I 4 5</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 4 7</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 4 8A</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 4 8B</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 4 9A</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 4 9B</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 5 1</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 6 1</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 6 4</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 6 5</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 7 4</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Numeric</td>
+<td>Count of ‘5’ is really 23 and not 22, count of ‘6’ is really 25 and
+not 26. NOTE: Although CT is groups of 3, the cuts are NOT shifted</td>
+</tr>
+<tr>
+<td>I 7 5</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Alph</td>
+<td>BUG: The Tri- CUT results are shifted around, checking if it’s the
+groups of 3</td>
+</tr>
+<tr>
+<td>I 7 6</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Numeric</td>
+<td>Really has 320 digits, it says it has 319</td>
+</tr>
+<tr>
+<td>I 8 1</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 8 3</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 8 6</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 8 7</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 8 9</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 9 1</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 9 2</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>I 10 2</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Alph</td>
+<td></td>
+</tr>
+<tr>
+<td>I 10 3</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Alph</td>
+<td>True length is 300, not 299</td>
+</tr>
+<tr>
+<td>I 10 4</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Alph</td>
+<td></td>
+</tr>
+<tr>
+<td>II 1 1</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 1 1*</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 1 2</td>
+<td style="text-align: right;">65</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 1 2*</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 1 7</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 2 3</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 2 6a</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 2 6b</td>
+<td style="text-align: right;">75</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 4 4</td>
+<td style="text-align: right;">77</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 4 6</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 4 7</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 5 1</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 5 7</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 5 8</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 6 3/3</td>
+<td style="text-align: right;">89</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 6 4/2</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 7 1</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 7 2</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Alph</td>
+<td>Last three letters are padding Xs</td>
+</tr>
+<tr>
+<td>II 7 9</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 8 1</td>
+<td style="text-align: right;">99</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 8 2</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 8 4</td>
+<td style="text-align: right;">103</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 8 5</td>
+<td style="text-align: right;">105</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 8 6</td>
+<td style="text-align: right;">107</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 8 7A</td>
+<td style="text-align: right;">109</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 9 1A</td>
+<td style="text-align: right;">111</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 9 2A</td>
+<td style="text-align: right;">113</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 9 2B</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 10 1</td>
+<td style="text-align: right;">117</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 10 3A</td>
+<td style="text-align: right;">119</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 10 3B</td>
+<td style="text-align: right;">121</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>II 10 9</td>
+<td style="text-align: right;">123</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 1 8</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 1 9</td>
+<td style="text-align: right;">127</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 1 10</td>
+<td style="text-align: right;">129</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 1 11a</td>
+<td style="text-align: right;">131</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 1 11b</td>
+<td style="text-align: right;">133</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 1 12</td>
+<td style="text-align: right;">135</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 3 2</td>
+<td style="text-align: right;">137</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 3 3</td>
+<td style="text-align: right;">139</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 3 4</td>
+<td style="text-align: right;">141</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 3 5</td>
+<td style="text-align: right;">143</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 3 6A</td>
+<td style="text-align: right;">145</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 3 6B</td>
+<td style="text-align: right;">147</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 7 7</td>
+<td style="text-align: right;">149</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 3 8A</td>
+<td style="text-align: right;">151</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>III 3 8B</td>
+<td style="text-align: right;">153</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note:</strong> Remove two groups from start and end = reduce
+by 20</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th style="text-align: right;">Page</th>
+<th style="text-align: center;">Viable?</th>
+<th style="text-align: center;">Alph/Numeric?</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Z 295 AEFEA</td>
+<td style="text-align: right;">155</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 240 CCFII</td>
+<td style="text-align: right;">157</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 306 CCFII</td>
+<td style="text-align: right;">159</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 311 CFIFC</td>
+<td style="text-align: right;">161</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 085 CJCCJ</td>
+<td style="text-align: right;">163</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 343 DAEAD</td>
+<td style="text-align: right;">165</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 103 DCGCD</td>
+<td style="text-align: right;">167</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 312 DCGCD</td>
+<td style="text-align: right;">169</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 077 DDHAA</td>
+<td style="text-align: right;">171</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 369 DDHAA</td>
+<td style="text-align: right;">173</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Alph</td>
+<td>Listing says 473 with 3 dits (?)</td>
+</tr>
+<tr>
+<td>Z 262 DJDJD</td>
+<td style="text-align: right;">175</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 011 ECHCE</td>
+<td style="text-align: right;">177</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 161 EGBGE</td>
+<td style="text-align: right;">179</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 020 FEAFE</td>
+<td style="text-align: right;">181</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 084 FFBGG</td>
+<td style="text-align: right;">183</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 319 FFBGG</td>
+<td style="text-align: right;">185</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 107 GIFIG</td>
+<td style="text-align: right;">187</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 017 HAIHA</td>
+<td style="text-align: right;">189</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 298 HBJBH</td>
+<td style="text-align: right;">191</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 042 IIHFF</td>
+<td style="text-align: right;">193</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 060 IIHFF</td>
+<td style="text-align: right;">195</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 091 JAAAJ</td>
+<td style="text-align: right;">197</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 001 JGGJG</td>
+<td style="text-align: right;">199</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 105 28082</td>
+<td style="text-align: right;">201</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 106 28082</td>
+<td style="text-align: right;">203</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 243 50505</td>
+<td style="text-align: right;">205</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 314 50505</td>
+<td style="text-align: right;">207</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 133 68486</td>
+<td style="text-align: right;">209</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 284 68486</td>
+<td style="text-align: right;">211</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 069 80808</td>
+<td style="text-align: right;">213</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 359 80808</td>
+<td style="text-align: right;">215</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 180 95459</td>
+<td style="text-align: right;">217</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>Z 313 95459</td>
+<td style="text-align: right;">219</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 100</td>
+<td style="text-align: right;">221</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 110</td>
+<td style="text-align: right;">223</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 111</td>
+<td style="text-align: right;">225</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 113</td>
+<td style="text-align: right;">227</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 114</td>
+<td style="text-align: right;">229</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 128A</td>
+<td style="text-align: right;">231</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 128B</td>
+<td style="text-align: right;">233</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 131</td>
+<td style="text-align: right;">235</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 137</td>
+<td style="text-align: right;">237</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 139</td>
+<td style="text-align: right;">239</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 141</td>
+<td style="text-align: right;">241</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 142</td>
+<td style="text-align: right;">243</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 143</td>
+<td style="text-align: right;">245</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 146A</td>
+<td style="text-align: right;">247</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 146B</td>
+<td style="text-align: right;">249</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 150</td>
+<td style="text-align: right;">251</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 151A</td>
+<td style="text-align: right;">253</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 151B</td>
+<td style="text-align: right;">255</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 152</td>
+<td style="text-align: right;">257</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 152A</td>
+<td style="text-align: right;">259</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 158</td>
+<td style="text-align: right;">261</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 159</td>
+<td style="text-align: right;">263</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 161</td>
+<td style="text-align: right;">265</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 165</td>
+<td style="text-align: right;">267</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 190</td>
+<td style="text-align: right;">269</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 195</td>
+<td style="text-align: right;">271</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 196</td>
+<td style="text-align: right;">273</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 206</td>
+<td style="text-align: right;">275</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 208</td>
+<td style="text-align: right;">277</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 210</td>
+<td style="text-align: right;">279</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 211</td>
+<td style="text-align: right;">281</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 212</td>
+<td style="text-align: right;">283</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 214</td>
+<td style="text-align: right;">285</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 218B</td>
+<td style="text-align: right;">287</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 219</td>
+<td style="text-align: right;">289</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 220</td>
+<td style="text-align: right;">291</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr>
+<td>D 222</td>
+<td style="text-align: right;">293</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
