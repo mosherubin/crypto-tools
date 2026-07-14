@@ -17,6 +17,10 @@ convention: a `raw` field can never carry the debris of a copy-paste from a
 PDF — smart quotes, ligatures (`ﬁ`), non-breaking spaces, soft hyphens, OCR
 noise, mixed line endings — the way a plain text file can. If it doesn't
 parse cleanly against its own declared charset, it doesn't validate.
+The same judgment applies when transcribing from a printed book: a
+cryptogram's trailing sentence-punctuation (e.g. a period, if the book
+typesets the cryptogram as the end of a sentence) is the book's, not the
+cipher's — leave it out of `raw` rather than adding it to `ignorechars`.
 
 Version described here: **1.0** (draft — schema under review, not yet implemented).
 
@@ -90,7 +94,7 @@ type is a validation error if it appears on the other.
 | `id` | conditionally — see below | Reference name, e.g. `"1"`, `"GRP42"`, `"L2-P16-a"`. Unique across the whole document. |
 | `raw` | **yes** | The ciphertext text, exactly as transcribed. |
 | `cipher_system` | no, cascades | e.g. `"Vigenère"`, `"Hill"`, `"Quagmire III"`, `"unknown"`. |
-| `charset` | no, cascades | Regex character class (e.g. `[A-Z]`) matching valid cipher symbols. |
+| `charset` | no, cascades | Regex character class (e.g. `[A-Z]`) matching valid cipher symbols. To match any character (e.g. a concealment/null cipher), use `[\s\S]` — see [Validation rules](#validation-rules) — not `[.]`, which matches only a literal period. |
 | `casesensitive` | no, cascades | Whether `charset` matching is case-sensitive. |
 | `ditschar` | no, cascades | Character standing in for a missing/unrecoverable symbol. |
 | `ignorechars` | no, cascades | Regex character class (e.g. `[\s]`) of characters silently dropped (whitespace, group separators). |
@@ -130,7 +134,8 @@ cascades; it's a validation error for any of these to appear on the
 document. `solution.plaintext_charset` is the one exception inside a
 non-cascading object: it still resolves via the scalar-override chain,
 because a plaintext alphabet is conceptually the same kind of setting as
-`charset`, just for the solution.
+`charset`, just for the solution. Unlike `charset`, though, it's
+**descriptive, not enforced** — see [solution](#solution) for why.
 
 ## Gap marker
 
@@ -184,18 +189,27 @@ Multiple occurrences in one `raw` are allowed; there's no cap.
 - **`source.type`** must be one of the enumerated values (see below) — not
   an arbitrary string.
 - **`ditschar`** must be exactly one character.
-- **`charset`, `ignorechars`, and `plaintext_charset`** (`plaintext_charset`
-  is never a bare ciphertext field — it only occurs inside `defaults` or
-  inside `solution`) must each be a single bracketed regex character class — `[...]` or
-  `[^...]` — spanning the entire value, and must compile. Nothing is
-  allowed outside the brackets: no quantifiers, groups, alternation, or
-  anchors. `[A-Z]` is valid; `[A-Z]+`, `A-Z`, and `A|B|C` are not. Brackets
-  are always required **on disk** — a CryptML file is never expected to
-  contain a bare `A-Z`. (The browser editor may let you type `A-Z` and
-  auto-wrap it to `[A-Z]` before saving, as a data-entry convenience, but
-  that's an editor behavior, not a file-format allowance — every reader can
-  assume brackets are always present and never needs its own
-  normalization step.)
+- **`charset` and `ignorechars`** must each be a single bracketed regex
+  character class — `[...]` or `[^...]` — spanning the entire value, and
+  must compile. Nothing is allowed outside the brackets: no quantifiers,
+  groups, alternation, or anchors. `[A-Z]` is valid; `[A-Z]+`, `A-Z`, and
+  `A|B|C` are not. Brackets are always required **on disk** — a CryptML
+  file is never expected to contain a bare `A-Z`. (The browser editor may
+  let you type `A-Z` and auto-wrap it to `[A-Z]` before saving, as a
+  data-entry convenience, but that's an editor behavior, not a
+  file-format allowance — every reader can assume brackets are always
+  present and never needs its own normalization step.) `plaintext_charset`
+  is exempt from this rule entirely — see [solution](#solution).
+- **To match any character at all** (e.g. a concealment/null cipher, where
+  `raw` is ordinary prose rather than a restricted cipher alphabet), use
+  `charset: "[\s\S]"`, not `charset: "[.]"`. Inside a character class, `.`
+  loses its special "any character" meaning and matches only a literal
+  period — `[.]` rejects every letter, digit, and space. `[\s\S]`
+  ("whitespace or non-whitespace") is the standard idiom for "match
+  anything," including characters plain `.` doesn't match by default, like
+  newlines. Pair it with `casesensitive: true` if the original casing of
+  the text is meaningful, since the default (`false`) forces the derived
+  letter stream to uppercase.
 
 ## Shared sub-object shapes
 
@@ -234,8 +248,8 @@ and it cascades (see [Cascade rules](#cascade-rules)).
 
 | Field | Type | Cascades? |
 |---|---|---|
-| `plaintext` | string | no |
-| `plaintext_charset` | regex character class, default inherited via scalar-override chain | **yes** (exception, see above) |
+| `plaintext` | free text | no |
+| `plaintext_charset` | descriptive string, default inherited via scalar-override chain | **yes** (exception, see above) |
 | `key` | string | no |
 | `solvers` | array of [solver](#solver) objects | no |
 
@@ -244,6 +258,16 @@ occur once. Multiple people may have solved the same cipher independently,
 by different methods, at different times — `solvers` records each of those
 attempts separately rather than forcing one `solved_by`/`method` pair to
 speak for all of them.
+
+`plaintext` is free text, not validated character-by-character the way
+`raw` is validated against `charset`. A recovered plaintext is usually
+written the way a person would naturally write it — mixed case,
+punctuation, even `...` for a partial or truncated answer — not forced into
+an all-caps letter stream. `plaintext_charset` still cascades the same way
+`charset` does, but it's **descriptive only**: it documents what alphabet
+the cipher's underlying units correspond to (e.g. a Tridigital cipher's
+digit-triples map to `[A-Z]`), not an enforced constraint on `plaintext`
+itself.
 
 ### `solver` (item of a `solvers` list)
 

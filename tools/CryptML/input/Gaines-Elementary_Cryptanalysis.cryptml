@@ -1,0 +1,265 @@
+{
+  "cryptml_version": "1.0",
+  "title": "All ciphertexts in Helen Fouché Gaines's 'Cryptanalysis: A study of Ciphers and their Solution'",
+  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
+  "sources": [
+    { "type": "book", "title": "Cryptanalysis: A study of Ciphers and their Solution", "author": "Helen Fouché Gaines" }
+  ],
+  "notes": [
+    {
+        "title": "Legend for id strings",
+        "text": "C=chapter, FIG=figure, EX=exercise"
+    }
+  ],
+  "ciphertexts": [
+    {
+      "id": "C-II-FIG-2",
+      "raw": "INSPECT DETAILS FOR TRIGLETH ACKNOWLEDGE THE BONDS FROM FEWELL",
+      "charset": "[\\s\\S]",
+      "casesensitive": true,
+      "cipher_system": "concealment",
+      "solution": {
+        "plaintext": "STRIKE NOW",
+        "key": "Align on left, read down third column"
+      }
+    },
+    {
+      "id": "C-II-EX-1",
+      "raw": "On peut être Napoleon sans être son ami, mes enfants!",
+      "charset": "[\\s\\S]",
+      "casesensitive": true,
+      "cipher_system": "concealment",
+      "origin": {"originator": "PICCOLA"},
+      "solution": {
+        "plaintext": "Open Sesame!",
+        "key": "Read initial letters"
+      }
+    },
+    {
+      "id": "C-II-EX-2",
+      "raw": "FOR SALE:  Spring coats.  All fine Scotch serge, for ensembles.  Stoat trimmed, fashioned right.  Black shirred lining, striped.  Effective for brides.  Act quickly. - Abraham Batz, 522 Broad, Telephone Exchange 7104-R.",
+      "cipher_system": "concealment",
+      "charset": "[\\s\\S]",
+      "casesensitive": true,
+      "origin": {"originator": "B. NATURAL"},
+      "solution": {
+        "plaintext": "Police on trail ...",
+        "key": "Read 2nd letters of words"
+      }
+    },
+    {
+      "id": "C-II-EX-3",
+      "raw": "How about releasing Tony, the gang chief?  He don't lie, and is not the true slayer either.  Let us be friends.  I am all  right.  Ed Lehr.",
+      "charset": "[\\s\\S]",
+      "casesensitive": true,
+      "cipher_system": "concealment",
+      "origin": {"originator": "TITOGI"},
+      "solution": {
+        "plaintext": "Being held ...",
+        "key": "Read every 5th letter"
+      }
+    },
+    {
+      "id": "C-II-EX-4",
+      "raw": "To those friends considering, it is always news, but all filled ciphers disturb happiness with varied answers!",
+      "charset": "[\\s\\S]",
+      "casesensitive": true,
+      "cipher_system": "concealment",
+      "origin": {"originator": "TRYIT"},
+      "solution": {
+        "plaintext": "This is a null cipher.",
+        "key": "Progess 1-2-3 etc. within words"
+      }
+    },
+    {
+      "id": "C-II-EX-5",
+      "raw": "Do not send for any supplies before Monday, at earliest.  Order once only, as men in charge are feeling sore about your threat to encourage the mutiny at Ford's. - Wilson.",
+      "charset": "[\\s\\S]",
+      "casesensitive": true,
+      "cipher_system": "concealment",
+      "origin": {"originator": "PICCOLA"},
+      "solution": {
+        "plaintext": "Send supplies",
+        "key": "Read every 3rd word"
+      }
+    },
+    {
+      "id": "C-II-EX-6",
+      "raw": "AWITH ANYSE NDFOR ITYOU MUSTB EFEAR THECA NHITT RYABO UREOU TISEC HIYOU ANDMY TIONC UPCRE ASKTO CANDQ",
+      "charset": "[\\s\\S]",
+      "casesensitive": true,
+      "cipher_system": "concealment",
+      "origin": {"originator": "PICCOLA"},
+      "hints": [ {"text": "Why not, indeed?"} ],
+      "solution": {
+        "plaintext": "Why not use ...",
+        "key": "Read every 3rd letter, beginning with 2nd."
+      }
+    },
+    {
+      "id": "C-III-EX-7-a",
+      "raw": "TSSNI HAYST INTPI SEROO IAASN",
+      "cipher_system": "transposition",
+      "origin": {"originator": "TITOGI"},
+      "solution": {
+        "plaintext": "This is an ...",
+        "key": "Write in columns of 5, normal order."
+      }
+    },
+    {
+      "id": "C-III-EX-7-b",
+      "raw": "SHCVI EOLEA EWERM",
+      "cipher_system": "transposition",
+      "origin": {"originator": "TITOGI"},
+      "solution": {
+        "plaintext": "This is an ...",
+        "key": "Write in columns of 5, normal order."
+      }
+    },
+    {
+      "id": "C-III-EX-8",
+      "raw": "TGHMR RIAYE XNUEE SDEXS HMTID EQUOA YROAU NPUET GTITE SYSNO AQNXA TUADS ISHX",
+      "cipher_system": "transposition",
+      "origin": {"originator": "G. A. SLIGHT"},
+      "hints": [ {"text": "Something found in every school-book - IF found!"} ],
+      "solution": {
+        "plaintext": "Three hungry Esquimaux ...",
+        "key": "Box 8x8; write in ascending diagonals from upper left corner."
+      }
+    },
+    {
+      "id": "C-III-EX-9",
+      "raw": "WINTA HDAES WHLET YLWAI LHOQL ASSSA SQ",
+      "cipher_system": "transposition",
+      "origin": {"originator": "PICCOLA"},
+      "solution": {
+        "plaintext": "Well, I swan ...",
+        "key": "Box 4 x 8; write in columns, normal order."
+      }
+    },
+    {
+      "id": "C-III-EX-10",
+      "raw": "LEASU LTSGM SLOEI EOIME ARNSA SRCDE KIUSU HEMAQ LYSPR MEOA",
+      "cipher_system": "transposition",
+      "origin": {"originator": "NEMO"},
+      "hints": [ {"text": "Magic Square"} ],
+      "solution": {
+        "plaintext": "Magic squares are simple ...",
+        "key": "Taken out by rows, normal order, from this magic square where plain letters are put ordinally: 20 11 2 49 40 31 22; 12 3 43 41 32 23 21; 4 44 42 33 24 15 13; 45 36 34 25 16 14 5; 37 35 26 17 8 6 46; 29 27 18 9 7 47 38; 28 19 10 1 48 39 30"
+      }
+    },
+    {
+      "id": "C-III-EX-11",
+      "raw": "BSPNT EAEFT VVOAN EYAPU ZSETP THMNA TAEER SDSSK PSJES TYSEA LRHIA SKSNT TEYWO FTHMW YKEFE NNHCI EHHUM IHITE OHGES UCGDI OOWEA SASNE RHMAA SSLER GSMNE DTHKE MLUAE TVMFO RAIWP AYAMA EYAD",
+      "cipher_system": "transposition",
+      "origin": {"originator": "THE ADMIRAL"},
+      "solution": {
+        "plaintext": "Best trust the ...",
+        "key": "Box 7 x 22; write in columns, normal order."
+      }
+    },
+    {
+      "id": "C-IV-EX-16",
+      "raw": "OEEHE ATFLS VASYC IOAED QOHDF MCMTC POGEO REUGM IEFUO GCYWG DQUUI ALSIE RNORN RRATO AQ",
+      "cipher_system": "Nihilist Transposition",
+      "origin": {"originator": "PICCOLA"},
+      "hints": [ {"text": "Ordinary columnar"} ],
+      "solution": {
+        "plaintext": "Following message received ...",
+        "key": "Box 9 x 8; columns taken out by key NAVAL TOWN."
+      }
+    },
+    {
+      "id": "C-IV-EX-19",
+      "raw": "Wants Little Wish Should Long Muster But The Man And Gold Wants If Me Many Below Mint For Not A So And Nor Of More With Score In Song Wants Were I That Told Exactly Are Here A Long 'Tis Many 'Tis My But Each Still Little Would So!",
+      "charset": "[\\s\\S]",
+      "casesensitive": true,
+      "cipher_system": "Nihilist Transposition",
+      "origin": {"originator": "SLEEPY"},
+      "hints": [ {"text": "Nihilist \"route-cipher\""} ],
+      "solution": {
+        "plaintext": "Man wants but little ...",
+        "key": "Key PATTERN"
+      }
+    },
+    {
+      "id": "C-IV-EX-36-a",
+      "raw": "UOYME ETENA WHTIM CICTI JIUSO GNHYF",
+      "cipher_system": "Transposition -  Multiple Anagramming",
+      "origin": {"originator": "TITOGI"},
+      "notes": [ {"title": "One of multiple messages", "text": "1 of 10 in-depth messages"} ],
+      "solution": {
+        "plaintext": "Man wants but little ..."
+      }
+    },
+    {
+      "id": "C-IV-EX-36-b",
+      "raw": "YTMIL LEMLE WUAAJ TWONF ORTAH LHTGI",
+      "cipher_system": "Transposition -  Multiple Anagramming",
+      "origin": {"originator": "TITOGI"},
+      "notes": [ {"title": "One of multiple messages", "text": "2 of 10 in-depth messages"} ],
+      "solution": {
+        "plaintext": "Man wants but little ..."
+      }
+    },
+    {
+      "id": "C-IV-EX-36-c",
+      "raw": "ROPUL EAEEB AHFTK ODTSC ILTTM RYTIH",
+      "cipher_system": "Transposition -  Multiple Anagramming",
+      "origin": {"originator": "TITOGI"},
+      "notes": [ {"title": "One of multiple messages", "text": "3 of 10 in-depth messages"} ],
+      "solution": {
+        "plaintext": "Man wants but little ..."
+      }
+    },
+    {
+      "id": "C-IV-EX-36-d",
+      "raw": "UMHTS EUOKS IHWTR ANCIO WAOHT YOSSY",
+      "cipher_system": "Transposition -  Multiple Anagramming",
+      "origin": {"originator": "TITOGI"},
+      "notes": [ {"title": "One of multiple messages", "text": "4 of 10 in-depth messages"} ]
+    },
+    {
+      "id": "C-IV-EX-36-e",
+      "raw": "ECERL TADAR MREAO GPOYM EEAAT NIBSA",
+      "cipher_system": "Transposition -  Multiple Anagramming",
+      "origin": {"originator": "TITOGI"},
+      "notes": [ {"title": "One of multiple messages", "text": "5 of 10 in-depth messages"} ]
+    },
+    {
+      "id": "C-IV-EX-36-f",
+      "raw": "REUOT KNAEH EHHLY WDELE EEEOM NWSLL",
+      "cipher_system": "Transposition -  Multiple Anagramming",
+      "origin": {"originator": "TITOGI"},
+      "notes": [ {"title": "One of multiple messages", "text": "6 of 10 in-depth messages"} ]
+    },
+    {
+      "id": "C-IV-EX-36-g",
+      "raw": "IHLPU HTTGI YTTAS NERTE ORYTA HNJDS",
+      "cipher_system": "Transposition -  Multiple Anagramming",
+      "origin": {"originator": "TITOGI"},
+      "notes": [ {"title": "One of multiple messages", "text": "7 of 10 in-depth messages"} ]
+    },
+    {
+      "id": "C-IV-EX-36-h",
+      "raw": "ESEFK ACAPE EOLSA MEJNS TEOMS LEOTI",
+      "cipher_system": "Transposition -  Multiple Anagramming",
+      "origin": {"originator": "TITOGI"},
+      "notes": [ {"title": "One of multiple messages", "text": "8 of 10 in-depth messages"} ]
+    },
+    {
+      "id": "C-IV-EX-36-i",
+      "raw": "TENEW OHSKI INSGT MOOHT AATHU EUTOB",
+      "cipher_system": "Transposition -  Multiple Anagramming",
+      "origin": {"originator": "TITOGI"},
+      "notes": [ {"title": "One of multiple messages", "text": "9 of 10 in-depth messages"} ]
+    },
+    {
+      "id": "C-IV-EX-36-j",
+      "raw": "HTPRA HLERE ERETA TLEEH STTTE HBNBS",
+      "cipher_system": "Transposition -  Multiple Anagramming",
+      "origin": {"originator": "TITOGI"},
+      "notes": [ {"title": "One of multiple messages", "text": "10 of 10 in-depth messages"} ]
+    }
+  ]
+}

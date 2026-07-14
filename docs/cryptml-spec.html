@@ -257,7 +257,12 @@ guarantee, not a convention: a <code>raw</code> field can never carry
 the debris of a copy-paste from a PDF — smart quotes, ligatures
 (<code>ﬁ</code>), non-breaking spaces, soft hyphens, OCR noise, mixed
 line endings — the way a plain text file can. If it doesn’t parse
-cleanly against its own declared charset, it doesn’t validate.</p>
+cleanly against its own declared charset, it doesn’t validate. The same
+judgment applies when transcribing from a printed book: a cryptogram’s
+trailing sentence-punctuation (e.g. a period, if the book typesets the
+cryptogram as the end of a sentence) is the book’s, not the cipher’s —
+leave it out of <code>raw</code> rather than adding it to
+<code>ignorechars</code>.</p>
 <p>Version described here: <strong>1.0</strong> (draft — schema under
 review, not yet implemented).</p>
 <h2 id="design-principles">Design principles</h2>
@@ -413,7 +418,10 @@ rules</a>.</td>
 <td><code>charset</code></td>
 <td>no, cascades</td>
 <td>Regex character class (e.g. <code>[A-Z]</code>) matching valid
-cipher symbols.</td>
+cipher symbols. To match any character (e.g. a concealment/null cipher),
+use <code>[\s\S]</code> — see <a href="#validation-rules">Validation
+rules</a> — not <code>[.]</code>, which matches only a literal
+period.</td>
 </tr>
 <tr>
 <td><code>casesensitive</code></td>
@@ -516,7 +524,8 @@ these to appear on the document. <code>solution.plaintext_charset</code>
 is the one exception inside a non-cascading object: it still resolves
 via the scalar-override chain, because a plaintext alphabet is
 conceptually the same kind of setting as <code>charset</code>, just for
-the solution.</p>
+the solution. Unlike <code>charset</code>, though, it’s
+<strong>descriptive, not enforced</strong> — see <a href="#solution">solution</a> for why.</p>
 <h2 id="gap-marker">Gap marker</h2>
 <p><code>raw</code> may contain the literal reserved string
 <code>&quot;[...]&quot;</code> to mark a point where an unspecified number of
@@ -575,22 +584,32 @@ found on a ciphertext is an error.</li>
 enumerated values (see below) — not an arbitrary string.</li>
 <li><strong><code>ditschar</code></strong> must be exactly one
 character.</li>
-<li><strong><code>charset</code>, <code>ignorechars</code>, and
-<code>plaintext_charset</code></strong> (<code>plaintext_charset</code>
-is never a bare ciphertext field — it only occurs inside
-<code>defaults</code> or inside <code>solution</code>) must each be a
-single bracketed regex character class — <code>[...]</code> or
-<code>[^...]</code> — spanning the entire value, and must compile.
-Nothing is allowed outside the brackets: no quantifiers, groups,
-alternation, or anchors. <code>[A-Z]</code> is valid;
-<code>[A-Z]+</code>, <code>A-Z</code>, and <code>A|B|C</code> are not.
-Brackets are always required <strong>on disk</strong> — a CryptML file
-is never expected to contain a bare <code>A-Z</code>. (The browser
+<li><strong><code>charset</code> and <code>ignorechars</code></strong>
+must each be a single bracketed regex character class —
+<code>[...]</code> or <code>[^...]</code> — spanning the entire value,
+and must compile. Nothing is allowed outside the brackets: no
+quantifiers, groups, alternation, or anchors. <code>[A-Z]</code> is
+valid; <code>[A-Z]+</code>, <code>A-Z</code>, and <code>A|B|C</code> are
+not. Brackets are always required <strong>on disk</strong> — a CryptML
+file is never expected to contain a bare <code>A-Z</code>. (The browser
 editor may let you type <code>A-Z</code> and auto-wrap it to
 <code>[A-Z]</code> before saving, as a data-entry convenience, but
 that’s an editor behavior, not a file-format allowance — every reader
 can assume brackets are always present and never needs its own
-normalization step.)</li>
+normalization step.) <code>plaintext_charset</code> is exempt from this
+rule entirely — see <a href="#solution">solution</a>.</li>
+<li><strong>To match any character at all</strong> (e.g. a
+concealment/null cipher, where <code>raw</code> is ordinary prose rather
+than a restricted cipher alphabet), use <code>charset: &quot;[\s\S]&quot;</code>,
+not <code>charset: &quot;[.]&quot;</code>. Inside a character class,
+<code>.</code> loses its special “any character” meaning and matches
+only a literal period — <code>[.]</code> rejects every letter, digit,
+and space. <code>[\s\S]</code> (“whitespace or non-whitespace”) is the
+standard idiom for “match anything,” including characters plain
+<code>.</code> doesn’t match by default, like newlines. Pair it with
+<code>casesensitive: true</code> if the original casing of the text is
+meaningful, since the default (<code>false</code>) forces the derived
+letter stream to uppercase.</li>
 </ul>
 <h2 id="shared-sub-object-shapes">Shared sub-object shapes</h2>
 <p><code>origin</code> and <code>source</code> are easy to conflate but
@@ -726,13 +745,12 @@ ciphertext itself was created.</td>
 <tbody>
 <tr>
 <td><code>plaintext</code></td>
-<td>string</td>
+<td>free text</td>
 <td>no</td>
 </tr>
 <tr>
 <td><code>plaintext_charset</code></td>
-<td>regex character class, default inherited via scalar-override
-chain</td>
+<td>descriptive string, default inherited via scalar-override chain</td>
 <td><strong>yes</strong> (exception, see above)</td>
 </tr>
 <tr>
@@ -754,6 +772,17 @@ methods, at different times — <code>solvers</code> records each of those
 attempts separately rather than forcing one
 <code>solved_by</code>/<code>method</code> pair to speak for all of
 them.</p>
+<p><code>plaintext</code> is free text, not validated
+character-by-character the way <code>raw</code> is validated against
+<code>charset</code>. A recovered plaintext is usually written the way a
+person would naturally write it — mixed case, punctuation, even
+<code>...</code> for a partial or truncated answer — not forced into an
+all-caps letter stream. <code>plaintext_charset</code> still cascades
+the same way <code>charset</code> does, but it’s <strong>descriptive
+only</strong>: it documents what alphabet the cipher’s underlying units
+correspond to (e.g. a Tridigital cipher’s digit-triples map to
+<code>[A-Z]</code>), not an enforced constraint on
+<code>plaintext</code> itself.</p>
 <h3 id="solver-item-of-a-solvers-list"><code>solver</code> (item of a
 <code>solvers</code> list)</h3>
 <table>
