@@ -56,8 +56,8 @@ Diagnosis with the Aid of a Computer - A Collection of 147 Stethoscope
 Listings" in August 2025 \[3\].  Here is what a typical Stethoscope 
 listing looked like:
 
-![alt text](graphics/MC-I-lesson-2-problem-7.page-1.jpg "Military Cryptanalytics Part I, Lesson 2, Prolem 7, page 1")
-![alt text](graphics/MC-I-lesson-2-problem-7.page-2.jpg "Military Cryptanalytics Part I, Lesson 2, Prolem 7, page 2")
+![alt text](graphics/MC-I-lesson-2-problem-7.page-1.jpg "Military Cryptanalytics Part I, Lesson 2, Problem 7, page 1")
+![alt text](graphics/MC-I-lesson-2-problem-7.page-2.jpg "Military Cryptanalytics Part I, Lesson 2, Problem 7, page 2")
 
 ---
 
