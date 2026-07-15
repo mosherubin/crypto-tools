@@ -341,6 +341,32 @@ function filterMaximal(candidates) {
     return maximal;
 }
 
+function isDisguisedRepetition(candidate, minIsolen) {
+    // True when this isomorph is a plain repetition wearing mismatched characters
+    // at the boundary -- e.g. MHTZAITYDZYB / FHTZAITYDZYG is just the repeated
+    // string HTZAITYDZY with a different letter tacked onto each end.
+    //
+    // Trims the mismatched head and tail (positions where textA[i] != textB[i]);
+    // if what remains is an unbroken exact match and is itself long enough to be
+    // independently notable (>= minIsolen), the isomorph carries no substitution
+    // evidence beyond what an ordinary repeat already shows, so it is discarded.
+    var textA = candidate.textA, textB = candidate.textB;
+    var length = textA.length;
+
+    var start = 0;
+    while (start < length && textA[start] !== textB[start]) start++;
+
+    var end = length;
+    while (end > start && textA[end - 1] !== textB[end - 1]) end--;
+
+    if (end - start < minIsolen) return false;
+
+    for (var i = start; i < end; i++) {
+        if (textA[i] !== textB[i]) return false;
+    }
+    return true;
+}
+
 function locateIsomorphs(ciphertexts, minIsolen) {
     var deltas = [];
     for (var d = 0; d < ciphertexts.length; d++) deltas.push(buildDelta(ciphertexts[d]));
@@ -357,7 +383,13 @@ function locateIsomorphs(ciphertexts, minIsolen) {
             results = results.concat(found);
         }
     }
-    return filterMaximal(results);
+
+    var maximal = filterMaximal(results);
+    var genuine = [];
+    for (var m = 0; m < maximal.length; m++) {
+        if (!isDisguisedRepetition(maximal[m], minIsolen)) genuine.push(maximal[m]);
+    }
+    return genuine;
 }
 
 // ── isomorph_evaluation.py port ──────────────────────────────────────────────

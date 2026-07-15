@@ -130,10 +130,39 @@ def _filter_maximal(candidates: list) -> list:
     return maximal
 
 
+def _is_disguised_repetition(candidate: IsomorphCandidate, min_isolen: int) -> bool:
+    """True when this isomorph is a plain repetition wearing mismatched characters
+    at the boundary -- e.g. MHTZAITYDZYB / FHTZAITYDZYG is just the repeated
+    string HTZAITYDZY with a different letter tacked onto each end.
+
+    Trims the mismatched head and tail (positions where text_a[i] != text_b[i]);
+    if what remains is an unbroken exact match and is itself long enough to be
+    independently notable (>= min_isolen), the isomorph carries no substitution
+    evidence beyond what an ordinary repeat already shows, so it is discarded."""
+    text_a, text_b = candidate.text_a, candidate.text_b
+    length = len(text_a)
+
+    start = 0
+    while start < length and text_a[start] != text_b[start]:
+        start += 1
+
+    end = length
+    while end > start and text_a[end - 1] != text_b[end - 1]:
+        end -= 1
+
+    if end - start < min_isolen:
+        return False
+
+    return all(text_a[i] == text_b[i] for i in range(start, end))
+
+
 def locate_isomorphs(ciphertexts: list, min_isolen: int) -> list:
     """
     Locate every maximal isomorphic sequence pair of length >= min_isolen, both within
     each ciphertext (self-search) and between every pair of ciphertexts (cross-search).
+    Isomorphs that are really just a repetition wearing mismatched boundary characters
+    (see _is_disguised_repetition) are discarded, since they carry no substitution
+    evidence beyond what an ordinary repeat search already shows.
     No significance filtering is applied here -- see isomorph_evaluation.evaluate_isomorph.
 
     ciphertexts: list of cleaned ciphertext strings (letters only)
@@ -154,4 +183,5 @@ def locate_isomorphs(ciphertexts: list, min_isolen: int) -> list:
                 candidate.message_b = j
             results.extend(found)
 
-    return _filter_maximal(results)
+    maximal = _filter_maximal(results)
+    return [c for c in maximal if not _is_disguised_repetition(c, min_isolen)]
