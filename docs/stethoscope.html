@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.10)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.11)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -826,7 +826,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.10)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.11)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
@@ -1034,6 +1034,20 @@ function _filterMaximalIso(candidates) {
     return maximal;
 }
 
+function _isDisguisedRepetitionIso(candidate, minIsolen) {
+    var textA = candidate.textA, textB = candidate.textB;
+    var length = textA.length;
+    var start = 0;
+    while (start < length && textA[start] !== textB[start]) start++;
+    var end = length;
+    while (end > start && textA[end - 1] !== textB[end - 1]) end--;
+    if (end - start < minIsolen) return false;
+    for (var i = start; i < end; i++) {
+        if (textA[i] !== textB[i]) return false;
+    }
+    return true;
+}
+
 function _locateIsomorphsIso(ciphertexts, minIsolen) {
     var deltas = [], d, i, j, k, found;
     for (d = 0; d < ciphertexts.length; d++) deltas.push(_buildDelta(ciphertexts[d]));
@@ -1045,7 +1059,12 @@ function _locateIsomorphsIso(ciphertexts, minIsolen) {
             results = results.concat(found);
         }
     }
-    return _filterMaximalIso(results);
+    var maximal = _filterMaximalIso(results);
+    var genuine = [];
+    for (var m = 0; m < maximal.length; m++) {
+        if (!_isDisguisedRepetitionIso(maximal[m], minIsolen)) genuine.push(maximal[m]);
+    }
+    return genuine;
 }
 
 var _isoStirlingCache = {};
