@@ -28,12 +28,12 @@ non-viable listing cannot be used for testing our STETHOSCOPE tool implementatio
 | I 3 7 | 9 | Yes | Numeric | |
 | I 4 3 | 11 | Yes | Numeric | |
 | I 4 4 | 13 | Yes | Numeric | |
-| I 4 5 | 15 | | | |
-| I 4 7 | 17 | | | |
-| I 4 8A | 19 | | | |
-| I 4 8B | 21 | | | |
-| I 4 9A | 23 | | | |
-| I 4 9B | 25 | | | |
+| I 4 5 | 15 | Yes | Numeric | |
+| I 4 7 | 17 | No | Numeric | Rob Roy listing says 329 characters, really has 330.  Mono count of '9' is 36 and not 35 as in listing|
+| I 4 8A | 19 | No | Numeric | Has a non-zero number (1) of dits|
+| I 4 8B | 21 | No | Numeric | Has a non-zero number (1) of dits|
+| I 4 9A | 23 | Yes | Numeric | |
+| I 4 9B | 25 | Yes | Numeric | |
 | I 5 1 | 27 | | | |
 | I 6 1 | 29 | | | |
 | I 6 4 | 31 | | | |
