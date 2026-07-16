@@ -81,33 +81,44 @@ def format_listing(ct, mc_result, ic_result,
                 else:
                     parts.append(' ' * 22)
             body[14 + i] = ' | '.join(parts)
-    body[body_len - 1] = 'WIDTH TESTS  2 TO 51  INCLUDING NO. OF COMPARISONS FOR EACH W'
+    body[25] = 'WIDTH TESTS  2 TO 51  INCLUDING NO. OF COMPARISONS FOR EACH W'
+
+    # Build width test lines so they can be interleaved with overflow mono count chars
+    wt_lines = []
+    if wt_result and wt_result.entries:
+        wt_hdr = f'{"W":>2}  {"HITS":>5}  {"COMPS":>6}  {"AVG IC":>6}  {"SIGMAGE":>7}'
+        left_entries  = wt_result.entries[:25]
+        right_entries = wt_result.entries[25:]
+        has_right = len(right_entries) > 0
+        wt_lines.append(wt_hdr + (f' | {wt_hdr}' if has_right else ''))
+        for idx, l_e in enumerate(left_entries):
+            r_e = right_entries[idx] if idx < len(right_entries) else None
+            row = _wt_row(l_e)
+            if r_e is not None:
+                row += f' | {_wt_row(r_e)}'
+            wt_lines.append(row)
 
     # Left-margin table: "MONO COUNT" header, then body_len lines
+    # Lines 0-25: body content on the right; lines 26+: width test lines interleaved
     out.append('MONO')
     out.append('COUNT')
     out.append(f'{"":24}{total_dits_line}')
     for i, content in enumerate(body):
         if i < len(alphabet):
             ch = alphabet[i]
-            left = f'{ch} {counts.get(ch, 0):>5}'
+            left = f'{ch.lower()} {counts.get(ch, 0):>5}'
         else:
             left = ' ' * 7
-        out.append(f'{left}   {content}')
+        if i < 26:
+            right = f'   {content}'
+        else:
+            wt_idx = i - 26
+            right = f'   {wt_lines[wt_idx]}' if wt_idx < len(wt_lines) else ''
+        out.append(f'{left}{right}')
 
-    # Width tests (2 columns: w=2-26 left, w=27-51 right)
-    if wt_result and wt_result.entries:
-        wt_hdr = f'{"W":>2}  {"HITS":>5}  {"COMPS":>6}  {"AVG IC":>6}  {"SIGMAGE":>7}'
-        left_entries  = wt_result.entries[:25]
-        right_entries = wt_result.entries[25:]
-        has_right = len(right_entries) > 0
-        out.append(f'{"":7}   {wt_hdr}' + (f' | {wt_hdr}' if has_right else ''))
-        for idx, l_e in enumerate(left_entries):
-            r_e = right_entries[idx] if idx < len(right_entries) else None
-            row = f'{"":7}   {_wt_row(l_e)}'
-            if r_e is not None:
-                row += f' | {_wt_row(r_e)}'
-            out.append(row)
+    # Any width test lines that extend beyond the mono count
+    for wt_idx in range(max(0, body_len - 26), len(wt_lines)):
+        out.append(f'{"":7}   {wt_lines[wt_idx]}')
 
     # Polygraphic IC
     if poly_result and poly_result.entries:
@@ -124,12 +135,15 @@ def format_listing(ct, mc_result, ic_result,
         out.append('')
         out.append('LIST OF HITS OF LENGTH 4 OR LONGER')
         out.append(f'{"LENGTH":>6}  {"POSITION":>8}  {"OFFSET":>6}    REPEATED TEXT')
-        for r in repeats_result.repeats:
-            out.append(f'{r.length:>6}  {r.position:>8}  {r.offset:>6}    '
-                       + '  '.join(r.text.lower()))
-        remaining = repeats_result.total_found - len(repeats_result.repeats)
-        if remaining > 0:
-            out.append(f'MORE ({remaining} remaining)')
+        if not repeats_result.repeats:
+            out.append('(none found)')
+        else:
+            for r in repeats_result.repeats:
+                out.append(f'{r.length:>6}  {r.position:>8}  {r.offset:>6}    '
+                           + '  '.join(r.text.lower()))
+            remaining = repeats_result.total_found - len(repeats_result.repeats)
+            if remaining > 0:
+                out.append(f'MORE ({remaining} remaining)')
 
     # Significant isomorphs
     if iso_result is not None:

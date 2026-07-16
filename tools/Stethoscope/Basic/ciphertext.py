@@ -24,19 +24,27 @@ class CiphertextData:
 
 
 def _expand_alphabet(charset_re: re.Pattern, casesensitive: bool) -> str:
-    """Return all printable ASCII chars (32-126) that match charset_re, in order."""
+    """Return all printable ASCII chars (32-126) that match charset_re.
+
+    Ordering: letters first (A-Z), then digits in the order 1-9-0.
+    """
     candidates = [chr(c) for c in range(32, 127)]
-    if not casesensitive:
-        # Fold to upper before matching; keep each unique match once
-        seen = set()
-        result = []
-        for ch in candidates:
-            folded = ch.upper()
-            if charset_re.fullmatch(folded) and folded not in seen:
-                seen.add(folded)
-                result.append(folded)
-        return ''.join(result)
-    return ''.join(ch for ch in candidates if charset_re.fullmatch(ch))
+    seen = set()
+    letters = []
+    digits = []
+    for ch in candidates:
+        folded = ch if casesensitive else ch.upper()
+        if charset_re.fullmatch(folded) and folded not in seen:
+            seen.add(folded)
+            if folded.isdigit():
+                digits.append(folded)
+            else:
+                letters.append(folded)
+    # Digits ordered 1-9 then 0, matching classic STETHOSCOPE listing convention
+    if '0' in digits:
+        digits.remove('0')
+        digits.append('0')
+    return ''.join(letters + digits)
 
 
 def _strip_ignored_boundary(raw: str, remove_from_start: int, remove_from_end: int,

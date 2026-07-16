@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.16)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.17)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -204,16 +204,20 @@ function pyFloatStr(val) {
 
 function expandAlphabet(charsetRe, caseSensitive) {
     var seen = {};
-    var result = [];
+    var letters = [], digits = [];
     for (var code = 32; code <= 126; code++) {
         var ch = String.fromCharCode(code);
         var folded = caseSensitive ? ch : ch.toUpperCase();
         if (charsetRe.test(folded) && !seen[folded]) {
             seen[folded] = true;
-            result.push(folded);
+            if (folded >= '0' && folded <= '9') digits.push(folded);
+            else letters.push(folded);
         }
     }
-    return result.join('');
+    // Digits ordered 1-9 then 0, matching classic STETHOSCOPE listing convention
+    var zeroIdx = digits.indexOf('0');
+    if (zeroIdx >= 0) { digits.splice(zeroIdx, 1); digits.push('0'); }
+    return letters.concat(digits).join('');
 }
 
 function createFromText(raw, charsetPattern, caseSensitive, description) {
@@ -676,7 +680,23 @@ function formatListing(ct, mc, icResult,
             body[14 + li] = parts.join(' | ');
         }
     }
-    body[bodyLen - 1] = 'WIDTH TESTS  2 TO 51  INCLUDING NO. OF COMPARISONS FOR EACH W';
+    body[25] = 'WIDTH TESTS  2 TO 51  INCLUDING NO. OF COMPARISONS FOR EACH W';
+
+    // Build width test lines so they can be interleaved with overflow mono count chars
+    var wtLines = [];
+    if (wtResult && wtResult.entries.length > 0) {
+        var wtHdr = _padStart('W', 2) + '  ' + _padStart('HITS', 5) + '  ' + _padStart('COMPS', 6) +
+                    '  ' + _padStart('AVG IC', 6) + '  ' + _padStart('SIGMAGE', 7);
+        var leftEnt  = wtResult.entries.slice(0, 25);
+        var rightEnt = wtResult.entries.slice(25);
+        var hasRight = rightEnt.length > 0;
+        wtLines.push(wtHdr + (hasRight ? ' | ' + wtHdr : ''));
+        for (var wi = 0; wi < leftEnt.length; wi++) {
+            var row = _wtRow(leftEnt[wi]);
+            if (rightEnt[wi] !== undefined) row += ' | ' + _wtRow(rightEnt[wi]);
+            wtLines.push(row);
+        }
+    }
 
     out.push('MONO');
     out.push('COUNT');
@@ -685,26 +705,23 @@ function formatListing(ct, mc, icResult,
         var left;
         if (i < alphabet.length) {
             var ch = alphabet[i];
-            left = ch + ' ' + _padStart(String(counts[ch] || 0), 5);
+            left = ch.toLowerCase() + ' ' + _padStart(String(counts[ch] || 0), 5);
         } else {
             left = _repeat(' ', 7);
         }
-        out.push(left + '   ' + body[i]);
+        var right;
+        if (i < 26) {
+            right = '   ' + body[i];
+        } else {
+            var wtIdx = i - 26;
+            right = wtIdx < wtLines.length ? '   ' + wtLines[wtIdx] : '';
+        }
+        out.push(left + right);
     }
 
-    // Width tests
-    if (wtResult && wtResult.entries.length > 0) {
-        var wtHdr = _padStart('W', 2) + '  ' + _padStart('HITS', 5) + '  ' + _padStart('COMPS', 6) +
-                    '  ' + _padStart('AVG IC', 6) + '  ' + _padStart('SIGMAGE', 7);
-        var leftEnt  = wtResult.entries.slice(0, 25);
-        var rightEnt = wtResult.entries.slice(25);
-        var hasRight = rightEnt.length > 0;
-        out.push(_repeat(' ', 7) + '   ' + wtHdr + (hasRight ? ' | ' + wtHdr : ''));
-        for (var wi = 0; wi < leftEnt.length; wi++) {
-            var row = _repeat(' ', 7) + '   ' + _wtRow(leftEnt[wi]);
-            if (rightEnt[wi] !== undefined) row += ' | ' + _wtRow(rightEnt[wi]);
-            out.push(row);
-        }
+    // Any width test lines that extend beyond the mono count
+    for (var wj = Math.max(0, bodyLen - 26); wj < wtLines.length; wj++) {
+        out.push(_repeat(' ', 7) + '   ' + wtLines[wj]);
     }
 
     // Polygraphic IC
@@ -728,13 +745,17 @@ function formatListing(ct, mc, icResult,
         out.push('LIST OF HITS OF LENGTH 4 OR LONGER');
         out.push(_padStart('LENGTH', 6) + '  ' + _padStart('POSITION', 8) + '  ' +
                  _padStart('OFFSET', 6) + '    REPEATED TEXT');
-        for (var ri = 0; ri < repeatsResult.repeats.length; ri++) {
-            var r = repeatsResult.repeats[ri];
-            out.push(_padStart(String(r.length), 6) + '  ' + _padStart(String(r.position), 8) + '  ' +
-                     _padStart(String(r.offset), 6) + '    ' + r.text.toLowerCase().split('').join('  '));
+        if (repeatsResult.repeats.length === 0) {
+            out.push('(none found)');
+        } else {
+            for (var ri = 0; ri < repeatsResult.repeats.length; ri++) {
+                var r = repeatsResult.repeats[ri];
+                out.push(_padStart(String(r.length), 6) + '  ' + _padStart(String(r.position), 8) + '  ' +
+                         _padStart(String(r.offset), 6) + '    ' + r.text.toLowerCase().split('').join('  '));
+            }
+            var remaining = repeatsResult.totalFound - repeatsResult.repeats.length;
+            if (remaining > 0) out.push('MORE (' + remaining + ' remaining)');
         }
-        var remaining = repeatsResult.totalFound - repeatsResult.repeats.length;
-        if (remaining > 0) out.push('MORE (' + remaining + ' remaining)');
     }
 
     // Significant isomorphs
@@ -854,7 +875,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.16)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.17)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
