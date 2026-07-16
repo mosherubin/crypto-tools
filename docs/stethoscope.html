@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.14)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.15)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -137,7 +137,7 @@
       Display ciphertext in output
     </label>
     <label style="display:flex; align-items:center; gap:6px; font-weight:normal;"
-           data-tooltip="Controls how the ciphertext is displayed in the output. Accepts one or two integers separated by a space. The first number is the group size: 0 (or blank) = as entered, 2 = digraphic, 3 = trigraphic, 5 = five-letter groups. The optional second number sets the line length (default 50). Examples: '2' — digraphs, 50 chars/line; '0 60' — as entered, 60 chars/line; '2 55' — digraphs, 55 chars/line.">
+           data-tooltip="Controls how the ciphertext is displayed in the output. Accepts one or two integers separated by a space.&#10;&#10;The first number is the group size: 0 (or blank) = as entered, 2 = digraphic, 3 = trigraphic, 5 = five-letter groups.&#10;&#10;The optional second number sets the line length (default 50). Examples: '2' — digraphs, 50 chars/line; '0 60' — as entered, 60 chars/line; '2 55' — digraphs, 55 chars/line.">
       Group size:
       <input type="text" id="group_size" value="" placeholder="0 = as entered"
              style="width:10em; font-family:monospace;"
@@ -853,7 +853,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.14)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.15)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
@@ -1179,7 +1179,7 @@ function _formatIsomorphSection(results) {
     var tip = document.createElement('div');
     tip.style.cssText = 'position:fixed;background:#222;color:#fff;padding:6px 10px;'
         + 'border-radius:4px;font-size:0.82em;font-family:Arial,sans-serif;'
-        + 'letter-spacing:normal;line-height:1.4;white-space:normal;max-width:300px;'
+        + 'letter-spacing:normal;line-height:1.4;white-space:pre-wrap;max-width:300px;'
         + 'z-index:9999;pointer-events:none;display:none;'
         + 'box-shadow:0 2px 6px rgba(0,0,0,0.35);';
     document.body.appendChild(tip);
