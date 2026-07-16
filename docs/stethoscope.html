@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.12)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.13)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -136,7 +136,8 @@
       <input type="checkbox" id="display_ct">
       Display ciphertext in output
     </label>
-    <label style="display:flex; align-items:center; gap:6px; font-weight:normal;">
+    <label style="display:flex; align-items:center; gap:6px; font-weight:normal;"
+           data-tooltip="Controls how the ciphertext is displayed in the output. Leave blank or enter 0 to show it exactly as entered (preserving word boundaries and spacing). Enter a positive integer to regroup the extracted letters into chunks of that size — e.g. 2 for digraphic, 3 for trigraphic, 5 for standard five-letter groups.">
       Group size:
       <input type="text" id="group_size" value="" placeholder="0 = as entered"
              style="width:9em; font-family:monospace;"
@@ -852,7 +853,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.12)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.13)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
