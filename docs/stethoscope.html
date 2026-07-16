@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.15)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.16)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -621,8 +621,9 @@ function formatListing(ct, mc, icResult,
     var entryByOffset = {};
     for (var ei = 0; ei < lrEntries.length; ei++) entryByOffset[lrEntries[ei].offset] = lrEntries[ei];
 
+    var bodyLen = Math.max(26, alphabet.length);
     var body = [];
-    for (var bi = 0; bi < 26; bi++) body.push('');
+    for (var bi = 0; bi < bodyLen; bi++) body.push('');
 
     var totalDitsLine = 'TOTAL ' + N + '  DITS ' + ct.ditscount;
     body[0] = _repeat(' ', 51) + 'HITS' + _repeat(' ', 8) + 'HITS';
@@ -675,12 +676,12 @@ function formatListing(ct, mc, icResult,
             body[14 + li] = parts.join(' | ');
         }
     }
-    body[25] = 'WIDTH TESTS  2 TO 51  INCLUDING NO. OF COMPARISONS FOR EACH W';
+    body[bodyLen - 1] = 'WIDTH TESTS  2 TO 51  INCLUDING NO. OF COMPARISONS FOR EACH W';
 
     out.push('MONO');
     out.push('COUNT');
     out.push(_repeat(' ', 24) + totalDitsLine);
-    for (var i = 0; i < 26; i++) {
+    for (var i = 0; i < bodyLen; i++) {
         var left;
         if (i < alphabet.length) {
             var ch = alphabet[i];
@@ -853,7 +854,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.15)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.16)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {

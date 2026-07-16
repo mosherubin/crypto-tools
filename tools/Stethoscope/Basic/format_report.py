@@ -27,9 +27,8 @@ def format_listing(ct, mc_result, ic_result,
     max_offset = lr_entries[-1].offset if lr_entries else 0
     entry_by_offset = {e.offset: e for e in lr_entries}
 
-    # 26 fixed-position test body lines (indices 0-25 = lines a-z)
-    # Line 0 carries TOTAL/DITS; line 1 carries IC TESTS header.
-    body = [''] * 26
+    body_len = max(26, len(alphabet))
+    body = [''] * body_len
     total_dits_line = f'TOTAL {N}  DITS {ct.ditscount}'
     body[0] = ' ' * 51 + 'HITS' + ' ' * 8 + 'HITS'
     body[1] = 'IC TESTS FOR SIGNIFICANCE' + ' ' * 15 + 'TOTAL    OBSERVED    EXPECTED'
@@ -82,9 +81,9 @@ def format_listing(ct, mc_result, ic_result,
                 else:
                     parts.append(' ' * 22)
             body[14 + i] = ' | '.join(parts)
-    body[25] = 'WIDTH TESTS  2 TO 51  INCLUDING NO. OF COMPARISONS FOR EACH W'
+    body[body_len - 1] = 'WIDTH TESTS  2 TO 51  INCLUDING NO. OF COMPARISONS FOR EACH W'
 
-    # Left-margin table: "MONO COUNT" header, then 26 body lines
+    # Left-margin table: "MONO COUNT" header, then body_len lines
     out.append('MONO')
     out.append('COUNT')
     out.append(f'{"":24}{total_dits_line}')
