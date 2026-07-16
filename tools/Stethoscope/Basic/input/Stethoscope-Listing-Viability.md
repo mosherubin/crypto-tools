@@ -34,9 +34,9 @@ non-viable listing cannot be used for testing our STETHOSCOPE tool implementatio
 | I 4 8B | 21 | No | Numeric | Has a non-zero number (1) of dits|
 | I 4 9A | 23 | Yes | Numeric | |
 | I 4 9B | 25 | Yes | Numeric | |
-| I 5 1 | 27 | | | |
-| I 6 1 | 29 | | | |
-| I 6 4 | 31 | | | |
+| I 5 1 | 27 | No | Alph | Frequencies (G,Q) in Rob Roy is (28,19), should be (27,20).|
+| I 6 1 | 29 | Yes | Alph | |
+| I 6 4 | 31 | Yes | Alph | |
 | I 6 5 | 33 | | | |
 | I 7 4 | 35 | No | Numeric | Count of '5' is really 23 and not 22, count of '6' is really 25 and not 26. NOTE: Although CT is groups of 3, the cuts are NOT shifted |
 | I 7 5 | 37 | Yes | Alph | BUG: The Tri- CUT results are shifted around, checking if it's the groups of 3 |
