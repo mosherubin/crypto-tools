@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.11)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.12)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -131,10 +131,16 @@
 
 <div class="row">
   <span class="lbl"></span>
-  <div class="ctrl">
-    <label data-tooltip="When checked, the extracted ciphertext is printed in groups of five at the top of the output report.">
+  <div class="ctrl" style="display:flex; align-items:center; gap:12px;">
+    <label data-tooltip="When checked, the ciphertext is printed at the top of the output report.">
       <input type="checkbox" id="display_ct">
       Display ciphertext in output
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; font-weight:normal;">
+      Group size:
+      <input type="text" id="group_size" value="" placeholder="0 = as entered"
+             style="width:9em; font-family:monospace;"
+             oninput="this.value=this.value.replace(/[^0-9]/g,'')">
     </label>
   </div>
 </div>
@@ -761,17 +767,37 @@ var CHARSET_MAP = {
     '[A-Za-z0-9]': { pattern: '[A-Za-z0-9]', caseSensitive: false },
 };
 
-function runSuite(ct, displayCt, maxRepeats, deltaConfig, includeIsomorphs) {
+function runSuite(ct, displayCt, maxRepeats, deltaConfig, includeIsomorphs, rawText, groupSize) {
     if (includeIsomorphs === undefined) includeIsomorphs = true;
+    if (groupSize === undefined) groupSize = 5;
     var parts = [];
     if (displayCt) {
-        var text   = ct.letters;
-        var groups = [];
-        for (var gi = 0; gi < text.length; gi += 5) groups.push(text.slice(gi, gi + 5));
-        var rows = [];
-        for (var ri = 0; ri < groups.length; ri += 10) rows.push(groups.slice(ri, ri + 10).join(' '));
         parts.push('CIPHERTEXT:');
-        for (var rj = 0; rj < rows.length; rj++) parts.push(rows[rj]);
+        if (groupSize === 0) {
+            var tokens = (rawText || '').trim().split(/\s+/);
+            var lineLen = 50;
+            var line = '';
+            for (var ti = 0; ti < tokens.length; ti++) {
+                var tok = tokens[ti];
+                if (line === '') {
+                    line = tok;
+                } else if (line.length + 1 + tok.length <= lineLen) {
+                    line += ' ' + tok;
+                } else {
+                    parts.push(line);
+                    line = tok;
+                }
+            }
+            if (line) parts.push(line);
+        } else {
+            var text   = ct.letters;
+            var groups = [];
+            for (var gi = 0; gi < text.length; gi += groupSize) groups.push(text.slice(gi, gi + groupSize));
+            var groupsPerRow = Math.floor(50 / (groupSize + 1)) || 1;
+            var rows = [];
+            for (var ri = 0; ri < groups.length; ri += groupsPerRow) rows.push(groups.slice(ri, ri + groupsPerRow).join(' '));
+            for (var rj = 0; rj < rows.length; rj++) parts.push(rows[rj]);
+        }
         parts.push('');
     }
     var mc          = runMonoCount(ct);
@@ -826,7 +852,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.11)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.12)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
@@ -891,6 +917,7 @@ function runTests() {
         var desc       = document.getElementById('description').value.trim();
         var charsetKey = document.getElementById('charset').value;
         var displayCt  = document.getElementById('display_ct').checked;
+        var groupSize  = parseInt(document.getElementById('group_size').value, 10) || 0;
 
         var charsetCfg;
         if (charsetKey === '[Other]') {
@@ -922,7 +949,7 @@ function runTests() {
                 caseSensitive:  charsetCfg.caseSensitive,
             };
         }
-        var output   = runSuite(ct, displayCt, maxRepeats, deltaConfig);
+        var output   = runSuite(ct, displayCt, maxRepeats, deltaConfig, true, rawText, groupSize);
         var descLine = desc ? 'Description: ' + desc : '';
         var text;
         if (displayCt && descLine) {
