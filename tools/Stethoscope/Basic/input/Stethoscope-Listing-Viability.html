@@ -191,8 +191,22 @@ Viability</h1>
 <p><em>22 June 2026</em></p>
 <p>This document records which of Callimahos’s 147 STETHOSCOPE listings
 are viable. By “viable” we mean that the listing does not have obvious
-errors in it. Any non-viable listing cannot be used for testing our
-STETHOSCOPE tool implementation.</p>
+errors in it (e.g., it says it has “dits” or garbled characters, or the
+frequency count is incorrect). Any non-viable listing cannot be used for
+testing our STETHOSCOPE tool implementation.</p>
+<p>Source Legend:</p>
+<ul>
+<li><strong>MC-I [lesson] [problem]</strong> = Problem Book Course,
+Military Cryptanalytics, Part I</li>
+<li><strong>MC-II [section] [problem]</strong> = Military
+Cryptanalytics, Part II, Section 3, Appendix 9 (page 671)</li>
+<li><strong>MC-III [section] [problem]</strong> = Military
+Cryptanalytics, Part III, Appendix 7 (page 611)</li>
+<li><strong>Z [num]</strong> = Zendian problem, Military Cryptanalytics,
+Part II, Section 3, Appendix 8 (page 273)</li>
+<li><strong>D [num]</strong> = D-series of diagnostic problems
+(“Problems in Cryptanalytic Diagnosis”) [classified, not available]</li>
+</ul>
 <table>
 <colgroup>
 <col style="width: 17%" />
@@ -212,554 +226,565 @@ STETHOSCOPE tool implementation.</p>
 </thead>
 <tbody>
 <tr>
-<td>I 2 7</td>
+<td><code>MC-I 2 7</code></td>
 <td style="text-align: right;">1</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Alph</td>
 <td>‘m’ and ‘n’ freq counts are +/- 1</td>
 </tr>
 <tr>
-<td>I 2 13</td>
+<td><code>MC-I 2 13</code></td>
 <td style="text-align: right;">3</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Alph</td>
 <td>True length=225, listing says 208 with 18 dits</td>
 </tr>
 <tr>
-<td>I 3 5</td>
+<td><code>MC-I 3 5</code></td>
 <td style="text-align: right;">5</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Numeric</td>
 <td>True length 240, not 236, freq count is off</td>
 </tr>
 <tr>
-<td>I 3 6</td>
+<td><code>MC-I 3 6</code></td>
 <td style="text-align: right;">7</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Numeric</td>
 <td>Listing says has 1 dit</td>
 </tr>
 <tr>
-<td>I 3 7</td>
+<td><code>MC-I 3 7</code></td>
 <td style="text-align: right;">9</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
 <td style="text-align: center;">Numeric</td>
 <td></td>
 </tr>
 <tr>
-<td>I 4 3</td>
+<td><code>MC-I 4 3</code></td>
 <td style="text-align: right;">11</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
 <td style="text-align: center;">Numeric</td>
 <td></td>
 </tr>
 <tr>
-<td>I 4 4</td>
+<td><code>MC-I 4 4</code></td>
 <td style="text-align: right;">13</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
 <td style="text-align: center;">Numeric</td>
 <td></td>
 </tr>
 <tr>
-<td>I 4 5</td>
+<td><code>MC-I 4 5</code></td>
 <td style="text-align: right;">15</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
 <td style="text-align: center;">Numeric</td>
 <td></td>
 </tr>
 <tr>
-<td>I 4 7</td>
+<td><code>MC-I 4 7</code></td>
 <td style="text-align: right;">17</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Numeric</td>
 <td>Rob Roy listing says 329 characters, really has 330. Mono count of
 ‘9’ is 36 and not 35 as in listing</td>
 </tr>
 <tr>
-<td>I 4 8A</td>
+<td><code>MC-I 4 8A</code></td>
 <td style="text-align: right;">19</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Numeric</td>
 <td>Has a non-zero number (1) of dits</td>
 </tr>
 <tr>
-<td>I 4 8B</td>
+<td><code>MC-I 4 8B</code></td>
 <td style="text-align: right;">21</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Numeric</td>
 <td>Has a non-zero number (1) of dits</td>
 </tr>
 <tr>
-<td>I 4 9A</td>
+<td><code>MC-I 4 9A</code></td>
 <td style="text-align: right;">23</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
 <td style="text-align: center;">Numeric</td>
 <td></td>
 </tr>
 <tr>
-<td>I 4 9B</td>
+<td><code>MC-I 4 9B</code></td>
 <td style="text-align: right;">25</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
 <td style="text-align: center;">Numeric</td>
 <td></td>
 </tr>
 <tr>
-<td>I 5 1</td>
+<td><code>MC-I 5 1</code></td>
 <td style="text-align: right;">27</td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td></td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
+<td style="text-align: center;">Alph</td>
+<td>Frequencies (G,Q) in Rob Roy is (28,19), should be (27,20).</td>
 </tr>
 <tr>
-<td>I 6 1</td>
+<td><code>MC-I 6 1</code></td>
 <td style="text-align: right;">29</td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
+<td style="text-align: center;">Alph</td>
 <td></td>
 </tr>
 <tr>
-<td>I 6 4</td>
+<td><code>MC-I 6 4</code></td>
 <td style="text-align: right;">31</td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
+<td style="text-align: center;">Alph</td>
 <td></td>
 </tr>
 <tr>
-<td>I 6 5</td>
+<td><code>MC-I 6 5</code></td>
 <td style="text-align: right;">33</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>I 7 4</td>
+<td><code>MC-I 7 4</code></td>
 <td style="text-align: right;">35</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Numeric</td>
 <td>Count of ‘5’ is really 23 and not 22, count of ‘6’ is really 25 and
 not 26. NOTE: Although CT is groups of 3, the cuts are NOT shifted</td>
 </tr>
 <tr>
-<td>I 7 5</td>
+<td><code>MC-I 7 5</code></td>
 <td style="text-align: right;">37</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
 <td style="text-align: center;">Alph</td>
 <td>BUG: The Tri- CUT results are shifted around, checking if it’s the
 groups of 3</td>
 </tr>
 <tr>
-<td>I 7 6</td>
+<td><code>MC-I 7 6</code></td>
 <td style="text-align: right;">39</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Numeric</td>
 <td>Really has 320 digits, it says it has 319</td>
 </tr>
 <tr>
-<td>I 8 1</td>
+<td><code>MC-I 8 1</code></td>
 <td style="text-align: right;">41</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>I 8 3</td>
+<td><code>MC-I 8 3</code></td>
 <td style="text-align: right;">43</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>I 8 6</td>
+<td><code>MC-I 8 6</code></td>
 <td style="text-align: right;">45</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>I 8 7</td>
+<td><code>MC-I 8 7</code></td>
 <td style="text-align: right;">47</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>I 8 9</td>
+<td><code>MC-I 8 9</code></td>
 <td style="text-align: right;">49</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>I 9 1</td>
+<td><code>MC-I 9 1</code></td>
 <td style="text-align: right;">51</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>I 9 2</td>
+<td><code>MC-I 9 2</code></td>
 <td style="text-align: right;">53</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>I 10 2</td>
+<td><code>MC-I 10 2</code></td>
 <td style="text-align: right;">55</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
 <td style="text-align: center;">Alph</td>
 <td></td>
 </tr>
 <tr>
-<td>I 10 3</td>
+<td><code>MC-I 10 3</code></td>
 <td style="text-align: right;">57</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Alph</td>
 <td>True length is 300, not 299</td>
 </tr>
 <tr>
-<td>I 10 4</td>
+<td><code>MC-I 10 4</code></td>
 <td style="text-align: right;">59</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
 <td style="text-align: center;">Alph</td>
 <td></td>
 </tr>
 <tr>
-<td>II 1 1</td>
+<td><code>MC-II 1 1</code></td>
 <td style="text-align: right;">61</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 1 1*</td>
+<td><code>MC-II 1 1*</code></td>
 <td style="text-align: right;">63</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 1 2</td>
+<td><code>MC-II 1 2</code></td>
 <td style="text-align: right;">65</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 1 2*</td>
+<td><code>MC-II 1 2*</code></td>
 <td style="text-align: right;">67</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 1 7</td>
+<td><code>MC-II 1 7</code></td>
 <td style="text-align: right;">69</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 2 3</td>
+<td><code>MC-II 2 3</code></td>
 <td style="text-align: right;">71</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 2 6a</td>
+<td><code>MC-II 2 6a</code></td>
 <td style="text-align: right;">73</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 2 6b</td>
+<td><code>MC-II 2 6b</code></td>
 <td style="text-align: right;">75</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 4 4</td>
+<td><code>MC-II 4 4</code></td>
 <td style="text-align: right;">77</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 4 6</td>
+<td><code>MC-II 4 6</code></td>
 <td style="text-align: right;">79</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 4 7</td>
+<td><code>MC-II 4 7</code></td>
 <td style="text-align: right;">81</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 5 1</td>
+<td><code>MC-II 5 1</code></td>
 <td style="text-align: right;">83</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 5 7</td>
+<td><code>MC-II 5 7</code></td>
 <td style="text-align: right;">85</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 5 8</td>
+<td><code>MC-II 5 8</code></td>
 <td style="text-align: right;">87</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 6 3/3</td>
+<td><code>MC-II 6 3/3</code></td>
 <td style="text-align: right;">89</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 6 4/2</td>
+<td><code>MC-II 6 4/2</code></td>
 <td style="text-align: right;">91</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 7 1</td>
+<td><code>MC-II 7 1</code></td>
 <td style="text-align: right;">93</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 7 2</td>
+<td><code>MC-II 7 2</code></td>
 <td style="text-align: right;">95</td>
-<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><span style="background-color:#90EE90; padding:2px 8px;">Yes</span></td>
 <td style="text-align: center;">Alph</td>
 <td>Last three letters are padding Xs</td>
 </tr>
 <tr>
-<td>II 7 9</td>
+<td><code>MC-II 7 9</code></td>
 <td style="text-align: right;">97</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 8 1</td>
+<td><code>MC-II 8 1</code></td>
 <td style="text-align: right;">99</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 8 2</td>
+<td><code>MC-II 8 2</code></td>
 <td style="text-align: right;">101</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 8 4</td>
+<td><code>MC-II 8 4</code></td>
 <td style="text-align: right;">103</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 8 5</td>
+<td><code>MC-II 8 5</code></td>
 <td style="text-align: right;">105</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 8 6</td>
+<td><code>MC-II 8 6</code></td>
 <td style="text-align: right;">107</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 8 7A</td>
+<td><code>MC-II 8 7A</code></td>
 <td style="text-align: right;">109</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 9 1A</td>
+<td><code>MC-II 9 1A</code></td>
 <td style="text-align: right;">111</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 9 2A</td>
+<td><code>MC-II 9 2A</code></td>
 <td style="text-align: right;">113</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 9 2B</td>
+<td><code>MC-II 9 2B</code></td>
 <td style="text-align: right;">115</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 10 1</td>
+<td><code>MC-II 10 1</code></td>
 <td style="text-align: right;">117</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 10 3A</td>
+<td><code>MC-II 10 3A</code></td>
 <td style="text-align: right;">119</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 10 3B</td>
+<td><code>MC-II 10 3B</code></td>
 <td style="text-align: right;">121</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>II 10 9</td>
+<td><code>MC-II 10 9</code></td>
 <td style="text-align: right;">123</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 1 8</td>
+<td><code>MC-III 1 8</code></td>
 <td style="text-align: right;">125</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 1 9</td>
+<td><code>MC-III 1 9</code></td>
 <td style="text-align: right;">127</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 1 10</td>
+<td><code>MC-III 1 10</code></td>
 <td style="text-align: right;">129</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 1 11a</td>
+<td><code>MC-III 1 11a</code></td>
 <td style="text-align: right;">131</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 1 11b</td>
+<td><code>MC-III 1 11b</code></td>
 <td style="text-align: right;">133</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 1 12</td>
+<td><code>MC-III 1 12</code></td>
 <td style="text-align: right;">135</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 3 2</td>
+<td><code>MC-III 3 2</code></td>
 <td style="text-align: right;">137</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 3 3</td>
+<td><code>MC-III 3 3</code></td>
 <td style="text-align: right;">139</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 3 4</td>
+<td><code>MC-III 3 4</code></td>
 <td style="text-align: right;">141</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 3 5</td>
+<td><code>MC-III 3 5</code></td>
 <td style="text-align: right;">143</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 3 6A</td>
+<td><code>MC-III 3 6A</code></td>
 <td style="text-align: right;">145</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 3 6B</td>
+<td><code>MC-III 3 6B</code></td>
 <td style="text-align: right;">147</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 7 7</td>
+<td><code>MC-III 3 7</code></td>
 <td style="text-align: right;">149</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>III 3 8A</td>
+<td><code>MC-III 2 8a</code></td>
 <td style="text-align: right;">151</td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td></td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
+<td style="text-align: center;">Alphanumeric</td>
+<td>Incorrectly identified as “MC-III 3 8a” in the Rob Roy listing. The
+mono count is radically different from the ciphertext; the count should
+be (1, 4, 8, 5, 3, 2, 2, 4, 1, 0, 4, 1, 6, 2, 4, 3, 5, 0, 1, 1, 5, 2, 3,
+2, 1, 0, 0, 0, 1, 3, 9, 0, 3, 1, 3, 0)</td>
 </tr>
 <tr>
-<td>III 3 8B</td>
+<td><code>MC-III 2 8b</code></td>
 <td style="text-align: right;">153</td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td></td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
+<td style="text-align: center;">Alphanumeric</td>
+<td>Incorrectly identified as “MC-III 3 8b” in the Rob Roy listing. Rob
+Roy total is 119 while there are 120 characters, H=6 but should be
+7.</td>
 </tr>
 </tbody>
 </table>
 <blockquote>
-<p><strong>Note:</strong> Remove two groups from start and end = reduce
-by 20</p>
+<p><strong>Note:</strong></p>
 </blockquote>
 <table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 12%" />
+<col style="width: 19%" />
+<col style="width: 31%" />
+<col style="width: 19%" />
+</colgroup>
 <thead>
 <tr>
 <th>Source</th>
@@ -771,490 +796,490 @@ by 20</p>
 </thead>
 <tbody>
 <tr>
-<td>Z 295 AEFEA</td>
+<td><code>Z 295 AEFEA</code></td>
 <td style="text-align: right;">155</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 240 CCFII</td>
+<td><code>Z 240 CCFII</code></td>
 <td style="text-align: right;">157</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 306 CCFII</td>
+<td><code>Z 306 CCFII</code></td>
 <td style="text-align: right;">159</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 311 CFIFC</td>
+<td><code>Z 311 CFIFC</code></td>
 <td style="text-align: right;">161</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 085 CJCCJ</td>
+<td><code>Z 085 CJCCJ</code></td>
 <td style="text-align: right;">163</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 343 DAEAD</td>
+<td><code>Z 343 DAEAD</code></td>
 <td style="text-align: right;">165</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 103 DCGCD</td>
+<td><code>Z 103 DCGCD</code></td>
 <td style="text-align: right;">167</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 312 DCGCD</td>
+<td><code>Z 312 DCGCD</code></td>
 <td style="text-align: right;">169</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 077 DDHAA</td>
+<td><code>Z 077 DDHAA</code></td>
 <td style="text-align: right;">171</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 369 DDHAA</td>
+<td><code>Z 369 DDHAA</code></td>
 <td style="text-align: right;">173</td>
-<td style="text-align: center;">No</td>
+<td style="text-align: center;"><span style="background-color:#FF7F7F; padding:2px 8px;">No</span></td>
 <td style="text-align: center;">Alph</td>
 <td>Listing says 473 with 3 dits (?)</td>
 </tr>
 <tr>
-<td>Z 262 DJDJD</td>
+<td><code>Z 262 DJDJD</code></td>
 <td style="text-align: right;">175</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 011 ECHCE</td>
+<td><code>Z 011 ECHCE</code></td>
 <td style="text-align: right;">177</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 161 EGBGE</td>
+<td><code>Z 161 EGBGE</code></td>
 <td style="text-align: right;">179</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 020 FEAFE</td>
+<td><code>Z 020 FEAFE</code></td>
 <td style="text-align: right;">181</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 084 FFBGG</td>
+<td><code>Z 084 FFBGG</code></td>
 <td style="text-align: right;">183</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 319 FFBGG</td>
+<td><code>Z 319 FFBGG</code></td>
 <td style="text-align: right;">185</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 107 GIFIG</td>
+<td><code>Z 107 GIFIG</code></td>
 <td style="text-align: right;">187</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 017 HAIHA</td>
+<td><code>Z 017 HAIHA</code></td>
 <td style="text-align: right;">189</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 298 HBJBH</td>
+<td><code>Z 298 HBJBH</code></td>
 <td style="text-align: right;">191</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 042 IIHFF</td>
+<td><code>Z 042 IIHFF</code></td>
 <td style="text-align: right;">193</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 060 IIHFF</td>
+<td><code>Z 060 IIHFF</code></td>
 <td style="text-align: right;">195</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 091 JAAAJ</td>
+<td><code>Z 091 JAAAJ</code></td>
 <td style="text-align: right;">197</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 001 JGGJG</td>
+<td><code>Z 001 JGGJG</code></td>
 <td style="text-align: right;">199</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 105 28082</td>
+<td><code>Z 105 28082</code></td>
 <td style="text-align: right;">201</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 106 28082</td>
+<td><code>Z 106 28082</code></td>
 <td style="text-align: right;">203</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 243 50505</td>
+<td><code>Z 243 50505</code></td>
 <td style="text-align: right;">205</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 314 50505</td>
+<td><code>Z 314 50505</code></td>
 <td style="text-align: right;">207</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 133 68486</td>
+<td><code>Z 133 68486</code></td>
 <td style="text-align: right;">209</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 284 68486</td>
+<td><code>Z 284 68486</code></td>
 <td style="text-align: right;">211</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 069 80808</td>
+<td><code>Z 069 80808</code></td>
 <td style="text-align: right;">213</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 359 80808</td>
+<td><code>Z 359 80808</code></td>
 <td style="text-align: right;">215</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 180 95459</td>
+<td><code>Z 180 95459</code></td>
 <td style="text-align: right;">217</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>Z 313 95459</td>
+<td><code>Z 313 95459</code></td>
 <td style="text-align: right;">219</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 100</td>
+<td><code>D 100</code></td>
 <td style="text-align: right;">221</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 110</td>
+<td><code>D 110</code></td>
 <td style="text-align: right;">223</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 111</td>
+<td><code>D 111</code></td>
 <td style="text-align: right;">225</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 113</td>
+<td><code>D 113</code></td>
 <td style="text-align: right;">227</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 114</td>
+<td><code>D 114</code></td>
 <td style="text-align: right;">229</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 128A</td>
+<td><code>D 128A</code></td>
 <td style="text-align: right;">231</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 128B</td>
+<td><code>D 128B</code></td>
 <td style="text-align: right;">233</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 131</td>
+<td><code>D 131</code></td>
 <td style="text-align: right;">235</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 137</td>
+<td><code>D 137</code></td>
 <td style="text-align: right;">237</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 139</td>
+<td><code>D 139</code></td>
 <td style="text-align: right;">239</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 141</td>
+<td><code>D 141</code></td>
 <td style="text-align: right;">241</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 142</td>
+<td><code>D 142</code></td>
 <td style="text-align: right;">243</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 143</td>
+<td><code>D 143</code></td>
 <td style="text-align: right;">245</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 146A</td>
+<td><code>D 146A</code></td>
 <td style="text-align: right;">247</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 146B</td>
+<td><code>D 146B</code></td>
 <td style="text-align: right;">249</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 150</td>
+<td><code>D 150</code></td>
 <td style="text-align: right;">251</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 151A</td>
+<td><code>D 151A</code></td>
 <td style="text-align: right;">253</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 151B</td>
+<td><code>D 151B</code></td>
 <td style="text-align: right;">255</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 152</td>
+<td><code>D 152</code></td>
 <td style="text-align: right;">257</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 152A</td>
+<td><code>D 152A</code></td>
 <td style="text-align: right;">259</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 158</td>
+<td><code>D 158</code></td>
 <td style="text-align: right;">261</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 159</td>
+<td><code>D 159</code></td>
 <td style="text-align: right;">263</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 161</td>
+<td><code>D 161</code></td>
 <td style="text-align: right;">265</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 165</td>
+<td><code>D 165</code></td>
 <td style="text-align: right;">267</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 190</td>
+<td><code>D 190</code></td>
 <td style="text-align: right;">269</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 195</td>
+<td><code>D 195</code></td>
 <td style="text-align: right;">271</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 196</td>
+<td><code>D 196</code></td>
 <td style="text-align: right;">273</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 206</td>
+<td><code>D 206</code></td>
 <td style="text-align: right;">275</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 208</td>
+<td><code>D 208</code></td>
 <td style="text-align: right;">277</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 210</td>
+<td><code>D 210</code></td>
 <td style="text-align: right;">279</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 211</td>
+<td><code>D 211</code></td>
 <td style="text-align: right;">281</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 212</td>
+<td><code>D 212</code></td>
 <td style="text-align: right;">283</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 214</td>
+<td><code>D 214</code></td>
 <td style="text-align: right;">285</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 218B</td>
+<td><code>D 218B</code></td>
 <td style="text-align: right;">287</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 219</td>
+<td><code>D 219</code></td>
 <td style="text-align: right;">289</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 220</td>
+<td><code>D 220</code></td>
 <td style="text-align: right;">291</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td>D 222</td>
+<td><code>D 222</code></td>
 <td style="text-align: right;">293</td>
 <td style="text-align: center;"></td>
 <td style="text-align: center;"></td>
