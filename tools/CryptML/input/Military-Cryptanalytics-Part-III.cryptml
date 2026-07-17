@@ -1,0 +1,49 @@
+{
+  "cryptml_version": "1.0",
+  "title": "Military Cryptanalytics, Part III",
+  "defaults": { "charset": "[A-Z0-9]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
+  "sources": [
+    { "type": "book", "title": "MC-III", "author": "Lambros D. Callimahos" }
+  ],
+  "notes": [
+    {
+        "title": "Location",
+        "text": "https://www.governmentattic.org/41docs/NSAmilitaryCryptalyticsPt3_1977.pdf"
+    },
+    {
+        "title": "Stethoscope Listings",
+        "text": "Numerous Stethoscope listings from this book can be found at https://www.governmentattic.org/59docs/NSAlDCCDAC1965.pdf"
+    }
+  ],
+  "ciphertexts": [
+    {
+      "id": "MC-III-B-8a",
+      "raw": "8EN55 MT5QH MUHHQ 5QM4F B7ESO OCDC5 CMKDY CD97Q CL9D5 O5CP5 4D7KK UBOUG IXCKG UVCEP QMNPH BM4BF UVW53 WAXW9",
+      "cipher_system": "Ciphertext autokey systems",
+      "notes":
+      [
+        { "title": "byline", "text": "Solve the following cryptogram and recover all keys" },
+        { "title": "related", "text": "Part of group of ciphertexts with MC-III-B-8b" }
+      ]
+    },
+    {
+      "id": "MC-III-B-8b",
+      "raw": "K8AZE J7GQK GYV7Y CSBAO V7VFP XA8RM UY7U9 8HRP7 3TNBP 3XUM5 3WRBP 3XHE8 TN3HH AHDH5 4SPFR OARF7 B34BV FP5SB OIMO5 57NU5 HKPNQ OWFP7 VWKSE UUOUO",
+      "cipher_system": "Ciphertext autokey systems",
+      "notes":
+      [
+        { "title": "byline", "text": "Solve the following cryptogram and recover all keys" },
+        { "title": "related", "text": "Part of group of ciphertexts with MC-III-B-8a" }
+      ]
+    },
+    {
+      "id": "MC-III-C-8",
+      "raw": "FIW8A CHN8Y DSX8L 87W89 NONN8 CZXGR XTOOV EPMJH 8BVVY ZADMB NFEEC VVA9A LBSY5 VVQTU PEOXQ WUMV4 YGXDM RN8YO D3M84 XR3UR X8QGI KC4GJ 88BQN NXPID LBZNC Z3G8R JDSXN TWNMJ DH40B TTCBL UTQLQ S9VY3 Z8BGU SIXGP R8LAY V5MDI 8M3TQ V4WEU VX7TJ GNNQA",
+      "cipher_system": "Ciphertext autokey systems",
+      "notes":
+      [
+        { "title": "byline", "text": "The fo1lowing teleprinter transmission was enciphered with an introductory key up to 10 characters in length. Solve it and recover all keys." }
+      ]
+    }
+  ]
+}

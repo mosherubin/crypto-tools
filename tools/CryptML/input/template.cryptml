@@ -1,0 +1,24 @@
+{
+  "cryptml_version": "1.0",
+  "title": "",
+  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
+  "sources": [
+    { "type": "book", "title": "", "author": "" }
+  ],
+  "notes": [
+    {
+        "title": "",
+        "text": ""
+    }
+  ],
+  "ciphertexts": [
+    {
+      "id": "",
+      "raw": "",
+      "cipher_system": "",
+      "origin": {"originator": ""},
+      "hints": [ {"text": ""} ],
+      "solution": { "plaintext": "", "key": "" }
+    }
+  ]
+}

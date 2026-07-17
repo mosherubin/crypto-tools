@@ -1,0 +1,44 @@
+{
+  "cryptml_version": "1.0",
+  "title": "Military Cryptanalytics, Part I, Problem Book",
+  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
+  "sources": [
+    { "type": "book", "title": "MC-I Problem Book", "author": "Friedman and Callimahos" }
+  ],
+  "notes": [
+    {
+        "title": "Location",
+        "text": "https://www.nsa.gov/portals/70/documents/news-features/declassified-documents/friedman-documents/publications/FOLDER_250/41748609078779.pdf"
+    },
+    {
+        "title": "Stethoscope Listings",
+        "text": "Numerous Stethoscope listings from this book can be found at https://www.governmentattic.org/59docs/NSAlDCCDAC1965.pdf"
+    }
+  ],
+  "ciphertexts": [
+    {
+      "id": "MC-I-5-1",
+      "raw": "MH EA XP SO ZP LM HT XN PR QU EH HG RH GR LC HU ZW VA BD MD WO HU ZB XR DD DU RH GR CG HO SO ZB XN WS ZO RG BL PC SO ZP ZC OC BL BT QL CP GR CC LU SD WS PR PX MD YG AM DF MH IL QH CQ YO IQ PF GF ND BI PF CC VA LF CC CQ YO OZ RT OQ VH CG IQ KP DL IY AO HA CG HO PF GF TD CP AO HA CV LF CC CQ YO QU OD CN OG CN WA QC HT MH KQ ZG LC HU PB GT ID WQ OF WG ZO LG KG DL ZW VA ZB XR AU VA DH PF MH PF ZB OH WL CG HO LZ SO ZB XN WS ZO IU TA AO GA HA EU MH YO LT EU MH HU LV WQ MZ YT ZT ZO YG SO LZ CP EU ON MU WG RT CG HO MH MS PR OT MF LF CP KS RO WZ MN QU CP AO HA CV CO MH DT DU PF GF NQ YG QD IB WS ZO YG BB YO ZN XR LW HU IQ WS QD DC ZB IB RM SO EN IA RU DW GR CG HO MH MS PR QD DC LZ TN WL KN PF XD UT WA ZO",
+      "cipher_system": "Polygraphic substitution: four-square and twosquare matrices",
+      "notes": [ { "title": "byline", "text": "Construct a digraphic distribution for the cryptogram below. Solve the cryptogram, and recover all keys." } ]
+    },
+    {
+      "id": "MC-I-6-1",
+      "raw": "UA SK UA SP KM MR IO OR IX YR OR OS MS SD UA RH LV BR SA AK SW AX SA BG CW PN CW XS AU BS NA NM SM VU YN AR OR HG RA RL SA YN UK SA OR MY IA AU BF MS SD UN WC AS EN CA HN DR FB NL AS BU RF VU RO MW BE RP NY IA CU GR WO SR XS AU BU LB UG DM KS MR GN HQ DM DU HU SB WC AS UB EO AS AD WB NO DK AD FB RH SP RW HO UC AD FT NO SB AU RD OT MS SD UN XB VL UA KS HQ KS MR UA RH LV CU CW FB NL QO AR OR HG RA LV AL UB UA CE RB AD EQ YX OE XH UM SW PR FS ON UK GN DR UP UR XW RW QH FR SD AS NO AD UA WB NO WS IG FS LR UB CA UO RP AS SB NW BH NP BS NA UA OE RB RB RZ RO KR OR VR NU US DR SR SP RW FR DA",
+      "cipher_system": "Polygraphic substitution: Playfair cipher systems",
+      "notes": [ { "title": "byline", "text": "Solve the following cryptogram and recover all keys" } ]
+    },
+    {
+      "id": "MC-I-10-2",
+      "raw": "GHUIP GJHNI MBSPR IUSNS SHPGB RQSAJ OOQRS SIPQS MHVJI PQIVV JFKIH GSANY PTKKD YJKQX ZVNPR OQNJS NUYEF ENPZV NPROQ QTKLN FFHON QUPOQ HUQTV OTNDO JTKLP OWOJT EJWNQ EKJAE IOUTI QQGTB ANNKZ XVUKR EMMQR RTEII KVPXV UKRRE MWKIK VPXVU DAEIP RSQII GWQLQ UXVVX VUATG WQQVP",
+      "cipher_system": "Miscellaneous monalphabetic substitution system",
+      "notes": [ { "title": "byline", "text": "Solve the following cryptogram and recover all keys" } ]
+    },
+    {
+      "id": "MC-I-6-4",
+      "raw": "LHQEF IPXOE OPYQE NCOPC MAGZH EFQEL MCOBY FMEBO DKDYS YFQEL EFDFH EFQET OLIEG GYHLO SLMLQ LBPJZ SPTFA OFQRL DQELN HQEFF MIBTZ OFGWJ FOSLM DPYFQ ELBLY BYFQE LYFQE LLMSX LEBIF EFDMQ ECFZN LQEMF XSLMT OLIDY OADSF EOSQE MLEFQ RQILU BPSTL MFHLM FIKQE FFYFQ ELTOL LGDYD TLQLB PKFAO FQROT PCQEM OSQEM LMBLY BGCGZ FQRWO OLSAP SKLLM ESZQR LKMOE SPSRN",
+      "cipher_system": "Miscellaneous monalphabetic substitution system",
+      "notes": [ { "title": "byline", "text": "The following cryptogram is suspected to contain the signature \"CLINTON COURTNEY COL INF.\" Solve it and recover all keys." } ]
+    }
+  ]
+}

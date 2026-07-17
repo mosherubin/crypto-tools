@@ -1,0 +1,28 @@
+{
+  "cryptml_version": "1.0",
+  "title": "Professor Cipher Deavours Spring 1976 course in Cryptography and Cryptanalysis",
+  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
+  "sources": [
+    { "type": "other", "title": "Sheet handouts for his Spring 1976 course", "author": "Cipher Deavours" }
+  ],
+  "notes": [
+    {
+        "title": "History",
+        "text": "I received Deavours's mimiographed sheets from his Spring 1976 course in Kean College, NJ, USA"
+    }
+  ],
+  "ciphertexts": [
+    {
+      "id": "assignment-4-exercise-2",
+      "raw": "VMRNG UIYKT DDFES TGHYR NVCWD EBGTD TYJVF SDFGH LKJHG FVFFR TGVBV GTYHU QBZDR KHNGT YFWQX VREDS PIUJG HHUYK NNNJT MRTFE XDEW",
+      "cipher_system": "Either monoalphabetic, Vigenere, or random characters",
+      "origin": {"originator": ""},
+      "notes":
+      [
+        { "title": "byline", "text": "Either monoalphabetic, Vigenere, or random characters, determine the system" }
+      ],
+      "hints": [ {"text": ""} ],
+      "solution": { "plaintext": "<Random Typewriter Characters>", "key": "random" }
+    }
+  ]
+}
