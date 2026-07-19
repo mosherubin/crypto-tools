@@ -3,7 +3,7 @@
   "ciphertexts": [
     {
       "id": "CC-1983-10",
-      "cipher_system": "Danish Wheastone Cipher Device",
+      "cipher_system": "Danish Wheatstone Cipher Device",
       "parts": [
         {
           "part_id": "1",
@@ -47,11 +47,11 @@
     },
     {
       "id": "CC-1984-01",
-      "cipher_system": "Danish Wheastone Cipher Device",
+      "cipher_system": "Danish Wheatstone Cipher Device",
       "parts": [
         {
           "part_id": "1",
-          "raw": "FQQO 2RUCN UMXUE QWXTZ HUI3Y IXO2L MKCT3 DARVS THIEZ KEFMP GNYWF QRRBE WDLZX FRYPM JV2P3 UVMWR Q2CEV 32V4Z LXAPN BASDR 2FTAR JGOSE C3RNF VRLBP 2M2FH RGBAU ANRVM BA2DS HHDY3 XFJZC GEIT4 YHWUO FKELX VEW4G IIIZE WEQXC HRQHS UNSXX",
+          "raw": "FFQQO 2RUCN UMXUE QWXTZ HUI3Y IXO2L MKCT3 DARVS THIEZ KEFMP GNYWF QRRBE WDLZX FRYPM JV2P3 UVMWR Q2CEV 32V4Z LXAPN BASDR 2FTAR JGOSE C3RNF VRLBP 2M2FH RGBAU ANRVM BA2DS HHDY3 XFJZC GEIT4 YHWUO FKELX VEW4G IIIZE WEQXC HRQHS UNSXX",
           "origin": {
             "location": "Cryptologia, Cryptanalysts' Corner, January 1984, Volume 8, Number 1, page 57"
           }

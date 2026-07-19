@@ -1,2 +1,4 @@
 #!/bin/sh
-exec python "$(git rev-parse --show-toplevel)/tools/Stethoscope/hooks/pre-commit.py"
+ROOT="$(git rev-parse --show-toplevel)"
+python "$ROOT/tools/Stethoscope/hooks/pre-commit.py" || exit 1
+python "$ROOT/tools/CryptML/hooks/pre-commit.py" || exit 1

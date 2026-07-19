@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CryptML List / Browse</title>
+<title>CryptML Search</title>
 <style>
   body { font-family: monospace; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
   h1 { font-family: sans-serif; }
@@ -25,14 +25,16 @@
 </head>
 <body>
   <p><a href="index.html">&larr; back to tools</a></p>
-  <h1>CryptML List / Browse</h1>
-  <p>List every ciphertext in one or more <code>.cryptml</code> files, one line each. Nothing you choose here leaves your browser.</p>
+  <h1>CryptML Search</h1>
+  <p>Search every field of one or more <code>.cryptml</code> files (including the filename) for a boolean expression of
+     quoted or bare strings joined by <code>AND</code>/<code>OR</code>. Matching is case-insensitive; adjacent terms with
+     no operator between them are treated as <code>AND</code>. Example: <code>"C-" AND transposition</code>.
+     Nothing you choose here leaves your browser.</p>
 
   <div class="toolbar">
     <button id="btn-folder">Choose folder&hellip;</button>
     <button id="btn-files">Choose files&hellip;</button>
-    <input type="text" id="filter" placeholder="Filter by filename (e.g. Military-*)">
-    <label><input type="checkbox" id="sort-ids"> Sort ciphertext IDs</label>
+    <input type="text" id="query" placeholder='e.g. "C-" AND "transposition"'>
   </div>
   <div id="status"></div>
   <div id="output"></div>
@@ -57,36 +59,6 @@ function setStatus(text, isError = false) {
   const el = document.getElementById('status');
   el.textContent = text;
   el.style.color = isError ? '#b00' : '#555';
-}
-
-function globToRegExp(pattern) {
-  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.');
-  return new RegExp(`^${escaped}$`, 'i');
-}
-
-function matchesFilter(filename, pattern) {
-  if (!pattern.trim()) return true;
-  const p = pattern.trim();
-  return p.includes('*') || p.includes('?') ? globToRegExp(p).test(filename) : filename.toLowerCase().includes(p.toLowerCase());
-}
-
-function naturalCompare(a, b) {
-  const ax = String(a).match(/\d+|\D+/g) || [];
-  const bx = String(b).match(/\d+|\D+/g) || [];
-  const len = Math.max(ax.length, bx.length);
-  for (let i = 0; i < len; i++) {
-    const ac = ax[i], bc = bx[i];
-    if (ac === undefined) return -1;
-    if (bc === undefined) return 1;
-    if (/^\d+$/.test(ac) && /^\d+$/.test(bc)) {
-      const diff = Number(ac) - Number(bc);
-      if (diff !== 0) return diff;
-    } else {
-      const cmp = ac.localeCompare(bc);
-      if (cmp !== 0) return cmp;
-    }
-  }
-  return 0;
 }
 
 function pad(str, width) {
@@ -131,15 +103,111 @@ function rowsForCiphertext(ct) {
   }];
 }
 
-async function renderListing() {
-  const pattern = document.getElementById('filter').value;
+// Tokenizes a search query into quoted/bare terms and AND/OR operators.
+// Quoted terms keep their exact contents -- e.g. "C-" is never stripped to "C".
+function tokenizeQuery(query) {
+  const tokens = [];
+  let i = 0;
+  while (i < query.length) {
+    const c = query[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if (c === '"' || c === "'") {
+      const close = query.indexOf(c, i + 1);
+      const end = close === -1 ? query.length : close;
+      tokens.push({ type: 'term', value: query.slice(i + 1, end) });
+      i = end + 1;
+      continue;
+    }
+    let j = i;
+    while (j < query.length && !/\s/.test(query[j])) j++;
+    const word = query.slice(i, j);
+    if (/^and$/i.test(word)) tokens.push({ type: 'AND' });
+    else if (/^or$/i.test(word)) tokens.push({ type: 'OR' });
+    else tokens.push({ type: 'term', value: word });
+    i = j;
+  }
+  return tokens;
+}
+
+// Grammar: expr := and (OR and)* ; and := factor (AND? factor)* -- a missing
+// operator between two terms defaults to AND, so `"a" "b"` behaves like `"a" AND "b"`.
+function parseQuery(query) {
+  const tokens = tokenizeQuery(query);
+  if (!tokens.length) return null;
+  let pos = 0;
+  const peek = () => tokens[pos];
+
+  function parseFactor() {
+    const t = peek();
+    if (!t || t.type !== 'term') throw new Error('Expected a search term (check your AND/OR placement)');
+    pos++;
+    return { op: 'TERM', value: t.value };
+  }
+  function parseAnd() {
+    let node = parseFactor();
+    while (peek() && (peek().type === 'AND' || peek().type === 'term')) {
+      if (peek().type === 'AND') pos++;
+      node = { op: 'AND', left: node, right: parseFactor() };
+    }
+    return node;
+  }
+  function parseOr() {
+    let node = parseAnd();
+    while (peek() && peek().type === 'OR') {
+      pos++;
+      node = { op: 'OR', left: node, right: parseAnd() };
+    }
+    return node;
+  }
+
+  const tree = parseOr();
+  if (pos < tokens.length) throw new Error('Unexpected extra text in search query');
+  return tree;
+}
+
+function evaluateQuery(node, corpusLower) {
+  if (node.op === 'TERM') return corpusLower.includes(node.value.toLowerCase());
+  if (node.op === 'AND') return evaluateQuery(node.left, corpusLower) && evaluateQuery(node.right, corpusLower);
+  return evaluateQuery(node.left, corpusLower) || evaluateQuery(node.right, corpusLower);
+}
+
+// Matches at part granularity for a parts-based ciphertext, so a term found in one part's
+// raw doesn't drag in its unrelated sibling parts -- only fields shared by all parts
+// (id, cipher_system, sources, etc.) make every part match together.
+function matchingRowsForCiphertext(rawCt, resolvedCt, sharedCorpusPrefix, query) {
+  if (!rawCt.parts) {
+    const corpus = sharedCorpusPrefix + ' ' + JSON.stringify(rawCt).toLowerCase();
+    return evaluateQuery(query, corpus) ? rowsForCiphertext(resolvedCt) : [];
+  }
+  const ctSharedOnly = { ...rawCt };
+  delete ctSharedOnly.parts;
+  const ctCorpusBase = sharedCorpusPrefix + ' ' + JSON.stringify(ctSharedOnly).toLowerCase();
+  const allRows = rowsForCiphertext(resolvedCt); // one per part, same order as rawCt.parts
+  return rawCt.parts
+    .map((rawPart, i) => evaluateQuery(query, ctCorpusBase + ' ' + JSON.stringify(rawPart).toLowerCase()) ? allRows[i] : null)
+    .filter(Boolean);
+}
+
+async function renderSearch() {
+  const queryText = document.getElementById('query').value;
   const output = document.getElementById('output');
   output.innerHTML = '';
   document.getElementById('summary').textContent = '';
 
-  const matching = loadedFiles.filter(f => matchesFilter(f.name, pattern));
-  if (!matching.length) {
-    setStatus(loadedFiles.length ? 'No files match that filter.' : 'No files loaded yet -- choose a folder or files above.');
+  if (!loadedFiles.length) {
+    setStatus('No files loaded yet -- choose a folder or files above.');
+    return;
+  }
+  if (!queryText.trim()) {
+    setStatus('Type a search query above.');
+    return;
+  }
+
+  let query;
+  try {
+    query = parseQuery(queryText);
+  } catch (e) {
+    setStatus(`Search query error: ${e.message}`, true);
     return;
   }
 
@@ -147,9 +215,9 @@ async function renderListing() {
     formatRow('ID', 'CIPHER SYSTEM', 'LEN', 'SLV', 'PREVIEW'));
   output.appendChild(header);
 
-  let fileCount = 0, ciphertextCount = 0, rowCount = 0;
+  let fileCount = 0, rowCount = 0;
 
-  for (const { name, file } of matching.sort((a, b) => a.name.localeCompare(b.name))) {
+  for (const { name, file } of [...loadedFiles].sort((a, b) => a.name.localeCompare(b.name))) {
     let text;
     try {
       text = await file.text();
@@ -182,36 +250,49 @@ async function renderListing() {
       continue;
     }
 
+    // Fields shared by every ciphertext in this file (title, defaults, document-level
+    // sources/references/notes/chatter) -- searched alongside each ciphertext's own fields.
+    const docCorpus = JSON.stringify({
+      cryptml_version: data.cryptml_version,
+      title: data.title,
+      defaults: data.defaults,
+      sources: data.sources,
+      references: data.references,
+      notes: data.notes,
+      chatter: data.chatter,
+    }).toLowerCase();
+    const sharedCorpusPrefix = name.toLowerCase() + ' ' + docCorpus;
+
+    const matchedRows = [];
+    data.ciphertexts.forEach((rawCt, index) => {
+      matchedRows.push(...matchingRowsForCiphertext(rawCt, doc.ciphertexts[index], sharedCorpusPrefix, query));
+    });
+
+    if (!matchedRows.length) continue;
+
     fileCount++;
-    output.appendChild(M.el('div', { className: 'file-header' }, `${name} (${doc.ciphertexts.length} ciphertext${doc.ciphertexts.length === 1 ? '' : 's'})`));
-    const ciphertexts = document.getElementById('sort-ids').checked
-      ? [...doc.ciphertexts].sort((a, b) => naturalCompare(a.id, b.id))
-      : doc.ciphertexts;
-    for (const ct of ciphertexts) {
-      ciphertextCount++;
-      for (const { line, title } of rowsForCiphertext(ct)) {
-        rowCount++;
-        output.appendChild(M.el('div', { className: 'row', title }, line));
-      }
+    output.appendChild(M.el('div', { className: 'file-header' }, `${name} (${matchedRows.length} matching row${matchedRows.length === 1 ? '' : 's'})`));
+    for (const { line, title } of matchedRows) {
+      rowCount++;
+      output.appendChild(M.el('div', { className: 'row', title }, line));
     }
   }
 
-  setStatus(`Listed ${matching.length} matching file(s).`);
+  setStatus(`Searched ${loadedFiles.length} file(s).`);
   document.getElementById('summary').textContent =
-    `${fileCount} file(s) listed, ${ciphertextCount} ciphertext(s), ${rowCount} row(s) shown.`;
+    `${fileCount} file(s) matched, ${rowCount} row(s) shown.`;
 }
 
 async function loadFileList(fileList) {
   loadedFiles = [...fileList].filter(f => f.name.endsWith('.cryptml')).map(f => ({ name: f.name, file: f }));
-  await renderListing();
+  await renderSearch();
 }
 
 document.getElementById('btn-folder').addEventListener('click', () => folderInput.click());
 document.getElementById('btn-files').addEventListener('click', () => filesInput.click());
 folderInput.addEventListener('change', () => loadFileList(folderInput.files));
 filesInput.addEventListener('change', () => loadFileList(filesInput.files));
-document.getElementById('filter').addEventListener('input', renderListing);
-document.getElementById('sort-ids').addEventListener('change', renderListing);
+document.getElementById('query').addEventListener('input', renderSearch);
 </script>
 <script data-goatcounter="https://mosherubin.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
