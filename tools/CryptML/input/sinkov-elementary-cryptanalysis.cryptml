@@ -1,0 +1,48 @@
+{
+  "cryptml_version": "1.0",
+  "ciphertexts": [
+    {
+      "id": "Exercise-01",
+      "cipher_system": "Caesar Cipher",
+      "raw": "FRZDUGV GLH PDQB WLPHV EHIRUH WKHLU GDHWKV",
+      "solution": {
+        "plaintext": "COWARDS DIE MANY TIMES BEFORE THEIR DEATHS",
+        "solvers": [
+          {
+            "notes": "From \"Solutions to Exercises\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "Exercise-02",
+      "cipher_system": "Caesar Cipher",
+      "raw": "WKH HYLO WKDW PHQ GR OLYHV DIWHU WKHP",
+      "solution": {
+        "plaintext": "THE EVIL THAT MEN DO LIVES AFTER THEM",
+        "solvers": [
+          {
+            "notes": "From \"Solutions to Exercises\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "Exercise-06-b",
+      "cipher_system": "Direct Standard Alphabets",
+      "raw": "KSPCP TD L ETOP TY ESP LQQLTCD ZQ XPY HSTNS ELVPY LE ESP QWZZO WPLOD ZY EZ QZCEFYP",
+      "notes": [
+        {
+          "title": "byline",
+          "text": "(b) Decipher the following monoalphabetic cipher knowing that it is a direct standard alphabet with shift 11"
+        }
+      ]
+    }
+  ],
+  "title": "sinkov-elementary-cryptanalysis",
+  "references": [
+    {
+      "citation": "Elementary Cryptanalysis: A Mathematical Approach, Random House, 1968, First Printing"
+    }
+  ]
+}

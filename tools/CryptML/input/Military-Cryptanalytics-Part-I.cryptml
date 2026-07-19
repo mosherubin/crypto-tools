@@ -1,0 +1,22 @@
+{
+  "cryptml_version": "1.0",
+  "title": "Military Cryptanalytics, Part I",
+  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
+  "sources": [
+    { "type": "book", "title": "MC-I", "author": "Friedman and Callimahos" }
+  ],
+  "notes": [
+    {
+        "title": "Location",
+        "text": "https://www.nsa.gov/Portals/70/documents/news-features/declassified-documents/friedman-documents/publications/FOLDER_245/41748799078803.pdf"
+    }
+  ],
+  "ciphertexts": [
+    {
+      "id": "MC-I-section-41",
+      "raw": "SFDZF IOGHL PZFGZ DYSPF HBZDS GVHTF UPLVD FGYVJ VFVHT GADZZ AITYD ZYFZJ ZTGPT VTZBD VFHTZ DFXSB GIDZY VTXOI YVTEF VMGZZ THLLV XZDFM HTZAI TYDZY BDVFH TZDFK ZDZZJ SXISG ZYGAV FSLGZ DTHHT CDZRS VTYZD OZFFH TZAIT YDZYG AVDGZ ZTKHI TYZYS DZGHU ZFZTG UPGDI XWGHX ASRUZ DFUID EGHTV EAGXX",
+      "cipher_system": "monoalphabetic, mixed-alphabet cryptogram",
+      "notes": [ { "title": "byline", "text": "The student is now ready to resume his cryptanalytic s~udies. Note the following cryptogram:" } ]
+    }
+  ]
+}

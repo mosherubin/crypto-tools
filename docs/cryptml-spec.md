@@ -92,26 +92,66 @@ type is a validation error if it appears on the other.
 | Field | Required | Meaning |
 |---|---|---|
 | `id` | conditionally — see below | Reference name, e.g. `"1"`, `"GRP42"`, `"L2-P16-a"`. Unique across the whole document. |
-| `raw` | **yes** | The ciphertext text, exactly as transcribed. |
+| `raw` | conditionally — exactly one of `raw`/`parts` required | The ciphertext text, exactly as transcribed. |
+| `parts` | conditionally — exactly one of `raw`/`parts` required | Array of ≥2 [part](#part) objects, for one exercise made of several inseparable raw blocks (e.g. messages "a" and "b" that must be solved jointly). See below. |
 | `cipher_system` | no, cascades | e.g. `"Vigenère"`, `"Hill"`, `"Quagmire III"`, `"unknown"`. |
 | `charset` | no, cascades | Regex character class (e.g. `[A-Z]`) matching valid cipher symbols. To match any character (e.g. a concealment/null cipher), use `[\s\S]` — see [Validation rules](#validation-rules) — not `[.]`, which matches only a literal period. |
 | `casesensitive` | no, cascades | Whether `charset` matching is case-sensitive. |
 | `ditschar` | no, cascades | Character standing in for a missing/unrecoverable symbol. |
 | `ignorechars` | no, cascades | Regex character class (e.g. `[\s]`) of characters silently dropped (whitespace, group separators). |
-| `remove_from_start` | no, default `0` | Number of non-ignored characters (i.e. not matched by `ignorechars`) to strip from the start of `raw` — typically a message preamble. No cascade. |
-| `remove_from_end` | no, default `0` | Number of non-ignored characters to strip from the end of `raw` — typically padding added to reach a group-length multiple. No cascade. |
-| `origin` | no | No cascade. See [origin](#origin). |
+| `remove_from_start` | no, default `0` | Number of non-ignored characters (i.e. not matched by `ignorechars`) to strip from the start of `raw` — typically a message preamble. Only legal alongside `raw`; with `parts`, each part has its own instead (see below). No cascade. |
+| `remove_from_end` | no, default `0` | Number of non-ignored characters to strip from the end of `raw` — typically padding added to reach a group-length multiple. Only legal alongside `raw`; with `parts`, each part has its own instead. No cascade. |
+| `origin` | no | No cascade. Only legal alongside `raw`; with `parts`, each part has its own instead. See [origin](#origin). |
 | `sources` | no, cascades | This ciphertext's own sources, merged with the document's. |
 | `references` | no, cascades | Merged with the document's. |
 | `notes` | no, cascades | Merged with the document's. |
 | `chatter` | no, cascades | Merged with the document's. |
-| `solution` | no | No cascade (except `solution.plaintext_charset`, see below). See [solution](#solution). |
-| `hints` | no | No cascade. See [hint](#hint). |
+| `solution` | no | No cascade (except `solution.plaintext_charset`, see below). Only legal alongside `raw`; with `parts`, each part has its own instead — independent messages sharing key material usually decrypt to different plaintexts. See [solution](#solution). |
+| `hints` | no | No cascade. Only legal alongside `raw`; with `parts`, each part has its own instead — a crib usually applies to one message's content, not the exercise in the abstract. See [hint](#hint). |
 
 `id` default rule: if `ciphertexts` has exactly one entry, `id` may be
 omitted and defaults to `"1"`. Whenever there's more than one ciphertext in
 the file, every one of them needs an explicit `id`, and all ids must be
 unique across the document.
+
+### `part` (item of a `parts` list)
+
+The split follows one rule: fields describing **the system/exercise as a
+whole** (`cipher_system`, `charset`/`casesensitive`/`ditschar`/
+`ignorechars`, `sources`/`references`/`notes`/`chatter`) stay on the parent
+ciphertext and apply to every part uniformly — that's exactly what makes
+independent messages "in depth" in the first place, same system and key.
+Fields describing **one specific message's own content and outcome**
+(`raw`, `origin`, `solution`, `hints`) move onto each part instead, because
+those genuinely differ between independent messages — different plaintexts,
+possibly different cribs, possibly even different interception details,
+despite sharing key material.
+
+| Field | Required | Meaning |
+|---|---|---|
+| `part_id` | **yes** | Label for this part, e.g. `"a"`, `"b"`. Unique within the `parts` list. Free-form, like ciphertext `id` — no auto-default, since `parts` never has just one entry. |
+| `raw` | **yes** | This part's ciphertext text. |
+| `remove_from_start` | no, default `0` | Same meaning as the ciphertext-level field, scoped to this part's `raw`. |
+| `remove_from_end` | no, default `0` | Same meaning as the ciphertext-level field, scoped to this part's `raw`. |
+| `origin` | no | Same shape as ciphertext-level [origin](#origin), scoped to this part. |
+| `solution` | no | Same shape as ciphertext-level [solution](#solution), scoped to this part. |
+| `hints` | no | Same shape as ciphertext-level [hint](#hint) list, scoped to this part. |
+
+Two inseparable messages that must be solved jointly (e.g. Military
+Cryptanalytics, Part I, Lesson 4, Problem 9's messages 'a' and 'b') — one
+`id` and one `cipher_system` shared by both, but each part carries its own
+`solution` since the two messages decrypt to different plaintexts:
+
+```json
+{
+  "id": "MC-I-4-9",
+  "cipher_system": "Vigenère (two messages in depth)",
+  "parts": [
+    { "part_id": "a", "raw": "QLZOV EEXWO ...", "solution": { "plaintext": "ATTACK AT DAWN ..." } },
+    { "part_id": "b", "raw": "TKHNS RIOAB ...", "solution": { "plaintext": "HOLD UNTIL REINFORCED ..." } }
+  ]
+}
+```
 
 ## Cascade rules
 
@@ -128,9 +168,9 @@ Exactly two cascade behaviors, both document → ciphertext, one level:
    ciphertext's effective list is `document.<field> + ciphertext.<field>`,
    document's entries first, then the ciphertext's own.
 
-Everything else — `id`, `raw`, `remove_from_start`, `remove_from_end`,
-`origin`, `solution`, `hints` — is ciphertext-only and never
-cascades; it's a validation error for any of these to appear on the
+Everything else — `id`, `raw`, `parts`, `remove_from_start`,
+`remove_from_end`, `origin`, `solution`, `hints` — is ciphertext-only and
+never cascades; it's a validation error for any of these to appear on the
 document. `solution.plaintext_charset` is the one exception inside a
 non-cascading object: it still resolves via the scalar-override chain,
 because a plaintext alphabet is conceptually the same kind of setting as
@@ -139,10 +179,11 @@ because a plaintext alphabet is conceptually the same kind of setting as
 
 ## Gap marker
 
-`raw` may contain the literal reserved string `"[...]"` to mark a point
-where an unspecified number of groups/symbols from the original message
-were never transcribed — e.g. an analyst excerpting only the first several
-and last several groups of a long message log. This is different from
+`raw` (or a `part`'s own `raw`, if the ciphertext uses `parts`) may contain
+the literal reserved string `"[...]"` to mark a point where an unspecified
+number of groups/symbols from the original message were never transcribed —
+e.g. an analyst excerpting only the first several and last several groups
+of a long message log. This is different from
 `ditschar`, which stands for exactly one unrecoverable symbol at a known
 position: `[...]` makes no claim about how much is missing, only that
 something is. It's also different from `remove_from_start`/
@@ -177,13 +218,29 @@ Multiple occurrences in one `raw` are allowed; there's no cap.
   `ignorechars` — there is no fourth bucket. A character that matches none
   of the three is a validation error. This is the mechanism behind the
   "guaranteed clean" claim above: a `raw` field can never quietly carry
-  unaccounted-for characters.
+  unaccounted-for characters. With `parts`, this rule applies independently
+  to each part's own `raw`, against the same ciphertext-level `charset`/
+  `ditschar`/`ignorechars`.
+- **A ciphertext has exactly one of `raw` or `parts`.** Neither, or both,
+  is a validation error.
+- **`parts` must have at least 2 entries.** A single-entry `parts` array is
+  rejected — use `raw` instead; there's exactly one way to say "one raw
+  block."
+- **`part_id` is required and unique within its `parts` list.** No
+  auto-default, since `parts` never has just one entry to default from.
+- **`remove_from_start`/`remove_from_end` are illegal on a ciphertext that
+  uses `parts`.** Use each part's own instead — there's no single `raw` on
+  that ciphertext for a ciphertext-level trim to unambiguously apply to.
+- **`origin`, `solution`, and `hints` are likewise illegal on a ciphertext
+  that uses `parts`.** Use each part's own instead — these describe one
+  message's own content and outcome, which independent in-depth messages
+  don't share even when their cipher system and key do.
 - **Unknown fields are errors.** Every node type and every sub-object below
   has a fixed field set. A key not in that set is rejected.
 - **Misplaced fields are errors**, symmetrically: a ciphertext-only field
-  (`raw`, `remove_from_start`, `remove_from_end`, `origin`, `solution`,
-  `hints`) found on the document is an error; a document-only field
-  (`cryptml_version`, `title`, `defaults`, `ciphertexts`) found on a
+  (`raw`, `parts`, `remove_from_start`, `remove_from_end`, `origin`,
+  `solution`, `hints`) found on the document is an error; a document-only
+  field (`cryptml_version`, `title`, `defaults`, `ciphertexts`) found on a
   ciphertext is an error.
 - **Duplicate `id` anywhere in `ciphertexts` is an error.**
 - **`source.type`** must be one of the enumerated values (see below) — not
@@ -373,6 +430,55 @@ Resolved view of `L2-P16-a`: `charset = "[A-Z]"` / `casesensitive = false` /
 down from the document — it has none of its own). `L2-P17` overrides
 `charset` to `"[1-3]"` for its own use, everything else still cascades
 normally.
+
+## Example: single-`raw` and `parts` ciphertexts side by side
+
+Two ciphertexts in one document — an ordinary single-message problem, and
+an in-depth pair. `MC-I-4-7` looks exactly like every other ciphertext
+you've already seen. `MC-I-4-9` has no `raw`, `origin`, `solution`, or
+`hints` of its own at all — those all live on its two parts instead,
+because `cipher_system` is the only thing 'a' and 'b' actually share.
+
+```json
+{
+  "cryptml_version": "1.0",
+  "title": "Military Cryptanalytics, Part I, Lesson 4 (excerpt)",
+  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
+  "sources": [
+    { "type": "book", "title": "Military Cryptanalytics, Part I", "author": "Friedman and Callimahos" }
+  ],
+  "ciphertexts": [
+    {
+      "id": "MC-I-4-7",
+      "raw": "WKRUL BXHVI DQGWK HODZQ FRXOG",
+      "cipher_system": "Monoalphabetic substitution",
+      "solution": { "plaintext": "THE QUICK BROWN FOX" }
+    },
+    {
+      "id": "MC-I-4-9",
+      "cipher_system": "Vigenère (two messages in depth)",
+      "parts": [
+        {
+          "part_id": "a",
+          "raw": "QLZOV EEXWO ...",
+          "origin": { "date": "1943-06", "method": "intercepted teleprinter traffic" },
+          "hints": [ { "text": "Believed to begin with a standard preamble." } ],
+          "solution": { "plaintext": "ATTACK AT DAWN ..." }
+        },
+        {
+          "part_id": "b",
+          "raw": "TKHNS RIOAB ...",
+          "solution": { "plaintext": "HOLD UNTIL REINFORCED ..." }
+        }
+      ]
+    }
+  ]
+}
+```
+
+Note that `origin`/`hints` are entirely optional per part — part 'a' has
+both, part 'b' has neither, and that's fine; nothing requires parts to be
+symmetric with each other.
 
 ## Invalid examples
 

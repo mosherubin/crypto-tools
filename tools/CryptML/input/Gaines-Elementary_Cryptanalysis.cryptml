@@ -97,24 +97,28 @@
       }
     },
     {
-      "id": "C-III-EX-7-a",
-      "raw": "TSSNI HAYST INTPI SEROO IAASN",
+      "id": "C-III-EX-7",
       "cipher_system": "transposition",
-      "origin": {"originator": "TITOGI"},
-      "solution": {
-        "plaintext": "This is an ...",
-        "key": "Write in columns of 5, normal order."
-      }
-    },
-    {
-      "id": "C-III-EX-7-b",
-      "raw": "SHCVI EOLEA EWERM",
-      "cipher_system": "transposition",
-      "origin": {"originator": "TITOGI"},
-      "solution": {
-        "plaintext": "This is an ...",
-        "key": "Write in columns of 5, normal order."
-      }
+      "parts": [
+        {
+            "part_id": "a",
+            "raw": "TSSNI HAYST INTPI SEROO IAASN",
+            "solution": {
+                "plaintext": "This is an ...",
+                "key": "Write in columns of 5, normal order."
+            },
+            "origin": {"originator": "TITOGI"}
+        },
+        {
+            "part_id": "b",
+            "raw": "SHCVI EOLEA EWERM",
+            "solution": {
+                "plaintext": "See how clever I am",
+                "key": "Write in columns of 5, normal order."
+            },
+            "origin": {"originator": "TITOGI"}
+        }
+      ]
     },
     {
       "id": "C-III-EX-8",
@@ -183,83 +187,69 @@
       }
     },
     {
-      "id": "C-IV-EX-36-a",
-      "raw": "UOYME ETENA WHTIM CICTI JIUSO GNHYF",
+      "id": "C-IV-EX-36",
       "cipher_system": "Transposition -  Multiple Anagramming",
-      "origin": {"originator": "TITOGI"},
-      "notes": [ {"title": "One of multiple messages", "text": "1 of 10 in-depth messages"} ],
-      "solution": {
-        "plaintext": "Man wants but little ..."
-      }
-    },
-    {
-      "id": "C-IV-EX-36-b",
-      "raw": "YTMIL LEMLE WUAAJ TWONF ORTAH LHTGI",
-      "cipher_system": "Transposition -  Multiple Anagramming",
-      "origin": {"originator": "TITOGI"},
-      "notes": [ {"title": "One of multiple messages", "text": "2 of 10 in-depth messages"} ],
-      "solution": {
-        "plaintext": "Man wants but little ..."
-      }
-    },
-    {
-      "id": "C-IV-EX-36-c",
-      "raw": "ROPUL EAEEB AHFTK ODTSC ILTTM RYTIH",
-      "cipher_system": "Transposition -  Multiple Anagramming",
-      "origin": {"originator": "TITOGI"},
-      "notes": [ {"title": "One of multiple messages", "text": "3 of 10 in-depth messages"} ],
-      "solution": {
-        "plaintext": "Man wants but little ..."
-      }
-    },
-    {
-      "id": "C-IV-EX-36-d",
-      "raw": "UMHTS EUOKS IHWTR ANCIO WAOHT YOSSY",
-      "cipher_system": "Transposition -  Multiple Anagramming",
-      "origin": {"originator": "TITOGI"},
-      "notes": [ {"title": "One of multiple messages", "text": "4 of 10 in-depth messages"} ]
-    },
-    {
-      "id": "C-IV-EX-36-e",
-      "raw": "ECERL TADAR MREAO GPOYM EEAAT NIBSA",
-      "cipher_system": "Transposition -  Multiple Anagramming",
-      "origin": {"originator": "TITOGI"},
-      "notes": [ {"title": "One of multiple messages", "text": "5 of 10 in-depth messages"} ]
-    },
-    {
-      "id": "C-IV-EX-36-f",
-      "raw": "REUOT KNAEH EHHLY WDELE EEEOM NWSLL",
-      "cipher_system": "Transposition -  Multiple Anagramming",
-      "origin": {"originator": "TITOGI"},
-      "notes": [ {"title": "One of multiple messages", "text": "6 of 10 in-depth messages"} ]
-    },
-    {
-      "id": "C-IV-EX-36-g",
-      "raw": "IHLPU HTTGI YTTAS NERTE ORYTA HNJDS",
-      "cipher_system": "Transposition -  Multiple Anagramming",
-      "origin": {"originator": "TITOGI"},
-      "notes": [ {"title": "One of multiple messages", "text": "7 of 10 in-depth messages"} ]
-    },
-    {
-      "id": "C-IV-EX-36-h",
-      "raw": "ESEFK ACAPE EOLSA MEJNS TEOMS LEOTI",
-      "cipher_system": "Transposition -  Multiple Anagramming",
-      "origin": {"originator": "TITOGI"},
-      "notes": [ {"title": "One of multiple messages", "text": "8 of 10 in-depth messages"} ]
-    },
-    {
-      "id": "C-IV-EX-36-i",
-      "raw": "TENEW OHSKI INSGT MOOHT AATHU EUTOB",
-      "cipher_system": "Transposition -  Multiple Anagramming",
-      "origin": {"originator": "TITOGI"},
-      "notes": [ {"title": "One of multiple messages", "text": "9 of 10 in-depth messages"} ]
-    },
-    {
-      "id": "C-IV-EX-36-j",
-      "raw": "HTPRA HLERE ERETA TLEEH STTTE HBNBS",
-      "cipher_system": "Transposition -  Multiple Anagramming",
-      "origin": {"originator": "TITOGI"},
-      "notes": [ {"title": "One of multiple messages", "text": "10 of 10 in-depth messages"} ]
+      "parts": [
+        {
+            "part_id": "a",
+            "raw": "UOYME ETENA WHTIM CICTI JIUSO GNHYF",
+            "solution": {
+                "plaintext": "See if you can get in touch with Jimmy"
+            },
+            "origin": {"originator": "TITOGI"}
+        },
+        {
+            "part_id": "b",
+            "raw": "YTMIL LEMLE WUAAJ TWONF ORTAH LHTGI",
+            "solution": {
+                "plaintext": "All right, tell me what you want of Jim"
+            },
+            "origin": {"originator": "TITOGI"}
+        },
+        {
+            "part_id": "c",
+            "raw": "ROPUL EAEEB AHFTK ODTSC ILTTM RYTIH",
+            "solution": {
+                "plaintext": "Tell him to be ready for that stickup"
+            },
+            "origin": {"originator": "TITOGI"}
+        },
+        {
+            "part_id": "d",
+            "raw": "UMHTS EUOKS IHWTR ANCIO WAOHT YOSSY",
+            "origin": {"originator": "TITOGI"}
+        },
+        {
+            "part_id": "e",
+            "raw": "ECERL TADAR MREAO GPOYM EEAAT NIBSA",
+            "origin": {"originator": "TITOGI"}
+        },
+        {
+            "part_id": "f",
+            "raw": "REUOT KNAEH EHHLY WDELE EEEOM NWSLL",
+            "origin": {"originator": "TITOGI"}
+        },
+        {
+            "part_id": "g",
+            "raw": "IHLPU HTTGI YTTAS NERTE ORYTA HNJDS",
+            "origin": {"originator": "TITOGI"}
+        },
+        {
+            "part_id": "h",
+            "raw": "ESEFK ACAPE EOLSA MEJNS TEOMS LEOTI",
+            "origin": {"originator": "TITOGI"}
+        },
+        {
+            "part_id": "i",
+            "raw": "TENEW OHSKI INSGT MOOHT AATHU EUTOB",
+            "origin": {"originator": "TITOGI"}
+        },
+        {
+            "part_id": "j",
+            "raw": "HTPRA HLERE ERETA TLEEH STTTE HBNBS",
+            "origin": {"originator": "TITOGI"}
+        }
+      ]
     }
   ]
 }

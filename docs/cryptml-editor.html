@@ -41,7 +41,7 @@
 <body>
   <p><a href="index.html">&larr; back to tools</a></p>
   <h1>CryptML Editor</h1>
-  <p>Create and edit CryptML ciphertext-exchange files. Format reference: <a href="cryptml-spec.md">cryptml-spec.md</a>.</p>
+  <p>Create and edit CryptML ciphertext-exchange files. Format reference: <a href="cryptml-spec.html">cryptml-spec.html</a>.</p>
 
   <div id="unsupported-banner" hidden>
     Open/Save require the File System Access API, available in Chrome and Edge. You can still build a
@@ -65,6 +65,10 @@
       <div id="defaults-fields"></div>
     </details>
     <details class="subsection">
+      <summary>Sources</summary>
+      <div id="document-sources"></div>
+    </details>
+    <details class="subsection">
       <summary>References</summary>
       <div id="document-references"></div>
     </details>
@@ -73,8 +77,8 @@
       <div id="document-notes"></div>
     </details>
     <details class="subsection">
-      <summary>Chitchat</summary>
-      <div id="document-chitchat"></div>
+      <summary>Chatter</summary>
+      <div id="document-chatter"></div>
     </details>
   </section>
 
@@ -100,25 +104,35 @@ const M = CryptMLEditor;
 const SAMPLE_DOCUMENT = {
   cryptml_version: '1.0',
   title: 'The Cryptogram MJ2026 batch',
-  defaults: { cipher_system: 'unknown', charset: '[A-Z]', casesensitive: false, ditschar: '-', ignorechars: '\\s' },
   references: [{ citation: 'American Cryptogram Association, The Cryptogram', url: 'https://www.cryptogram.org/' }],
   ciphertexts: [
     {
       id: 'E-23',
       raw: 'WKRUL BXHVI DQGWK HODZQ FRXOG',
       cipher_system: 'Quagmire III',
-      origin: { date: '2026-05', collector: 'unknown setter', method: 'typed from magazine', location: 'The Cryptogram, MJ2026' },
+      origin: { date: '2026-05', originator: 'unknown setter', method: 'typed from magazine', location: 'The Cryptogram, MJ2026' },
       sources: [{ type: 'periodical', title: 'The Cryptogram', publisher: 'American Cryptogram Association', date: '2026-05', page: '12' }],
       hints: [{ text: 'THE', position: 'start', confidence: 'guess' }],
       notes: [{ title: 'First impression', text: 'IC looks periodic around length 5.' }],
-      chitchat: [{ author: 'Moshe', date: '2026-07-09', text: 'Set this aside, revisit after finishing GRP42.' }],
+      chatter: [{ author: 'Moshe', date: '2026-07-09', text: 'Set this aside, revisit after finishing GRP42.' }],
     },
     {
       id: 'GRP42',
       raw: '213 132 321 123',
       cipher_system: 'Tridigital',
       charset: '[1-3]',
-      solution: { plaintext: 'ATTACKATDAWN', plaintext_charset: '[A-Z]', key: '3-1-2', solved_by: 'Moshe', solved_date: '2026-06-20', method: 'frequency analysis of digit triples' },
+      solution: {
+        plaintext: 'ATTACKATDAWN', key: '3-1-2',
+        solvers: [{ solved_by: 'Moshe', solved_date: '2026-06-20', method: 'frequency analysis of digit triples' }],
+      },
+    },
+    {
+      id: 'MC-I-4-9',
+      cipher_system: 'Vigenère (two messages in depth)',
+      parts: [
+        { part_id: 'a', raw: 'QLZOV EEXWO', solution: { plaintext: 'ATTACK AT DAWN' } },
+        { part_id: 'b', raw: 'TKHNS RIOAB', solution: { plaintext: 'HOLD UNTIL REINFORCED' } },
+      ],
     },
   ],
 };
@@ -145,18 +159,23 @@ function renderDocumentSection() {
 
   M.renderObjectSection(document.getElementById('defaults-fields'), doc.defaults, [
     { key: 'cipher_system', label: 'Cipher system', type: 'text' },
-    { key: 'charset', label: 'Charset (regex)', type: 'text' },
+    { key: 'charset', label: 'Charset (regex character class)', type: 'text' },
     { key: 'casesensitive', label: 'Case sensitive', type: 'checkbox' },
     { key: 'ditschar', label: 'Dits char', type: 'text' },
-    { key: 'ignorechars', label: 'Ignore chars (regex)', type: 'text' },
-    { key: 'plaintext_charset', label: 'Plaintext charset (regex)', type: 'text' },
+    { key: 'ignorechars', label: 'Ignore chars (regex character class)', type: 'text' },
+    { key: 'plaintext_charset', label: 'Plaintext charset (descriptive only)', type: 'text' },
   ], renderJsonPreview);
 
+  M.renderRepeatable(document.getElementById('document-sources'), doc.sources, M.SOURCE_FIELDS, {
+    itemLabel: 'source',
+    blank: () => ({ type: 'book', title: '', author: '', publisher: '', date: '', page: '', url: '', note: '' }),
+    onChange: renderJsonPreview,
+  });
   M.renderRepeatable(document.getElementById('document-references'), doc.references, M.REFERENCE_FIELDS,
     { itemLabel: 'reference', blank: () => ({ citation: '', url: '' }), onChange: renderJsonPreview });
   M.renderRepeatable(document.getElementById('document-notes'), doc.notes, M.NOTE_FIELDS,
     { itemLabel: 'note', blank: () => ({ title: '', text: '' }), onChange: renderJsonPreview });
-  M.renderRepeatable(document.getElementById('document-chitchat'), doc.chitchat, M.CHITCHAT_FIELDS,
+  M.renderRepeatable(document.getElementById('document-chatter'), doc.chatter, M.CHATTER_FIELDS,
     { itemLabel: 'remark', blank: () => ({ author: '', date: '', text: '' }), onChange: renderJsonPreview });
 }
 
@@ -173,17 +192,24 @@ function renderTabs() {
   document.getElementById('btn-remove-ciphertext').disabled = doc.ciphertexts.length <= 1;
 }
 
-function renderSolutionSection(ct) {
+// `holder` is whatever object owns a `solution` field -- a ciphertext (single-raw) or a part.
+function renderSolutionSection(holder) {
   const container = M.el('div', {});
   const solvedCheckbox = M.el('input', { type: 'checkbox' });
-  solvedCheckbox.checked = !!ct.solution;
+  solvedCheckbox.checked = !!holder.solution;
   const fieldsDiv = M.el('div', {});
   const renderFields = () => {
     fieldsDiv.innerHTML = '';
-    if (ct.solution) M.renderObjectSection(fieldsDiv, ct.solution, M.SOLUTION_FIELDS, renderJsonPreview);
+    if (!holder.solution) return;
+    M.renderObjectSection(fieldsDiv, holder.solution, M.SOLUTION_FIELDS, renderJsonPreview);
+    const solversDiv = M.el('div', {});
+    M.renderRepeatable(solversDiv, holder.solution.solvers, M.SOLVER_FIELDS, {
+      itemLabel: 'solver', blank: M.blankSolver, onChange: renderJsonPreview,
+    });
+    fieldsDiv.appendChild(M.el('div', { className: 'field-group' }, [M.el('h3', {}, 'Solvers'), solversDiv]));
   };
   solvedCheckbox.addEventListener('change', () => {
-    ct.solution = solvedCheckbox.checked ? M.blankSolution(doc.defaults) : null;
+    holder.solution = solvedCheckbox.checked ? M.blankSolution(doc.defaults) : null;
     renderFields();
     renderJsonPreview();
   });
@@ -191,6 +217,60 @@ function renderSolutionSection(ct) {
   container.appendChild(M.el('div', { className: 'field-row' }, [M.el('label', {}, 'Solved'), solvedCheckbox]));
   container.appendChild(fieldsDiv);
   return section('Solution', container, true);
+}
+
+// The fields a `part` owns on its own -- everything else (cipher_system, charset, ...) stays
+// on the parent ciphertext and applies to every part uniformly.
+function renderPart(part, index, ct, refreshParts) {
+  const box = M.el('fieldset', { className: 'repeat-item' });
+  const legend = M.el('legend', {}, [
+    `Part ${index + 1}`,
+    M.el('button', {
+      type: 'button', className: 'remove-btn', disabled: ct.parts.length <= 2 ? 'disabled' : undefined,
+      onClick: () => { ct.parts.splice(index, 1); refreshParts(); renderJsonPreview(); },
+    }, 'Remove'),
+  ]);
+  box.appendChild(legend);
+  box.appendChild(M.buildFieldRow({ key: 'part_id', label: 'Part ID', type: 'text' }, part, renderJsonPreview));
+  const rawRow = M.el('div', { className: 'field-row' }, [M.el('label', {}, 'Ciphertext')]);
+  const rawTextarea = M.el('textarea', { rows: 4, onInput: e => { part.raw = e.target.value; renderJsonPreview(); } });
+  rawTextarea.value = part.raw;
+  rawRow.appendChild(rawTextarea);
+  box.appendChild(rawRow);
+  box.appendChild(M.buildFieldRow({ key: 'remove_from_start', label: 'Remove from start', type: 'number' }, part, renderJsonPreview));
+  box.appendChild(M.buildFieldRow({ key: 'remove_from_end', label: 'Remove from end', type: 'number' }, part, renderJsonPreview));
+
+  const originDiv = M.el('div', {});
+  M.renderObjectSection(originDiv, part.origin, M.ORIGIN_FIELDS, renderJsonPreview);
+  box.appendChild(section('Origin', originDiv, true));
+
+  box.appendChild(renderSolutionSection(part));
+
+  const hintsDiv = M.el('div', {});
+  M.renderRepeatable(hintsDiv, part.hints, M.HINT_FIELDS, {
+    itemLabel: 'hint',
+    blank: () => ({ text: '', position: '', source: '', confidence: '', notes: '' }),
+    onChange: renderJsonPreview,
+  });
+  box.appendChild(section('Hints', hintsDiv, true));
+
+  return box;
+}
+
+function renderPartsSection(ct) {
+  const container = M.el('div', {});
+  const partsDiv = M.el('div', {});
+  const refreshParts = () => {
+    partsDiv.innerHTML = '';
+    ct.parts.forEach((part, index) => partsDiv.appendChild(renderPart(part, index, ct, refreshParts)));
+  };
+  refreshParts();
+  container.appendChild(partsDiv);
+  container.appendChild(M.el('button', {
+    type: 'button', className: 'add-btn',
+    onClick: () => { ct.parts.push(M.blankPart(M.nextPartId(ct.parts))); refreshParts(); renderJsonPreview(); },
+  }, '+ Add part'));
+  return section('Parts', container, true);
 }
 
 function renderCiphertextPanel() {
@@ -204,24 +284,52 @@ function renderCiphertextPanel() {
   const basic = M.el('div', {});
   basic.appendChild(M.buildFieldRow({ key: 'id', label: 'ID', type: 'text' }, ct, refreshTabs));
   basic.appendChild(M.buildFieldRow({ key: 'cipher_system', label: 'Cipher system', type: 'text' }, ct, renderJsonPreview));
-  const rawRow = M.el('div', { className: 'field-row' }, [M.el('label', {}, 'Ciphertext')]);
-  const rawTextarea = M.el('textarea', { id: 'raw', rows: 6, onInput: e => { ct.raw = e.target.value; renderJsonPreview(); } });
-  rawTextarea.value = ct.raw;
-  rawRow.appendChild(rawTextarea);
-  basic.appendChild(rawRow);
   [
-    { key: 'charset', label: 'Charset (regex)', type: 'text' },
+    { key: 'charset', label: 'Charset (regex character class)', type: 'text' },
     { key: 'casesensitive', label: 'Case sensitive', type: 'checkbox' },
     { key: 'ditschar', label: 'Dits char', type: 'text' },
-    { key: 'ignorechars', label: 'Ignore chars (regex)', type: 'text' },
-    { key: 'remove_from_start', label: 'Remove from start', type: 'number' },
-    { key: 'remove_from_end', label: 'Remove from end', type: 'number' },
+    { key: 'ignorechars', label: 'Ignore chars (regex character class)', type: 'text' },
   ].forEach(spec => basic.appendChild(M.buildFieldRow(spec, ct, renderJsonPreview)));
+
+  const partsModeCheckbox = M.el('input', { type: 'checkbox' });
+  partsModeCheckbox.checked = !!ct.parts;
+  partsModeCheckbox.addEventListener('change', () => {
+    ct.parts = partsModeCheckbox.checked ? [M.blankPart('a'), M.blankPart('b')] : null;
+    renderCiphertextPanel();
+    renderJsonPreview();
+  });
+  basic.appendChild(M.el('div', { className: 'field-row' }, [
+    M.el('label', {}, 'Multiple parts'), partsModeCheckbox,
+  ]));
+
+  if (!ct.parts) {
+    const rawRow = M.el('div', { className: 'field-row' }, [M.el('label', {}, 'Ciphertext')]);
+    const rawTextarea = M.el('textarea', { id: 'raw', rows: 6, onInput: e => { ct.raw = e.target.value; renderJsonPreview(); } });
+    rawTextarea.value = ct.raw;
+    rawRow.appendChild(rawTextarea);
+    basic.appendChild(rawRow);
+    basic.appendChild(M.buildFieldRow({ key: 'remove_from_start', label: 'Remove from start', type: 'number' }, ct, renderJsonPreview));
+    basic.appendChild(M.buildFieldRow({ key: 'remove_from_end', label: 'Remove from end', type: 'number' }, ct, renderJsonPreview));
+  }
   panel.appendChild(section('Basic', basic));
 
-  const originDiv = M.el('div', {});
-  M.renderObjectSection(originDiv, ct.origin, M.ORIGIN_FIELDS, renderJsonPreview);
-  panel.appendChild(section('Origin', originDiv, true));
+  if (ct.parts) {
+    panel.appendChild(renderPartsSection(ct));
+  } else {
+    const originDiv = M.el('div', {});
+    M.renderObjectSection(originDiv, ct.origin, M.ORIGIN_FIELDS, renderJsonPreview);
+    panel.appendChild(section('Origin', originDiv, true));
+
+    panel.appendChild(renderSolutionSection(ct));
+
+    const hintsDiv = M.el('div', {});
+    M.renderRepeatable(hintsDiv, ct.hints, M.HINT_FIELDS, {
+      itemLabel: 'hint',
+      blank: () => ({ text: '', position: '', source: '', confidence: '', notes: '' }),
+      onChange: renderJsonPreview,
+    });
+    panel.appendChild(section('Hints', hintsDiv, true));
+  }
 
   const sourcesDiv = M.el('div', {});
   M.renderRepeatable(sourcesDiv, ct.sources, M.SOURCE_FIELDS, {
@@ -230,24 +338,6 @@ function renderCiphertextPanel() {
     onChange: renderJsonPreview,
   });
   panel.appendChild(section('Sources', sourcesDiv, true));
-
-  panel.appendChild(renderSolutionSection(ct));
-
-  const hintsDiv = M.el('div', {});
-  M.renderRepeatable(hintsDiv, ct.hints, M.HINT_FIELDS, {
-    itemLabel: 'hint',
-    blank: () => ({ text: '', position: '', source: '', confidence: '', notes: '' }),
-    onChange: renderJsonPreview,
-  });
-  panel.appendChild(section('Hints', hintsDiv, true));
-
-  const testsDiv = M.el('div', {});
-  M.renderRepeatable(testsDiv, ct.tests, M.TEST_FIELDS, {
-    itemLabel: 'test result',
-    blank: () => ({ tool: '', test_name: '', date: '', parameters: '', result: '', notes: '' }),
-    onChange: renderJsonPreview,
-  });
-  panel.appendChild(section('Tests', testsDiv, true));
 
   const referencesDiv = M.el('div', {});
   M.renderRepeatable(referencesDiv, ct.references, M.REFERENCE_FIELDS, {
@@ -265,13 +355,13 @@ function renderCiphertextPanel() {
   });
   panel.appendChild(section('Notes', notesDiv, true));
 
-  const chitchatDiv = M.el('div', {});
-  M.renderRepeatable(chitchatDiv, ct.chitchat, M.CHITCHAT_FIELDS, {
+  const chatterDiv = M.el('div', {});
+  M.renderRepeatable(chatterDiv, ct.chatter, M.CHATTER_FIELDS, {
     itemLabel: 'remark',
     blank: () => ({ author: '', date: '', text: '' }),
     onChange: renderJsonPreview,
   });
-  panel.appendChild(section('Chitchat', chitchatDiv, true));
+  panel.appendChild(section('Chatter', chatterDiv, true));
 }
 
 function renderJsonPreview() {
@@ -325,12 +415,16 @@ if (!fsaSupported) {
   document.getElementById('btn-save-as').disabled = true;
 }
 
+function pickerOptions(extra) {
+  const opts = { types: [{ description: 'CryptML files', accept: { 'application/json': ['.cryptml'] } }], ...extra };
+  if (fileHandle) opts.startIn = fileHandle; // reopen where the last CryptML file in this session was
+  return opts;
+}
+
 document.getElementById('btn-open').addEventListener('click', async () => {
   if (!confirm('Open a file? Unsaved changes will be lost.')) return;
   try {
-    const [handle] = await window.showOpenFilePicker({
-      types: [{ description: 'CryptML files', accept: { 'application/json': ['.json'] } }],
-    });
+    const [handle] = await window.showOpenFilePicker(pickerOptions());
     const file = await handle.getFile();
     const data = JSON.parse(await file.text());
     doc = M.parseDocument(data);
@@ -353,10 +447,7 @@ async function writeToHandle(handle) {
 document.getElementById('btn-save').addEventListener('click', async () => {
   try {
     if (!fileHandle) {
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName: 'ciphertext.json',
-        types: [{ description: 'CryptML files', accept: { 'application/json': ['.json'] } }],
-      });
+      fileHandle = await window.showSaveFilePicker(pickerOptions({ suggestedName: 'ciphertext.cryptml' }));
     }
     await writeToHandle(fileHandle);
     setStatus(`Saved ${fileHandle.name}`);
@@ -367,10 +458,9 @@ document.getElementById('btn-save').addEventListener('click', async () => {
 
 document.getElementById('btn-save-as').addEventListener('click', async () => {
   try {
-    const handle = await window.showSaveFilePicker({
-      suggestedName: fileHandle ? fileHandle.name : 'ciphertext.json',
-      types: [{ description: 'CryptML files', accept: { 'application/json': ['.json'] } }],
-    });
+    const handle = await window.showSaveFilePicker(
+      pickerOptions({ suggestedName: fileHandle ? fileHandle.name : 'ciphertext.cryptml' })
+    );
     await writeToHandle(handle);
     fileHandle = handle;
     setStatus(`Saved ${handle.name}`);

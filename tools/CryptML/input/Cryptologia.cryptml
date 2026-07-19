@@ -1,0 +1,83 @@
+{
+  "cryptml_version": "1.0",
+  "title": "Cryptologia - Ciphertexts",
+  "defaults": { "charset": "[A-Z1-4]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
+  "sources": [
+    { "type": "periodical", "title": "Cryptologia", "author": "" }
+  ],
+  "notes": [
+    {
+        "title": "",
+        "text": ""
+    }
+  ],
+  "ciphertexts": [
+    {
+      "id": "CryptanalystsCorner-October-1983",
+      "cipher_system": "Danish Wheastone Cipher Device",
+      "notes": [ {"title": "byline", "text": "For the next set of problems, the reader is on his own until January [1984], when some help will be given.  Given the methods discussed here over the past year, the reader may be assured that at least some of them apply.  A device developed in a European country, apparently around the time of World War I, was used to encipher th problems, which are nevertheless in English."} ],
+      "parts": [
+        {
+            "part_id": "1",
+            "raw": "VV3B4 BTYZ3 JNRGM W3FAQ NQWGG KDMI3 HXJTL 3IOWJ EM4L4 2FKRQ GCNMT KNGV3 KTEZE UDAS4 SYJRS 2LBIM MCCNM LTNNR JTDO3 QNEYZ ILYHM AFKIP AJCUB VGBWK RVNIO VVD43 EEA3M LTAIA",
+            "origin": { "location": "Cryptologia, Cryptanalysts' Corner, October 1983, Volume 7, Number 4, page 374" },
+            "solution": { "plaintext": "ENEMY+ACTIVITY+OBSERVED+IN_VICINITY+OF+GREQN+SECTOR...", "key": "PACKINGBOXESDFHJLMQRTUVWYZ234" }
+        },
+        {
+            "part_id": "2",
+            "raw": "KKWDF WNOTR WOUDX QWEYL 4LF4T JNUEV CQY3D YTWVS 3DWHL 2EFK2 4CHJ3 MQHJP LFBIV XNYHJ VBDX2 URLAC DF2MH 4PNYV FMBOI NRNKE 2GVZY EHZIX Z4SEH 44MJH BMKGQ MTGRC",
+            "origin": { "location": "Cryptologia, Cryptanalysts' Corner, October 1983, Volume 7, Number 4, page 374" }
+        },
+        {
+            "part_id": "3",
+            "raw": "22EDJ DOFBA RBQQU WIERV NZPUB 3L2H2 ETCZM FKIPA JIUIO 2GWRX ZXHAZ 3DWXA ZCSMJ 3SIIX IKHKG QUTWQ STB3W XMSYJ WMF4N NMIUQ 4QIZT YMS3B F4DTY 32MLK KPC2A FENFK QENUU 2OXRF XISAL PDCK4 PR43Z GBVVR GZXEB BOPBZ 2HC3C LOFSE JXKEU RZREB CX4H3 EPA23 DAQAN WKTLM 4GKQY BYX4U SFXEG TYEC2 MRPFL GPCNM QAUMK RUX3E RZGXU U3MVP EPRZZ D3RHG PNMA2 ORBJR GOUWS AZ3DW FHESZ G3PDP MIFPK JHQKK GQLRR SQBEV UZEEF ZY4F2 MV3UJ QAPIQ QY3BO XROZ3 PI2GD",
+            "origin": { "location": "Cryptologia, Cryptanalysts' Corner, October 1983, Volume 7, Number 4, page 374" }
+        },
+        {
+            "part_id": "4",
+            "raw": "KKR42 CAEZA YQCYX OV43W HF2EJ EBQLN NCVQI YFHYG HDXDZ PE3PJ 4PSFO DZVKI JZTLI OKOWR YIZIM UVYDC LKHTY E3JCJ TKKPX HAYSG DMFYA NTDBH ZFZWE PLJK4 CHMPC KRYPM BVBQX 3OZOU DLOWF IAHH4 4CHFM CCLDM XNYJC BUVAF USH3E PA23D 4QIRK ITPLR CANRR XZYBB 3YHFM 3A3RF LTJTG CUVQR ITGWS TB2ML WJJD4 HCR4J UIMA4 P3KRV NIOVV NKPLL CS4DQ 4CHDJ JBHKY WGESG",
+            "origin": { "location": "Cryptologia, Cryptanalysts' Corner, October 1983, Volume 7, Number 4, page 374" }
+        }
+      ]
+    },
+    {
+      "id": "CryptanalystsCorner-January-1984",
+      "cipher_system": "Danish Wheastone Cipher Device",
+      "notes": [ {"title": "byline", "text": "Usually this column concludes with an explanation of the cipher system and the messages in the previous column.  This time will be an exception for the benefit of those readers who have not solved last issues messages as yet, but may lately have achieved an intuition.  For those readers who have solved the prior messages, I will add a few messages in basically the same system, perhaps with a simple change to make them somewhat harder."} ],
+      "parts": [
+        {
+            "part_id": "1",
+            "raw": "FQQO 2RUCN UMXUE QWXTZ HUI3Y IXO2L MKCT3 DARVS THIEZ KEFMP GNYWF QRRBE WDLZX FRYPM JV2P3 UVMWR Q2CEV 32V4Z LXAPN BASDR 2FTAR JGOSE C3RNF VRLBP 2M2FH RGBAU ANRVM BA2DS HHDY3 XFJZC GEIT4 YHWUO FKELX VEW4G IIIZE WEQXC HRQHS UNSXX",
+            "origin": { "location": "Cryptologia, Cryptanalysts' Corner, January 1984, Volume 8, Number 1, page 57" }
+        },
+        {
+            "part_id": "2",
+            "raw": "33GAC VCZQS NKXN3 3HVUB PMKEM QONTP CVBJJ QYVU2 SBIVK YHLAJ SZTT3 QMWTS RICHO TTDOM H3HIY HD3XM OZQIC BLKTB JJOZZ KXJVJ OZESZ BB24F 3DKSV HTSCI SDUN3 OGFQS KZGCE QXCHR QHRML ZYPKZ ACRTP 4PI2J AJSKQ ZKK3J KDF4W TKWXX",
+            "origin": { "location": "Cryptologia, Cryptanalysts' Corner, January 1984, Volume 8, Number 1, page 57" }
+        },
+        {
+            "part_id": "3",
+            "raw": "MMYJ4 UXF2S HH43P TXLCC P4J3T FRAST XAMLF XFETH NHYDZ LQE3M GX4UV NC4ME AJZW4 VLAZL YGAEP KPTS4 ECUWB CHEOF BHITN D3JLD MLWFN QNCTH UV2IO NNPWK Q42AD U2XNJ AOXJE BZFET QTOAF PEILF B3FB3",
+            "origin": { "location": "Cryptologia, Cryptanalysts' Corner, January 1984, Volume 8, Number 1, page 57" }
+        },
+        {
+            "part_id": "4",
+            "raw": "BSDFL BMVUG LKQ4O OURZ3 LSXXZ UVR3K FW43L WBSKL KC3OD OMANS ECRBP LUGHD XUBCW VNIUH SUNSM PWCZY Z34UC XGIJX OC2KJ OT3DA RVSAB SIKDE DX3OG HQT2D DZIYE UQWAG QLDVW 2LVCJ NKC3E 32WKZ CTSKZ RKJR4 NCMBS YZMDO MB24I BRFJC NMX4N 3HYMO SWM2Y SC3UC XGHJ4 KXXXX",
+            "origin": { "location": "Cryptologia, Cryptanalysts' Corner, January 1984, Volume 8, Number 1, page 57" }
+        }
+      ]
+    },
+    {
+      "id": "CryptanalystsCorner-July-1984",
+      "cipher_system": "Periodic Polyalphabetic",
+      "raw": "UKHCY TGYVH GWMFG BIENN OQPVO WKFUY GZLRF WXGXF SENIY GLPBM HGVWF VOFWF WYGAS MFSAV OZUKW ZZZYF BRFNT XSKKE YNTXX VLRJH GWYMU BUHUY JETRF GVGJR OWMNV WRTUL KXBZY ZUGNI AVEVL MQVEQ GRAMF ZANNC UKHCY TGYVG WPVZW ZOGLK XAXYU GRZAN NCUKK ZUWEP RWBKX YITVI KKYYX V",
+      "hints": [
+        {"text": "To end this issue, here is a cryptogram by Warren t. McCready which appeared in the July-August 1983 issue of The Cryptogram.  It is a period 8 cipher using the same keyword alphabet for both pt and ct.  When the tip is placed, the partial tableau illustrated is pbtained.  The reader is invited to complete the tableau, and read the message which, incidentally, is in very easy Spanish."},
+        {"text": "nero han hecho progresar considerable"}
+      ],
+      "notes": [
+        { "title": "reconstruction matrix", "text": "0  ABCDEFGHIJKLMNOPQRSTUVWXYZ\n1  ....U........L...TO.......\n2  ..B.R...W.................\n3  ...M...U.........JF.......\n4  G...N.........H...........\n5  .......G.......U..........\n6  W.G.......................\n7  .R...........YJ...........\n8  ......EM...T.R............" }
+      ]
+    }
+  ]
+}

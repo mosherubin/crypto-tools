@@ -17,16 +17,79 @@
   ],
   "ciphertexts": [
     {
+      "id": "MC-I-2-7",
+      "raw": "JMQVS QZXIF FMZSL IZMLZ CEMEB FQOME MDXYQ OZCYY XJMZI VMZIY OQWYI DKYMV MZMNQ EQKMX CCWZB CYIXI CDYYX CBZQI FZCQN HWDOX ICDJQ YPMMD YMVMZ MFSNQ EQKMN QDNEW OJMAW IBEMD XNMYX ZCSMN YXCBU MQZME CVIDK CWZXZ CCBYX CZMQZ BCYIX ICDYY XCBZQ FYXCD",
+      "cipher_system": "Uniliteral substitution with standard and mixed cipher alphabets",
+      "notes": [ { "title": "byline", "text": "Solve the following cryptogram and indicate the specific key (A-sub-p=Theta-sub-c)" } ]
+    },
+    {
+      "id": "MC-I-2-13",
+      "raw": "JZDFV WHEDZ VHWDS YKTWD OEDZD EDSEC CWHHW EDZTE XXWSZ VNZVZ SPFJK VZTYP HJDWO LJWDP VPWTI REDZE XEKVF PJVEY HHJEF EDZFV WHEDZ VHJPJ ZHJLP JXEKV JLTWM WHWED WHWDM WSWDW JREXI YKZCE KDJPW DCEMW DONZH JJEPJ JPSBE KVFEH WJWED HNZHJ EXXPW VJEND HJEFS EDXWV CPJWE DVZGK ZHJZT",
+      "cipher_system": "Uniliteral substitution with standard and mixed cipher alphabets",
+      "notes": [ { "title": "byline", "text": "Solve the following cryptogram, and recover all keys" } ]
+    },
+    {
+      "id": "MC-I-3-7",
+      "raw": "05105 23804 91161 38349 22702 74491 16138 33834 92274 27505 31612 74492 16127 14914 92274 38216 12724 91161 27138 10523 84274 05405 23801 61491 16105 22713 80271 05227 44910 51052 05327 14921 60491 05227 10502 74163 38016 11653 85492 27405 20531 61494 49238 42713 82492 27427 20522 71380 49127 02714 91270 49149 12702 72273 05505 30522 74272 16127 13814 93052 49449 24910 52380 05149 23834 91492 27449 23823 82384 38105 23844 91050",
+      "cipher_system": "Multiliteral substitution with single-equivalent cipher alphabets",
+      "charset": "[0-9]",
+      "notes": [ { "title": "byline", "text": "Solve the following cryptogram, and recover all keys" } ]
+    },
+    {
+      "id": "MC-I-4-5",
+      "raw": "80713 06941 35696 80213 28061 37695 69680 91394 78800 25513 28096 91134 47713 68026 97695 13913 72502 56475 80280 88091 35802 25247 31341 39696 25525 12508 09132 47825 81314 74256 69525 51301 36477 13169 46966 90699 80247 46951 30801 80525 11378 04470 69213 11308 03477",
+      "cipher_system": "Multiliteral substitution with variants",
+      "charset": "[0-9]",
+      "notes": [ 
+        { "title": "byline", "text": "Solve the following cryptogram, and recover all keys" }
+      ]
+    },
+    {
+      "id": "MC-I-4-7",
+      "raw": "72109 19015 41776 04657 89925 96235 70368 62717 67091 83938 99294 88596 52368 62170 37091 22620 80735 96695 04627 17032 53136 77644 22537 12262 47907 38026 22703 88434 30196 04118 66826 27034 15596 84825 35230 46569 16375 84979 74893 10920 85780 73541 97477 67212 08479 35210 91365 78947 39865 97030 28334 15432 54516 59910 04639 82992 26541 09142 43430 28208 75852 33987 03712 25322 67217 58569",
+      "charset": "[0-9]",
+      "cipher_system": "Multiliteral substitution with variants",
+      "notes": [ 
+        { "title": "byline", "text": "Solve the following cryptogram, and recover all keys" }
+      ]
+    },
+    {
+      "id": "MC-I-4-9a",
+      "raw": "43022 83524 26060 98448 56175 57368 05544 54713 25748 18995 73211 78809 78230 46746 55566 38971 52835 54310 66179 30225 49705 63605 75310 83452 92351 03132 27998 93539 26288 11095 80473 12200 63369 42108 52097 11477 11306 68721 98883 68453 95650 15184 59749 92076 67000",
+      "charset": "[0-9]",
+      "cipher_system": "Multiliteral substitution with variants",
+      "notes": [ 
+        { "title": "byline", "text": "The following naval messages are suspected to be isologs, containing the probable word \"TASK FORCE\" Solve them, and recover all keys." },
+        { "title": "grouping", "text": "Part of group with MC-I-4-9b" }
+      ]
+    },
+    {
+      "id": "MC-I-4-9b",
+      "raw": "77639 32338 96687 32583 16771 36033 25195 21007 61936 37147 94702 74323 91551 84030 23211 74696 15784 34746 34170 59391 35584 17645 65752 24915 07432 64598 99104 17307 66639 31127 90402 53353 77760 84479 75139 10388 02285 42214 80132 62568 27529 42875 07934 45455 20000",
+      "charset": "[0-9]",
+      "cipher_system": "Multiliteral substitution with variants",
+      "notes": [ 
+        { "title": "byline", "text": "The following naval messages are suspected to be isologs, containing the probable word \"TASK FORCE\" Solve them, and recover all keys." },
+        { "title": "grouping", "text": "Part of group with MC-I-4-9a" }
+      ]
+    },
+    {
       "id": "MC-I-5-1",
       "raw": "MH EA XP SO ZP LM HT XN PR QU EH HG RH GR LC HU ZW VA BD MD WO HU ZB XR DD DU RH GR CG HO SO ZB XN WS ZO RG BL PC SO ZP ZC OC BL BT QL CP GR CC LU SD WS PR PX MD YG AM DF MH IL QH CQ YO IQ PF GF ND BI PF CC VA LF CC CQ YO OZ RT OQ VH CG IQ KP DL IY AO HA CG HO PF GF TD CP AO HA CV LF CC CQ YO QU OD CN OG CN WA QC HT MH KQ ZG LC HU PB GT ID WQ OF WG ZO LG KG DL ZW VA ZB XR AU VA DH PF MH PF ZB OH WL CG HO LZ SO ZB XN WS ZO IU TA AO GA HA EU MH YO LT EU MH HU LV WQ MZ YT ZT ZO YG SO LZ CP EU ON MU WG RT CG HO MH MS PR OT MF LF CP KS RO WZ MN QU CP AO HA CV CO MH DT DU PF GF NQ YG QD IB WS ZO YG BB YO ZN XR LW HU IQ WS QD DC ZB IB RM SO EN IA RU DW GR CG HO MH MS PR QD DC LZ TN WL KN PF XD UT WA ZO",
       "cipher_system": "Polygraphic substitution: four-square and twosquare matrices",
-      "notes": [ { "title": "byline", "text": "Construct a digraphic distribution for the cryptogram below. Solve the cryptogram, and recover all keys." } ]
+      "notes": [ { "title": "byline", "text": "Construct a digraphic distribution for the cryptogram below. Solve the cryptogram, and recover all keys" } ]
     },
     {
       "id": "MC-I-6-1",
       "raw": "UA SK UA SP KM MR IO OR IX YR OR OS MS SD UA RH LV BR SA AK SW AX SA BG CW PN CW XS AU BS NA NM SM VU YN AR OR HG RA RL SA YN UK SA OR MY IA AU BF MS SD UN WC AS EN CA HN DR FB NL AS BU RF VU RO MW BE RP NY IA CU GR WO SR XS AU BU LB UG DM KS MR GN HQ DM DU HU SB WC AS UB EO AS AD WB NO DK AD FB RH SP RW HO UC AD FT NO SB AU RD OT MS SD UN XB VL UA KS HQ KS MR UA RH LV CU CW FB NL QO AR OR HG RA LV AL UB UA CE RB AD EQ YX OE XH UM SW PR FS ON UK GN DR UP UR XW RW QH FR SD AS NO AD UA WB NO WS IG FS LR UB CA UO RP AS SB NW BH NP BS NA UA OE RB RB RZ RO KR OR VR NU US DR SR SP RW FR DA",
       "cipher_system": "Polygraphic substitution: Playfair cipher systems",
       "notes": [ { "title": "byline", "text": "Solve the following cryptogram and recover all keys" } ]
+    },
+    {
+      "id": "MC-I-7-5",
+      "raw": "MRA DMT GCI YIY MFG NNL SRK QFB DMD WII DSZ GNM IJA GOO LGI DEV LTD GCI IYD LCI MMT JIU PNM VZP LGI DMY ITI POV GIP TGO PLM MCH JPB MRC DGK FWJ IHC EEF MDO DSZ TEN DGK FWI NNM LEV EZF TAS DIP HMT TDL GTR QMD MZU ROD NPC JNJ GCI IQM UZK LIY NJN CWQ MZF VOD NWG PRG NLC URP MIA DGI VRG NRF URV PIF DUJ TDL POJ VRT DAZ MRI IFX DGG DHV VZP IQM EMF JPC SMK JLM MND PQW YZB OZN IJY IPJ DMD YJP NIP EMF JPC SMK JLF ENG NPW FNV FJJ IWI GTT MOT EOW CRV WLF ELE TSZ TNM VRS MTR TEQ VRV QJQ MRV NOV GIP RMT KQX GCJ ELC MZH PRT LNM LCR IYR CZY GPW XPA",
+      "cipher_system": "Polygraphic substitution: large tables",
+      "notes": [ { "title": "byline", "text": "The cryptogram below is suspected to begin with the stereotype \"REFERRING TO YOUR MESSAGE\" OR \"REFERENCE YOUR MESSAGE\". Solve the text and recover all keys." } ]
     },
     {
       "id": "MC-I-10-2",

@@ -405,8 +405,17 @@ rules</a>.</td>
 </tr>
 <tr>
 <td><code>raw</code></td>
-<td><strong>yes</strong></td>
+<td>conditionally — exactly one of <code>raw</code>/<code>parts</code>
+required</td>
 <td>The ciphertext text, exactly as transcribed.</td>
+</tr>
+<tr>
+<td><code>parts</code></td>
+<td>conditionally — exactly one of <code>raw</code>/<code>parts</code>
+required</td>
+<td>Array of ≥2 <a href="#part">part</a> objects, for one exercise made
+of several inseparable raw blocks (e.g. messages “a” and “b” that must
+be solved jointly). See below.</td>
 </tr>
 <tr>
 <td><code>cipher_system</code></td>
@@ -444,19 +453,23 @@ silently dropped (whitespace, group separators).</td>
 <td>no, default <code>0</code></td>
 <td>Number of non-ignored characters (i.e. not matched by
 <code>ignorechars</code>) to strip from the start of <code>raw</code> —
-typically a message preamble. No cascade.</td>
+typically a message preamble. Only legal alongside <code>raw</code>;
+with <code>parts</code>, each part has its own instead (see below). No
+cascade.</td>
 </tr>
 <tr>
 <td><code>remove_from_end</code></td>
 <td>no, default <code>0</code></td>
 <td>Number of non-ignored characters to strip from the end of
 <code>raw</code> — typically padding added to reach a group-length
-multiple. No cascade.</td>
+multiple. Only legal alongside <code>raw</code>; with
+<code>parts</code>, each part has its own instead. No cascade.</td>
 </tr>
 <tr>
 <td><code>origin</code></td>
 <td>no</td>
-<td>No cascade. See <a href="#origin">origin</a>.</td>
+<td>No cascade. Only legal alongside <code>raw</code>; with
+<code>parts</code>, each part has its own instead. See <a href="#origin">origin</a>.</td>
 </tr>
 <tr>
 <td><code>sources</code></td>
@@ -482,12 +495,17 @@ multiple. No cascade.</td>
 <td><code>solution</code></td>
 <td>no</td>
 <td>No cascade (except <code>solution.plaintext_charset</code>, see
-below). See <a href="#solution">solution</a>.</td>
+below). Only legal alongside <code>raw</code>; with <code>parts</code>,
+each part has its own instead — independent messages sharing key
+material usually decrypt to different plaintexts. See <a href="#solution">solution</a>.</td>
 </tr>
 <tr>
 <td><code>hints</code></td>
 <td>no</td>
-<td>No cascade. See <a href="#hint">hint</a>.</td>
+<td>No cascade. Only legal alongside <code>raw</code>; with
+<code>parts</code>, each part has its own instead — a crib usually
+applies to one message’s content, not the exercise in the abstract. See
+<a href="#hint">hint</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -496,6 +514,93 @@ one entry, <code>id</code> may be omitted and defaults to
 <code>&quot;1&quot;</code>. Whenever there’s more than one ciphertext in the file,
 every one of them needs an explicit <code>id</code>, and all ids must be
 unique across the document.</p>
+<h3 id="part-item-of-a-parts-list"><code>part</code> (item of a
+<code>parts</code> list)</h3>
+<p>The split follows one rule: fields describing <strong>the
+system/exercise as a whole</strong> (<code>cipher_system</code>,
+<code>charset</code>/<code>casesensitive</code>/<code>ditschar</code>/
+<code>ignorechars</code>,
+<code>sources</code>/<code>references</code>/<code>notes</code>/<code>chatter</code>)
+stay on the parent ciphertext and apply to every part uniformly — that’s
+exactly what makes independent messages “in depth” in the first place,
+same system and key. Fields describing <strong>one specific message’s
+own content and outcome</strong> (<code>raw</code>, <code>origin</code>,
+<code>solution</code>, <code>hints</code>) move onto each part instead,
+because those genuinely differ between independent messages — different
+plaintexts, possibly different cribs, possibly even different
+interception details, despite sharing key material.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>part_id</code></td>
+<td><strong>yes</strong></td>
+<td>Label for this part, e.g. <code>&quot;a&quot;</code>, <code>&quot;b&quot;</code>. Unique
+within the <code>parts</code> list. Free-form, like ciphertext
+<code>id</code> — no auto-default, since <code>parts</code> never has
+just one entry.</td>
+</tr>
+<tr>
+<td><code>raw</code></td>
+<td><strong>yes</strong></td>
+<td>This part’s ciphertext text.</td>
+</tr>
+<tr>
+<td><code>remove_from_start</code></td>
+<td>no, default <code>0</code></td>
+<td>Same meaning as the ciphertext-level field, scoped to this part’s
+<code>raw</code>.</td>
+</tr>
+<tr>
+<td><code>remove_from_end</code></td>
+<td>no, default <code>0</code></td>
+<td>Same meaning as the ciphertext-level field, scoped to this part’s
+<code>raw</code>.</td>
+</tr>
+<tr>
+<td><code>origin</code></td>
+<td>no</td>
+<td>Same shape as ciphertext-level <a href="#origin">origin</a>, scoped
+to this part.</td>
+</tr>
+<tr>
+<td><code>solution</code></td>
+<td>no</td>
+<td>Same shape as ciphertext-level <a href="#solution">solution</a>,
+scoped to this part.</td>
+</tr>
+<tr>
+<td><code>hints</code></td>
+<td>no</td>
+<td>Same shape as ciphertext-level <a href="#hint">hint</a> list, scoped
+to this part.</td>
+</tr>
+</tbody>
+</table>
+<p>Two inseparable messages that must be solved jointly (e.g. Military
+Cryptanalytics, Part I, Lesson 4, Problem 9’s messages ‘a’ and ‘b’) —
+one <code>id</code> and one <code>cipher_system</code> shared by both,
+but each part carries its own <code>solution</code> since the two
+messages decrypt to different plaintexts:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;MC-I-4-9&quot;</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cipher_system&quot;</span><span class="fu">:</span> <span class="st">&quot;Vigenère (two messages in depth)&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;parts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;part_id&quot;</span><span class="fu">:</span> <span class="st">&quot;a&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;QLZOV EEXWO ...&quot;</span><span class="fu">,</span> <span class="dt">&quot;solution&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;plaintext&quot;</span><span class="fu">:</span> <span class="st">&quot;ATTACK AT DAWN ...&quot;</span> <span class="fu">}</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;part_id&quot;</span><span class="fu">:</span> <span class="st">&quot;b&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;TKHNS RIOAB ...&quot;</span><span class="fu">,</span> <span class="dt">&quot;solution&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;plaintext&quot;</span><span class="fu">:</span> <span class="st">&quot;HOLD UNTIL REINFORCED ...&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h2 id="cascade-rules">Cascade rules</h2>
 <p>Exactly two cascade behaviors, both document → ciphertext, one
 level:</p>
@@ -517,19 +622,21 @@ ciphertext’s effective list is
 document’s entries first, then the ciphertext’s own.</li>
 </ol>
 <p>Everything else — <code>id</code>, <code>raw</code>,
-<code>remove_from_start</code>, <code>remove_from_end</code>,
-<code>origin</code>, <code>solution</code>, <code>hints</code> — is
-ciphertext-only and never cascades; it’s a validation error for any of
-these to appear on the document. <code>solution.plaintext_charset</code>
-is the one exception inside a non-cascading object: it still resolves
-via the scalar-override chain, because a plaintext alphabet is
-conceptually the same kind of setting as <code>charset</code>, just for
-the solution. Unlike <code>charset</code>, though, it’s
-<strong>descriptive, not enforced</strong> — see <a href="#solution">solution</a> for why.</p>
+<code>parts</code>, <code>remove_from_start</code>,
+<code>remove_from_end</code>, <code>origin</code>,
+<code>solution</code>, <code>hints</code> — is ciphertext-only and never
+cascades; it’s a validation error for any of these to appear on the
+document. <code>solution.plaintext_charset</code> is the one exception
+inside a non-cascading object: it still resolves via the scalar-override
+chain, because a plaintext alphabet is conceptually the same kind of
+setting as <code>charset</code>, just for the solution. Unlike
+<code>charset</code>, though, it’s <strong>descriptive, not
+enforced</strong> — see <a href="#solution">solution</a> for why.</p>
 <h2 id="gap-marker">Gap marker</h2>
-<p><code>raw</code> may contain the literal reserved string
-<code>&quot;[...]&quot;</code> to mark a point where an unspecified number of
-groups/symbols from the original message were never transcribed —
+<p><code>raw</code> (or a <code>part</code>’s own <code>raw</code>, if
+the ciphertext uses <code>parts</code>) may contain the literal reserved
+string <code>&quot;[...]&quot;</code> to mark a point where an unspecified number
+of groups/symbols from the original message were never transcribed —
 e.g. an analyst excerpting only the first several and last several
 groups of a long message log. This is different from
 <code>ditschar</code>, which stands for exactly one unrecoverable symbol
@@ -552,7 +659,7 @@ stream and is never counted as a <code>ditschar</code>.
 pass added to recognize and strip this token before its existing
 per-character scan runs — a real, if small, change to that parser, not
 just documentation here.)</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;AXBQP LKQRS DTMNC FVXWA QPLEZ TRSUV WNMKL [...] QRTSU VWXYZ ABCDE&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;AXBQP LKQRS DTMNC FVXWA QPLEZ TRSUV WNMKL [...] QRTSU VWXYZ ABCDE&quot;</span> <span class="fu">}</span></span></code></pre></div>
 <p>Multiple occurrences in one <code>raw</code> are allowed; there’s no
 cap.</p>
 <h2 id="validation-rules">Validation rules</h2>
@@ -567,17 +674,40 @@ match <code>charset</code>, equal <code>ditschar</code>, or match
 <code>ignorechars</code> — there is no fourth bucket. A character that
 matches none of the three is a validation error. This is the mechanism
 behind the “guaranteed clean” claim above: a <code>raw</code> field can
-never quietly carry unaccounted-for characters.</li>
+never quietly carry unaccounted-for characters. With <code>parts</code>,
+this rule applies independently to each part’s own <code>raw</code>,
+against the same ciphertext-level <code>charset</code>/
+<code>ditschar</code>/<code>ignorechars</code>.</li>
+<li><strong>A ciphertext has exactly one of <code>raw</code> or
+<code>parts</code>.</strong> Neither, or both, is a validation
+error.</li>
+<li><strong><code>parts</code> must have at least 2 entries.</strong> A
+single-entry <code>parts</code> array is rejected — use <code>raw</code>
+instead; there’s exactly one way to say “one raw block.”</li>
+<li><strong><code>part_id</code> is required and unique within its
+<code>parts</code> list.</strong> No auto-default, since
+<code>parts</code> never has just one entry to default from.</li>
+<li><strong><code>remove_from_start</code>/<code>remove_from_end</code>
+are illegal on a ciphertext that uses <code>parts</code>.</strong> Use
+each part’s own instead — there’s no single <code>raw</code> on that
+ciphertext for a ciphertext-level trim to unambiguously apply to.</li>
+<li><strong><code>origin</code>, <code>solution</code>, and
+<code>hints</code> are likewise illegal on a ciphertext that uses
+<code>parts</code>.</strong> Use each part’s own instead — these
+describe one message’s own content and outcome, which independent
+in-depth messages don’t share even when their cipher system and key
+do.</li>
 <li><strong>Unknown fields are errors.</strong> Every node type and
 every sub-object below has a fixed field set. A key not in that set is
 rejected.</li>
 <li><strong>Misplaced fields are errors</strong>, symmetrically: a
-ciphertext-only field (<code>raw</code>, <code>remove_from_start</code>,
-<code>remove_from_end</code>, <code>origin</code>,
-<code>solution</code>, <code>hints</code>) found on the document is an
-error; a document-only field (<code>cryptml_version</code>,
-<code>title</code>, <code>defaults</code>, <code>ciphertexts</code>)
-found on a ciphertext is an error.</li>
+ciphertext-only field (<code>raw</code>, <code>parts</code>,
+<code>remove_from_start</code>, <code>remove_from_end</code>,
+<code>origin</code>, <code>solution</code>, <code>hints</code>) found on
+the document is an error; a document-only field
+(<code>cryptml_version</code>, <code>title</code>,
+<code>defaults</code>, <code>ciphertexts</code>) found on a ciphertext
+is an error.</li>
 <li><strong>Duplicate <code>id</code> anywhere in
 <code>ciphertexts</code> is an error.</strong></li>
 <li><strong><code>source.type</code></strong> must be one of the
@@ -909,50 +1039,50 @@ correspond to (e.g. a Tridigital cipher’s digit-triples map to
 </table>
 <h2 id="minimal-example">Minimal example</h2>
 <p>Relies entirely on defaults:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;WKRUL BXHVI DQGWK HODZQ FRXOG...&quot;</span> <span class="fu">}</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;WKRUL BXHVI DQGWK HODZQ FRXOG...&quot;</span> <span class="fu">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h2 id="illustrative-example">Illustrative example</h2>
 <p>A whole-file shared source (merges into every ciphertext), a
 document-wide charset default (overridden by one ciphertext that needs a
 different alphabet), free-form ids, and one solved entry.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;MC-I Problem Book, Lesson 2 (excerpt)&quot;</span><span class="fu">,</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span><span class="fu">,</span> <span class="dt">&quot;casesensitive&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;ditschar&quot;</span><span class="fu">:</span> <span class="st">&quot;-&quot;</span><span class="fu">,</span> <span class="dt">&quot;ignorechars&quot;</span><span class="fu">:</span> <span class="st">&quot;[</span><span class="ch">\\</span><span class="st">s]&quot;</span> <span class="fu">},</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sources&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;book&quot;</span><span class="fu">,</span> <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Military Cryptanalytics, Part I, Problem Book&quot;</span><span class="fu">,</span> <span class="dt">&quot;author&quot;</span><span class="fu">:</span> <span class="st">&quot;NSA&quot;</span><span class="fu">,</span> <span class="dt">&quot;page&quot;</span><span class="fu">:</span> <span class="st">&quot;L2&quot;</span> <span class="fu">}</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;L2-P16-a&quot;</span><span class="fu">,</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cipher_system&quot;</span><span class="fu">:</span> <span class="st">&quot;Playfair&quot;</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;L2-P16-b&quot;</span><span class="fu">,</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cipher_system&quot;</span><span class="fu">:</span> <span class="st">&quot;Nihilist Substitution&quot;</span><span class="fu">,</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;solution&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;plaintext&quot;</span><span class="fu">:</span> <span class="st">&quot;ATTACKATDAWN&quot;</span><span class="fu">,</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;key&quot;</span><span class="fu">:</span> <span class="st">&quot;3-1-2&quot;</span><span class="fu">,</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;solvers&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>          <span class="fu">{</span> <span class="dt">&quot;solved_by&quot;</span><span class="fu">:</span> <span class="st">&quot;Moshe&quot;</span><span class="fu">,</span> <span class="dt">&quot;solved_date&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-20&quot;</span><span class="fu">,</span> <span class="dt">&quot;method&quot;</span><span class="fu">:</span> <span class="st">&quot;frequency analysis of digit triples&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>          <span class="fu">{</span> <span class="dt">&quot;solved_by&quot;</span><span class="fu">:</span> <span class="st">&quot;J. Doe&quot;</span><span class="fu">,</span> <span class="dt">&quot;solved_date&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-22&quot;</span><span class="fu">,</span> <span class="dt">&quot;notes&quot;</span><span class="fu">:</span> <span class="st">&quot;Solved independently via crib-dragging, before seeing Moshe&#39;s writeup.&quot;</span> <span class="fu">}</span></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;L2-P17&quot;</span><span class="fu">,</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;213 132 321&quot;</span><span class="fu">,</span></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cipher_system&quot;</span><span class="fu">:</span> <span class="st">&quot;Tridigital&quot;</span><span class="fu">,</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[1-3]&quot;</span></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;MC-I Problem Book, Lesson 2 (excerpt)&quot;</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span><span class="fu">,</span> <span class="dt">&quot;casesensitive&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;ditschar&quot;</span><span class="fu">:</span> <span class="st">&quot;-&quot;</span><span class="fu">,</span> <span class="dt">&quot;ignorechars&quot;</span><span class="fu">:</span> <span class="st">&quot;[</span><span class="ch">\\</span><span class="st">s]&quot;</span> <span class="fu">},</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sources&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;book&quot;</span><span class="fu">,</span> <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Military Cryptanalytics, Part I, Problem Book&quot;</span><span class="fu">,</span> <span class="dt">&quot;author&quot;</span><span class="fu">:</span> <span class="st">&quot;NSA&quot;</span><span class="fu">,</span> <span class="dt">&quot;page&quot;</span><span class="fu">:</span> <span class="st">&quot;L2&quot;</span> <span class="fu">}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;L2-P16-a&quot;</span><span class="fu">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cipher_system&quot;</span><span class="fu">:</span> <span class="st">&quot;Playfair&quot;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;L2-P16-b&quot;</span><span class="fu">,</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cipher_system&quot;</span><span class="fu">:</span> <span class="st">&quot;Nihilist Substitution&quot;</span><span class="fu">,</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;solution&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;plaintext&quot;</span><span class="fu">:</span> <span class="st">&quot;ATTACKATDAWN&quot;</span><span class="fu">,</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;key&quot;</span><span class="fu">:</span> <span class="st">&quot;3-1-2&quot;</span><span class="fu">,</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;solvers&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>          <span class="fu">{</span> <span class="dt">&quot;solved_by&quot;</span><span class="fu">:</span> <span class="st">&quot;Moshe&quot;</span><span class="fu">,</span> <span class="dt">&quot;solved_date&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-20&quot;</span><span class="fu">,</span> <span class="dt">&quot;method&quot;</span><span class="fu">:</span> <span class="st">&quot;frequency analysis of digit triples&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>          <span class="fu">{</span> <span class="dt">&quot;solved_by&quot;</span><span class="fu">:</span> <span class="st">&quot;J. Doe&quot;</span><span class="fu">,</span> <span class="dt">&quot;solved_date&quot;</span><span class="fu">:</span> <span class="st">&quot;2026-06-22&quot;</span><span class="fu">,</span> <span class="dt">&quot;notes&quot;</span><span class="fu">:</span> <span class="st">&quot;Solved independently via crib-dragging, before seeing Moshe&#39;s writeup.&quot;</span> <span class="fu">}</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        <span class="ot">]</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;L2-P17&quot;</span><span class="fu">,</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;213 132 321&quot;</span><span class="fu">,</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cipher_system&quot;</span><span class="fu">:</span> <span class="st">&quot;Tridigital&quot;</span><span class="fu">,</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[1-3]&quot;</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Resolved view of <code>L2-P16-a</code>:
 <code>charset = &quot;[A-Z]&quot;</code> / <code>casesensitive = false</code> /
 <code>ditschar = &quot;-&quot;</code> / <code>ignorechars = &quot;[\\s]&quot;</code> (all
@@ -963,18 +1093,65 @@ from the document, unchanged), <code>cipher_system = &quot;Playfair&quot;</code>
 <code>L2-P17</code> overrides <code>charset</code> to
 <code>&quot;[1-3]&quot;</code> for its own use, everything else still cascades
 normally.</p>
+<h2 id="example-single-raw-and-parts-ciphertexts-side-by-side">Example:
+single-<code>raw</code> and <code>parts</code> ciphertexts side by
+side</h2>
+<p>Two ciphertexts in one document — an ordinary single-message problem,
+and an in-depth pair. <code>MC-I-4-7</code> looks exactly like every
+other ciphertext you’ve already seen. <code>MC-I-4-9</code> has no
+<code>raw</code>, <code>origin</code>, <code>solution</code>, or
+<code>hints</code> of its own at all — those all live on its two parts
+instead, because <code>cipher_system</code> is the only thing ‘a’ and
+‘b’ actually share.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Military Cryptanalytics, Part I, Lesson 4 (excerpt)&quot;</span><span class="fu">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span><span class="fu">,</span> <span class="dt">&quot;casesensitive&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;ditschar&quot;</span><span class="fu">:</span> <span class="st">&quot;-&quot;</span><span class="fu">,</span> <span class="dt">&quot;ignorechars&quot;</span><span class="fu">:</span> <span class="st">&quot;[</span><span class="ch">\\</span><span class="st">s]&quot;</span> <span class="fu">},</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sources&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;book&quot;</span><span class="fu">,</span> <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Military Cryptanalytics, Part I&quot;</span><span class="fu">,</span> <span class="dt">&quot;author&quot;</span><span class="fu">:</span> <span class="st">&quot;Friedman and Callimahos&quot;</span> <span class="fu">}</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;MC-I-4-7&quot;</span><span class="fu">,</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;WKRUL BXHVI DQGWK HODZQ FRXOG&quot;</span><span class="fu">,</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cipher_system&quot;</span><span class="fu">:</span> <span class="st">&quot;Monoalphabetic substitution&quot;</span><span class="fu">,</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;solution&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;plaintext&quot;</span><span class="fu">:</span> <span class="st">&quot;THE QUICK BROWN FOX&quot;</span> <span class="fu">}</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;MC-I-4-9&quot;</span><span class="fu">,</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cipher_system&quot;</span><span class="fu">:</span> <span class="st">&quot;Vigenère (two messages in depth)&quot;</span><span class="fu">,</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;parts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;part_id&quot;</span><span class="fu">:</span> <span class="st">&quot;a&quot;</span><span class="fu">,</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;QLZOV EEXWO ...&quot;</span><span class="fu">,</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;origin&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;date&quot;</span><span class="fu">:</span> <span class="st">&quot;1943-06&quot;</span><span class="fu">,</span> <span class="dt">&quot;method&quot;</span><span class="fu">:</span> <span class="st">&quot;intercepted teleprinter traffic&quot;</span> <span class="fu">},</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;hints&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="st">&quot;Believed to begin with a standard preamble.&quot;</span> <span class="fu">}</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;solution&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;plaintext&quot;</span><span class="fu">:</span> <span class="st">&quot;ATTACK AT DAWN ...&quot;</span> <span class="fu">}</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;part_id&quot;</span><span class="fu">:</span> <span class="st">&quot;b&quot;</span><span class="fu">,</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;TKHNS RIOAB ...&quot;</span><span class="fu">,</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;solution&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;plaintext&quot;</span><span class="fu">:</span> <span class="st">&quot;HOLD UNTIL REINFORCED ...&quot;</span> <span class="fu">}</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>      <span class="ot">]</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Note that <code>origin</code>/<code>hints</code> are entirely
+optional per part — part ‘a’ has both, part ‘b’ has neither, and that’s
+fine; nothing requires parts to be symmetric with each other.</p>
 <h2 id="invalid-examples">Invalid examples</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;hints&quot;</span> <span class="er">is</span> <span class="er">ciphertext-only,</span> <span class="er">not</span> <span class="er">legal</span> <span class="er">on</span> <span class="er">the</span> <span class="er">document.</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span> <span class="dt">&quot;hints&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span><span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="st">&quot;THE&quot;</span><span class="fu">}</span><span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">...</span><span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;defaults&quot;</span> <span class="er">is</span> <span class="er">not</span> <span class="er">legal</span> <span class="er">on</span> <span class="er">a</span> <span class="er">ciphertext</span> <span class="er">(its</span> <span class="er">scalars</span> <span class="er">are</span> <span class="er">bare</span> <span class="er">fields</span> <span class="er">instead).</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;priority&quot;</span> <span class="er">is</span> <span class="er">not</span> <span class="er">a</span> <span class="er">recognized</span> <span class="er">field</span> <span class="er">anywhere</span> <span class="er">in</span> <span class="er">the</span> <span class="er">schema.</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span> <span class="dt">&quot;priority&quot;</span><span class="fu">:</span> <span class="st">&quot;high&quot;</span><span class="fu">,</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">...</span><span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="er">two</span> <span class="er">ciphertexts</span> <span class="er">share</span> <span class="er">id</span> <span class="st">&quot;1&quot;</span><span class="er">.</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">}</span><span class="ot">,</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">}</span> <span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;charset&quot;</span> <span class="er">has</span> <span class="er">no</span> <span class="er">enclosing</span> <span class="er">brackets.</span> <span class="er">On</span> <span class="er">disk</span> <span class="er">it</span> <span class="er">must</span> <span class="er">be</span> <span class="st">&quot;[1-3]&quot;</span><span class="er">,</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">not</span> <span class="st">&quot;1-3&quot;</span> <span class="er">--</span> <span class="er">the</span> <span class="er">editor</span> <span class="er">may</span> <span class="er">let</span> <span class="er">you</span> <span class="er">type</span> <span class="er">it</span> <span class="er">bare,</span> <span class="er">but</span> <span class="er">never</span> <span class="er">saves</span> <span class="er">it</span> <span class="er">that</span> <span class="er">way.</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;213132&quot;</span><span class="fu">,</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;1-3&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;hints&quot;</span> <span class="er">is</span> <span class="er">ciphertext-only,</span> <span class="er">not</span> <span class="er">legal</span> <span class="er">on</span> <span class="er">the</span> <span class="er">document.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span> <span class="dt">&quot;hints&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span><span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="st">&quot;THE&quot;</span><span class="fu">}</span><span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">...</span><span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;defaults&quot;</span> <span class="er">is</span> <span class="er">not</span> <span class="er">legal</span> <span class="er">on</span> <span class="er">a</span> <span class="er">ciphertext</span> <span class="er">(its</span> <span class="er">scalars</span> <span class="er">are</span> <span class="er">bare</span> <span class="er">fields</span> <span class="er">instead).</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;priority&quot;</span> <span class="er">is</span> <span class="er">not</span> <span class="er">a</span> <span class="er">recognized</span> <span class="er">field</span> <span class="er">anywhere</span> <span class="er">in</span> <span class="er">the</span> <span class="er">schema.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span> <span class="dt">&quot;priority&quot;</span><span class="fu">:</span> <span class="st">&quot;high&quot;</span><span class="fu">,</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">...</span><span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="er">two</span> <span class="er">ciphertexts</span> <span class="er">share</span> <span class="er">id</span> <span class="st">&quot;1&quot;</span><span class="er">.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">}</span><span class="ot">,</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">}</span> <span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;charset&quot;</span> <span class="er">has</span> <span class="er">no</span> <span class="er">enclosing</span> <span class="er">brackets.</span> <span class="er">On</span> <span class="er">disk</span> <span class="er">it</span> <span class="er">must</span> <span class="er">be</span> <span class="st">&quot;[1-3]&quot;</span><span class="er">,</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">not</span> <span class="st">&quot;1-3&quot;</span> <span class="er">--</span> <span class="er">the</span> <span class="er">editor</span> <span class="er">may</span> <span class="er">let</span> <span class="er">you</span> <span class="er">type</span> <span class="er">it</span> <span class="er">bare,</span> <span class="er">but</span> <span class="er">never</span> <span class="er">saves</span> <span class="er">it</span> <span class="er">that</span> <span class="er">way.</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;213132&quot;</span><span class="fu">,</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;1-3&quot;</span> <span class="fu">}</span></span></code></pre></div>
 <h2 id="future-work">Future work</h2>
 <ul>
 <li>An XML serialization of the same schema (not yet defined).</li>
