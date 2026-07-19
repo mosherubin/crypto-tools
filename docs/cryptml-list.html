@@ -27,9 +27,12 @@
 <body>
   <p><a href="index.html">&larr; back to tools</a></p>
   <h1>CryptML List / Browse</h1>
-  <p>List every ciphertext in one or more <code>.cryptml</code> files, one line each. Nothing you choose here leaves your browser.</p>
+  <p>List every ciphertext in one or more <code>.cryptml</code> files, one line each. Browse the published
+     corpus (fetched read-only from GitHub), or a folder/files of your own -- nothing you choose from
+     your own disk ever leaves your browser.</p>
 
   <div class="toolbar">
+    <button id="btn-corpus">Browse the published corpus</button>
     <button id="btn-folder">Choose folder&hellip;</button>
     <button id="btn-files">Choose files&hellip;</button>
     <input type="text" id="filter" placeholder="Filter by filename (e.g. Military-*)">
@@ -52,7 +55,39 @@ filesInput.type = 'file';
 filesInput.multiple = true;
 filesInput.accept = '.cryptml';
 
-let loadedFiles = []; // [{name, file}]
+let loadedFiles = []; // [{name, file}] -- file just needs an async text() method
+
+const RAW_BASE = 'https://raw.githubusercontent.com/mosherubin/crypto-tools/main/tools/CryptML/input/';
+
+// Adapts a raw.githubusercontent.com URL to the same {text()} shape a picked
+// File object has, so the rest of the pipeline doesn't care whether a file
+// came from local disk or the published corpus. Fetches once, then caches.
+function remoteFile(url) {
+  let cached = null;
+  return {
+    text: async () => {
+      if (cached === null) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
+        cached = await res.text();
+      }
+      return cached;
+    },
+  };
+}
+
+async function loadPublishedCorpus() {
+  setStatus('Fetching published corpus manifest…');
+  try {
+    const res = await fetch(RAW_BASE + 'index.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const manifest = await res.json();
+    loadedFiles = manifest.files.map(f => ({ name: f.filename, file: remoteFile(RAW_BASE + f.filename) }));
+    await renderListing();
+  } catch (e) {
+    setStatus(`Failed to fetch the published corpus manifest -- ${e.message}`, true);
+  }
+}
 
 function setStatus(text, isError = false) {
   const el = document.getElementById('status');
@@ -140,7 +175,7 @@ async function renderListing() {
 
   const matching = loadedFiles.filter(f => matchesFilter(f.name, pattern));
   if (!matching.length) {
-    setStatus(loadedFiles.length ? 'No files match that filter.' : 'No files loaded yet -- choose a folder or files above.');
+    setStatus(loadedFiles.length ? 'No files match that filter.' : 'No files loaded yet -- browse the published corpus, or choose a folder or files above.');
     return;
   }
 
@@ -210,6 +245,7 @@ async function loadFileList(fileList) {
   await renderListing();
 }
 
+document.getElementById('btn-corpus').addEventListener('click', () => loadPublishedCorpus());
 document.getElementById('btn-folder').addEventListener('click', () => folderInput.click());
 document.getElementById('btn-files').addEventListener('click', () => filesInput.click());
 folderInput.addEventListener('change', () => loadFileList(folderInput.files));
