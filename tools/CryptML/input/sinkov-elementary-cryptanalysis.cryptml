@@ -37,6 +37,21 @@
           "text": "(b) Decipher the following monoalphabetic cipher knowing that it is a direct standard alphabet with shift 11"
         }
       ]
+    },
+    {
+      "id": "Exercise-07",
+      "cipher_system": "Direct Standard Alphabets",
+      "raw": "VXMDUJA JARCQVNCRL LXDUM KN LXWBRMNANM ANVJRWMNA JARCQVNCRL",
+      "solution": {
+        "plaintext": "MODULAR ARITHMETIC COULD BE CONSIDERED REMAINDER ARITHMETIC",
+        "key": "Shift of 12"
+      },
+      "notes": [
+        {
+          "title": "byline",
+          "text": "Solve the following messages"
+        }
+      ]
     }
   ],
   "title": "sinkov-elementary-cryptanalysis",

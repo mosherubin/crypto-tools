@@ -1,0 +1,59 @@
+name: CryptML manifest
+
+# Validates every tools/CryptML/input/*.cryptml file and regenerates its
+# manifest (index.json), which browser tools fetch from
+# raw.githubusercontent.com to discover what's searchable without ever
+# calling the rate-limited GitHub Contents API. This is the safety net for
+# contributions from anyone who doesn't have the local pre-commit hook
+# (tools/CryptML/hooks/pre-commit.py) installed -- i.e. everyone who forks
+# without knowing it exists.
+#
+# On a pull request: validation only, shown as a pass/fail check -- a fork
+# can't be pushed back to by the default token, and shouldn't be.
+# On a push to main: also commits the regenerated manifest if it changed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/CryptML/input/**'
+      - '!tools/CryptML/input/index.json'
+      - 'tools/CryptML/generate-manifest.js'
+      - 'docs/js/cryptml-editor.js'
+  pull_request:
+    paths:
+      - 'tools/CryptML/input/**'
+      - '!tools/CryptML/input/index.json'
+      - 'tools/CryptML/generate-manifest.js'
+      - 'docs/js/cryptml-editor.js'
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate CryptML files and regenerate manifest
+        run: node tools/CryptML/generate-manifest.js
+
+      - name: Commit updated manifest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          # Stage first, then diff --cached -- plain `git diff` never shows a
+          # brand-new untracked file (e.g. index.json's very first run), which
+          # would otherwise make this silently skip the initial commit.
+          git add tools/CryptML/input/index.json
+          if ! git diff --cached --quiet -- tools/CryptML/input/index.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "Auto-update CryptML manifest [skip ci]"
+            git push
+          else
+            echo "Manifest already up to date; nothing to commit."
+          fi

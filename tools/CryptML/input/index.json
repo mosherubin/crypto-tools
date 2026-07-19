@@ -1,0 +1,40 @@
+{
+  "generated": "2026-07-19T17:50:01.041Z",
+  "files": [
+    {
+      "filename": "Cipher-Deavours-Course-Spring-1976.cryptml",
+      "title": "Professor Cipher Deavours Spring 1976 course in Cryptography and Cryptanalysis",
+      "ciphertext_count": 1
+    },
+    {
+      "filename": "Cryptologia.cryptml",
+      "title": "Cryptologia - Ciphertexts",
+      "ciphertext_count": 3
+    },
+    {
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml",
+      "title": "All ciphertexts in Helen Fouché Gaines's 'Cryptanalysis: A study of Ciphers and their Solution'",
+      "ciphertext_count": 15
+    },
+    {
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml",
+      "title": "Military Cryptanalytics, Part I, Problem Book",
+      "ciphertext_count": 12
+    },
+    {
+      "filename": "Military-Cryptanalytics-Part-I.cryptml",
+      "title": "Military Cryptanalytics, Part I",
+      "ciphertext_count": 1
+    },
+    {
+      "filename": "Military-Cryptanalytics-Part-III.cryptml",
+      "title": "Military Cryptanalytics, Part III",
+      "ciphertext_count": 5
+    },
+    {
+      "filename": "sinkov-elementary-cryptanalysis.cryptml",
+      "title": "sinkov-elementary-cryptanalysis",
+      "ciphertext_count": 4
+    }
+  ]
+}

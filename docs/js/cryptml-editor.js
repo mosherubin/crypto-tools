@@ -265,6 +265,214 @@ const CryptMLEditor = (() => {
     return out;
   }
 
+  // ---------- validation ----------
+  // Pure data/logic, no DOM dependency -- ported from tools/Library/cryptml.py's
+  // validate(), field for field, so the two stay equivalent. Runs equally in the
+  // browser and under Node (see the CommonJS export at the bottom of this file).
+
+  const DOCUMENT_FIELDS = new Set(['cryptml_version', 'title', 'defaults', 'sources', 'references', 'notes', 'chatter', 'ciphertexts']);
+  const DEFAULTS_FIELDS = new Set(['cipher_system', 'charset', 'casesensitive', 'ditschar', 'ignorechars', 'plaintext_charset']);
+  const CIPHERTEXT_FIELDS = new Set([
+    'id', 'raw', 'parts', 'cipher_system', 'charset', 'casesensitive', 'ditschar', 'ignorechars',
+    'remove_from_start', 'remove_from_end', 'origin', 'sources', 'references', 'notes', 'chatter',
+    'solution', 'hints',
+  ]);
+  const PART_FIELDS = new Set(['part_id', 'raw', 'remove_from_start', 'remove_from_end', 'origin', 'solution', 'hints']);
+  const PART_ONLY_WHEN_SPLIT = ['remove_from_start', 'remove_from_end', 'origin', 'solution', 'hints'];
+  const ORIGIN_FIELD_SET = new Set(['date', 'originator', 'method', 'location', 'remarks']);
+  const SOURCE_FIELD_SET = new Set(['type', 'title', 'author', 'publisher', 'date', 'page', 'url', 'note']);
+  const SOURCE_TYPES = new Set(['book', 'web', 'letter', 'periodical', 'person', 'competition', 'other']);
+  const SOLUTION_FIELD_SET = new Set(['plaintext', 'plaintext_charset', 'key', 'solvers']);
+  const SOLVER_FIELD_SET = new Set(['solved_by', 'solved_date', 'method', 'notes']);
+  const HINT_FIELD_SET = new Set(['text', 'position', 'source', 'confidence', 'notes']);
+  const NOTE_FIELD_SET = new Set(['title', 'text']);
+  const CHATTER_FIELD_SET = new Set(['author', 'date', 'text']);
+  const GAP_MARKER = '[...]';
+
+  function isPlainObject(v) {
+    return typeof v === 'object' && v !== null && !Array.isArray(v);
+  }
+
+  function isSingleBracketedClass(pattern) {
+    if (typeof pattern !== 'string' || !pattern.startsWith('[') || !pattern.endsWith(']')) return false;
+    try { new RegExp(pattern); } catch { return false; }
+    const inner = pattern.slice(1, -1);
+    for (let i = 0; i < inner.length; i++) {
+      if (inner[i] === '\\') { i++; continue; }
+      if (inner[i] === ']') return false;
+    }
+    return true;
+  }
+
+  function checkFields(obj, allowed, where, errors) {
+    if (!isPlainObject(obj)) { errors.push(`${where}: expected an object, got ${typeof obj}`); return; }
+    for (const key of Object.keys(obj)) {
+      if (!allowed.has(key)) errors.push(`${where}: unrecognized field '${key}'`);
+    }
+  }
+
+  function checkOrigin(origin, where, errors) {
+    if (origin == null) return;
+    checkFields(origin, ORIGIN_FIELD_SET, where, errors);
+  }
+
+  function checkSolution(solution, where, errors) {
+    if (solution == null) return;
+    checkFields(solution, SOLUTION_FIELD_SET, where, errors);
+    if (!isPlainObject(solution)) return;
+    const solvers = solution.solvers ?? [];
+    if (!Array.isArray(solvers)) { errors.push(`${where}.solvers must be an array, got ${typeof solvers}`); return; }
+    solvers.forEach((sv, i) => checkFields(sv, SOLVER_FIELD_SET, `${where}.solvers[${i}]`, errors));
+  }
+
+  function checkHints(hints, where, errors) {
+    (hints || []).forEach((h, i) => checkFields(h, HINT_FIELD_SET, `${where}[${i}]`, errors));
+  }
+
+  function checkSourceList(sources, where, errors) {
+    (sources || []).forEach((s, i) => {
+      checkFields(s, SOURCE_FIELD_SET, `${where}[${i}]`, errors);
+      if (isPlainObject(s) && 'type' in s && !SOURCE_TYPES.has(s.type)) {
+        errors.push(`${where}[${i}].type = ${JSON.stringify(s.type)} not in [${[...SOURCE_TYPES].join(', ')}]`);
+      }
+    });
+  }
+
+  function checkNoteList(notes, where, errors) {
+    (notes || []).forEach((n, i) => checkFields(n, NOTE_FIELD_SET, `${where}[${i}]`, errors));
+  }
+
+  function checkChatterList(chatter, where, errors) {
+    (chatter || []).forEach((c, i) => checkFields(c, CHATTER_FIELD_SET, `${where}[${i}]`, errors));
+  }
+
+  function checkRawChars(raw, charsetRe, ignoreRe, ditschar, where, errors) {
+    if (typeof raw !== 'string') { errors.push(`${where}: expected a string, got ${typeof raw}`); return; }
+    const rawNoGaps = raw.split(GAP_MARKER).join('');
+    const bad = new Set();
+    for (const ch of rawNoGaps) {
+      if (!charsetRe.test(ch) && ch !== ditschar && !ignoreRe.test(ch)) bad.add(ch);
+    }
+    if (bad.size) errors.push(`${where}: characters not matched by charset/ditschar/ignorechars: ${JSON.stringify([...bad].sort())}`);
+  }
+
+  function fullMatchRegex(pattern, caseInsensitive) {
+    // charset/ignorechars are single character classes matched against one character
+    // at a time -- anchor so e.g. "[A]" doesn't accidentally match via partial search.
+    return new RegExp(`^(?:${pattern})$`, caseInsensitive ? 'iu' : 'u');
+  }
+
+  function validate(data) {
+    const errors = [];
+    if (!isPlainObject(data)) return [`document: expected an object, got ${typeof data}`];
+
+    checkFields(data, DOCUMENT_FIELDS, 'document', errors);
+
+    const defaultsRaw = isPlainObject(data.defaults) ? data.defaults : {};
+    checkFields(data.defaults ?? {}, DEFAULTS_FIELDS, 'defaults', errors);
+    const defaults = { ...DEFAULT_SETTINGS, ...defaultsRaw };
+
+    for (const key of ['charset', 'ignorechars']) {
+      if (!isSingleBracketedClass(defaults[key])) errors.push(`defaults.${key} = ${JSON.stringify(defaults[key])} is not a single bracketed character class`);
+    }
+    if (typeof defaults.ditschar !== 'string' || defaults.ditschar.length !== 1) {
+      errors.push(`defaults.ditschar must be exactly one character, got ${JSON.stringify(defaults.ditschar)}`);
+    }
+
+    checkSourceList(data.sources, 'document.sources', errors);
+    checkNoteList(data.notes, 'document.notes', errors);
+    checkChatterList(data.chatter, 'document.chatter', errors);
+
+    const ciphertexts = data.ciphertexts;
+    if (!Array.isArray(ciphertexts) || !ciphertexts.length) {
+      errors.push('document.ciphertexts: required, must have at least one entry');
+      return errors;
+    }
+
+    const idsSeen = new Set();
+    ciphertexts.forEach((ct, idx) => {
+      const where = `ciphertexts[${idx}] (id=${isPlainObject(ct) && 'id' in ct ? ct.id : '?'})`;
+      checkFields(ct, CIPHERTEXT_FIELDS, where, errors);
+      if (!isPlainObject(ct)) return;
+
+      const cid = ct.id;
+      if (cid === undefined) {
+        if (ciphertexts.length > 1) errors.push(`${where}: missing 'id', required when there is more than one ciphertext`);
+      } else {
+        if (idsSeen.has(cid)) errors.push(`${where}: duplicate id '${cid}'`);
+        idsSeen.add(cid);
+      }
+
+      const hasRaw = 'raw' in ct;
+      const hasParts = 'parts' in ct;
+      if (hasRaw && hasParts) errors.push(`${where}: has both 'raw' and 'parts' -- exactly one is required`);
+      if (!hasRaw && !hasParts) errors.push(`${where}: has neither 'raw' nor 'parts' -- exactly one is required`);
+
+      let ditschar = ct.ditschar ?? defaults.ditschar;
+      if (typeof ditschar !== 'string' || ditschar.length !== 1) {
+        errors.push(`${where}.ditschar must be exactly one character, got ${JSON.stringify(ditschar)}`);
+        ditschar = defaults.ditschar;
+      }
+
+      const charset = ct.charset ?? defaults.charset;
+      const ignorechars = ct.ignorechars ?? defaults.ignorechars;
+      for (const [fname, fval] of [['charset', charset], ['ignorechars', ignorechars]]) {
+        if (!isSingleBracketedClass(fval)) errors.push(`${where}.${fname} = ${JSON.stringify(fval)} is not a single bracketed character class`);
+      }
+
+      const casesensitive = ct.casesensitive ?? defaults.casesensitive;
+      let charsetRe = null, ignoreRe = null;
+      try {
+        charsetRe = fullMatchRegex(charset, !casesensitive);
+        ignoreRe = fullMatchRegex(ignorechars, !casesensitive);
+      } catch (e) {
+        errors.push(`${where}: invalid charset/ignorechars regex: ${e.message}`);
+      }
+
+      if (charsetRe && ignoreRe.test(ditschar)) {
+        errors.push(`${where}: ditschar ${JSON.stringify(ditschar)} is also matched by ignorechars ${JSON.stringify(ignorechars)}`);
+      }
+
+      if (hasParts) {
+        for (const f of PART_ONLY_WHEN_SPLIT) {
+          if (f in ct) errors.push(`${where}: '${f}' is illegal on a ciphertext that uses 'parts' -- move it to each part`);
+        }
+
+        const parts = ct.parts;
+        if (!Array.isArray(parts) || parts.length < 2) {
+          errors.push(`${where}.parts: must be an array with at least 2 entries`);
+        } else {
+          const partIdsSeen = new Set();
+          parts.forEach((part, pidx) => {
+            const pwhere = `${where}.parts[${pidx}]`;
+            checkFields(part, PART_FIELDS, pwhere, errors);
+            if (!isPlainObject(part)) return;
+            const pid = part.part_id;
+            if (pid === undefined) errors.push(`${pwhere}: missing required 'part_id'`);
+            else if (partIdsSeen.has(pid)) errors.push(`${pwhere}: duplicate part_id '${pid}'`);
+            else partIdsSeen.add(pid);
+            if (!('raw' in part)) errors.push(`${pwhere}: missing required 'raw'`);
+            else if (charsetRe) checkRawChars(part.raw, charsetRe, ignoreRe, ditschar, `${pwhere}.raw (part_id=${pid})`, errors);
+            checkOrigin(part.origin, `${pwhere}.origin`, errors);
+            checkSolution(part.solution, `${pwhere}.solution`, errors);
+            checkHints(part.hints, `${pwhere}.hints`, errors);
+          });
+        }
+      } else if (hasRaw && charsetRe) {
+        checkRawChars(ct.raw, charsetRe, ignoreRe, ditschar, `${where}.raw`, errors);
+        checkOrigin(ct.origin, `${where}.origin`, errors);
+        checkSolution(ct.solution, `${where}.solution`, errors);
+        checkHints(ct.hints, `${where}.hints`, errors);
+      }
+
+      checkSourceList(ct.sources, `${where}.sources`, errors);
+      checkNoteList(ct.notes, `${where}.notes`, errors);
+      checkChatterList(ct.chatter, `${where}.chatter`, errors);
+    });
+
+    return errors;
+  }
+
   // ---------- field specs for repeatable / single-object sections ----------
 
   const SOURCE_FIELDS = [
@@ -401,9 +609,18 @@ const CryptMLEditor = (() => {
     nextPartId,
     parseDocument,
     serializeDocument,
+    validate,
     SOURCE_FIELDS, HINT_FIELDS, REFERENCE_FIELDS, NOTE_FIELDS, CHATTER_FIELDS,
     ORIGIN_FIELDS, SOLUTION_FIELDS, SOLVER_FIELDS,
     el, buildFieldRow, renderObjectSection, renderRepeatable,
     blankOrigin, blankSolution, blankSolver, blankPart, serializeSolution,
   };
 })();
+
+// Dual-environment export: a plain <script> tag in the browser just sees the
+// `const CryptMLEditor` global above. Under Node (no `window`), also export it
+// as a CommonJS module so tools/CryptML/generate-manifest.js and the GitHub
+// Action can `require()` the same validation logic instead of reimplementing it.
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = CryptMLEditor;
+}
