@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptML Validator</title>
+<style>
+  body { font-family: monospace; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: sans-serif; }
+  p, label { font-family: sans-serif; }
+  a { font-family: sans-serif; }
+  .field-row { margin: 1.2rem 0; }
+  .field-row label { display: block; margin-bottom: 0.4rem; font-weight: bold; }
+  input[type="file"] { font-family: sans-serif; }
+  #filename { font-family: sans-serif; color: #555; margin-top: 0.4rem; font-size: 0.9rem; }
+  textarea#paste { width: 100%; min-height: 10rem; font-family: monospace; font-size: 0.85rem; padding: 0.5rem; box-sizing: border-box; }
+  #result { margin-top: 1.5rem; }
+  .valid { font-family: sans-serif; font-weight: bold; color: #0a0; }
+  .invalid-header { font-family: sans-serif; font-weight: bold; color: #b00; margin-bottom: 0.5rem; }
+  #errors { background: #fee; border: 1px solid #b00; padding: 1rem 1rem 1rem 2rem; border-radius: 4px; }
+  #errors li { margin: 0.3rem 0; font-size: 0.9rem; }
+  .error-box { background: #fee; border: 1px solid #b00; padding: 1rem; border-radius: 4px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">&larr; back to tools</a></p>
+  <h1>CryptML Validator</h1>
+  <p>Check a <code>.cryptml</code> file against the current spec before sharing or submitting it.
+     Format reference: <a href="cryptml-spec.html">cryptml-spec.html</a>.
+     Nothing you choose or paste here leaves your browser.</p>
+
+  <div class="field-row">
+    <label for="file-input">Choose a file</label>
+    <input type="file" id="file-input" accept=".cryptml,application/json">
+    <div id="filename"></div>
+  </div>
+
+  <div class="field-row">
+    <label for="paste">...or paste its JSON content here</label>
+    <textarea id="paste" placeholder="Paste CryptML JSON content here"></textarea>
+  </div>
+
+  <div id="result"></div>
+
+<script src="js/cryptml-editor.js"></script>
+<script>
+const M = CryptMLEditor;
+const resultEl = document.getElementById('result');
+const fileInput = document.getElementById('file-input');
+const pasteBox = document.getElementById('paste');
+const filenameEl = document.getElementById('filename');
+
+function renderResult(text, filenameLabel) {
+  resultEl.innerHTML = '';
+  if (!text.trim()) return;
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    resultEl.appendChild(M.el('div', { className: 'invalid-header' }, 'Not valid JSON'));
+    resultEl.appendChild(M.el('pre', { className: 'error-box' }, e.message));
+    return;
+  }
+
+  const errors = M.validate(data);
+  if (!errors.length) {
+    const count = Array.isArray(data.ciphertexts) ? data.ciphertexts.length : 0;
+    const label = filenameLabel ? ` -- ${filenameLabel}` : '';
+    resultEl.appendChild(M.el('div', { className: 'valid' },
+      `✓ Valid CryptML${label}. ${count} ciphertext${count === 1 ? '' : 's'}, no errors.`));
+  } else {
+    const label = filenameLabel ? ` in ${filenameLabel}` : '';
+    resultEl.appendChild(M.el('div', { className: 'invalid-header' },
+      `${errors.length} error${errors.length === 1 ? '' : 's'} found${label}:`));
+    resultEl.appendChild(M.el('ul', { id: 'errors' }, errors.map(e => M.el('li', {}, e))));
+  }
+}
+
+fileInput.addEventListener('change', async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  pasteBox.value = '';
+  filenameEl.textContent = `Selected: ${file.name} (${file.size.toLocaleString()} bytes)`;
+  renderResult(await file.text(), file.name);
+});
+
+pasteBox.addEventListener('input', () => {
+  if (pasteBox.value.trim()) {
+    fileInput.value = '';
+    filenameEl.textContent = '';
+  }
+  renderResult(pasteBox.value, null);
+});
+</script>
+<script data-goatcounter="https://mosherubin.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

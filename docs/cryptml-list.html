@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptML List / Browse</title>
+<style>
+  body { font-family: monospace; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: sans-serif; }
+  p, label { font-family: sans-serif; }
+  a { font-family: sans-serif; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 1rem 0; }
+  button { padding: 0.4rem 0.8rem; font-family: sans-serif; cursor: pointer; }
+  input[type="text"] { font-family: monospace; padding: 0.35rem; font-size: 0.9rem; flex: 1; min-width: 12rem; }
+  #status { font-family: sans-serif; color: #555; min-height: 1.2em; margin: 0.5rem 0 1rem; }
+  #output { background: #f4f4f4; border: 1px solid #ccc; border-radius: 4px; padding: 1rem; overflow-x: auto; }
+  .file-header { font-family: sans-serif; font-weight: bold; margin: 1rem 0 0.3rem; white-space: nowrap; }
+  .file-header:first-child { margin-top: 0; }
+  .file-error { color: #b00; font-family: sans-serif; margin: 1rem 0 0.3rem; white-space: nowrap; }
+  .col-headers, .row { white-space: pre; font-size: 0.88rem; line-height: 1.5; }
+  .col-headers { font-weight: bold; color: #555; }
+  .row:hover { background: #e8e8e8; }
+  #summary { font-family: sans-serif; color: #555; margin-top: 1rem; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">&larr; back to tools</a></p>
+  <h1>CryptML List / Browse</h1>
+  <p>List every ciphertext in one or more <code>.cryptml</code> files, one line each. Nothing you choose here leaves your browser.</p>
+
+  <div class="toolbar">
+    <button id="btn-folder">Choose folder&hellip;</button>
+    <button id="btn-files">Choose files&hellip;</button>
+    <input type="text" id="filter" placeholder="Filter by filename (e.g. Military-*)">
+    <label><input type="checkbox" id="sort-ids"> Sort ciphertext IDs</label>
+  </div>
+  <div id="status"></div>
+  <div id="output"></div>
+  <div id="summary"></div>
+
+<script src="js/cryptml-editor.js"></script>
+<script>
+const M = CryptMLEditor;
+const folderInput = document.createElement('input');
+folderInput.type = 'file';
+folderInput.webkitdirectory = true;
+folderInput.multiple = true;
+
+const filesInput = document.createElement('input');
+filesInput.type = 'file';
+filesInput.multiple = true;
+filesInput.accept = '.cryptml';
+
+let loadedFiles = []; // [{name, file}]
+
+function setStatus(text, isError = false) {
+  const el = document.getElementById('status');
+  el.textContent = text;
+  el.style.color = isError ? '#b00' : '#555';
+}
+
+function globToRegExp(pattern) {
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.');
+  return new RegExp(`^${escaped}$`, 'i');
+}
+
+function matchesFilter(filename, pattern) {
+  if (!pattern.trim()) return true;
+  const p = pattern.trim();
+  return p.includes('*') || p.includes('?') ? globToRegExp(p).test(filename) : filename.toLowerCase().includes(p.toLowerCase());
+}
+
+function naturalCompare(a, b) {
+  const ax = String(a).match(/\d+|\D+/g) || [];
+  const bx = String(b).match(/\d+|\D+/g) || [];
+  const len = Math.max(ax.length, bx.length);
+  for (let i = 0; i < len; i++) {
+    const ac = ax[i], bc = bx[i];
+    if (ac === undefined) return -1;
+    if (bc === undefined) return 1;
+    if (/^\d+$/.test(ac) && /^\d+$/.test(bc)) {
+      const diff = Number(ac) - Number(bc);
+      if (diff !== 0) return diff;
+    } else {
+      const cmp = ac.localeCompare(bc);
+      if (cmp !== 0) return cmp;
+    }
+  }
+  return 0;
+}
+
+function pad(str, width) {
+  str = String(str);
+  return str.length >= width ? str.slice(0, width) : str + ' '.repeat(width - str.length);
+}
+
+function truncate(str, width) {
+  str = String(str).replace(/\s+/g, ' ').trim();
+  return str.length > width ? str.slice(0, width - 1) + '…' : str;
+}
+
+function truncateFront(str, width) {
+  str = String(str).replace(/\s+/g, ' ').trim();
+  return str.length > width ? '…' + str.slice(str.length - width + 1) : str;
+}
+
+const COL = { id: 16, system: 32, len: 6, solved: 3, preview: 45 };
+
+function formatRow(id, system, len, solved, preview) {
+  return pad(truncateFront(id, COL.id), COL.id) + ' ' +
+         pad(truncate(system, COL.system), COL.system) + ' ' +
+         pad(String(len), COL.len).padStart(COL.len) + ' ' +
+         pad(solved, COL.solved) + ' ' +
+         truncate(preview, COL.preview);
+}
+
+function isSolved(solution) {
+  return !!(solution && solution.plaintext && solution.plaintext.trim());
+}
+
+function rowsForCiphertext(ct) {
+  if (ct.parts) {
+    return ct.parts.map(part => ({
+      line: formatRow(`${ct.id}/${part.part_id}`, ct.cipher_system, part.raw.length, isSolved(part.solution) ? 'Y' : 'N', part.raw),
+      title: `id: ${ct.id}/${part.part_id}\ncipher_system: ${ct.cipher_system}\nraw: ${part.raw}`,
+    }));
+  }
+  return [{
+    line: formatRow(ct.id, ct.cipher_system, ct.raw.length, isSolved(ct.solution) ? 'Y' : 'N', ct.raw),
+    title: `id: ${ct.id}\ncipher_system: ${ct.cipher_system}\nraw: ${ct.raw}`,
+  }];
+}
+
+async function renderListing() {
+  const pattern = document.getElementById('filter').value;
+  const output = document.getElementById('output');
+  output.innerHTML = '';
+  document.getElementById('summary').textContent = '';
+
+  const matching = loadedFiles.filter(f => matchesFilter(f.name, pattern));
+  if (!matching.length) {
+    setStatus(loadedFiles.length ? 'No files match that filter.' : 'No files loaded yet -- choose a folder or files above.');
+    return;
+  }
+
+  const header = M.el('div', { className: 'col-headers' },
+    formatRow('ID', 'CIPHER SYSTEM', 'LEN', 'SLV', 'PREVIEW'));
+  output.appendChild(header);
+
+  let fileCount = 0, ciphertextCount = 0, rowCount = 0;
+
+  for (const { name, file } of matching.sort((a, b) => a.name.localeCompare(b.name))) {
+    let text, data;
+    try {
+      text = await file.text();
+      data = JSON.parse(text);
+    } catch (e) {
+      output.appendChild(M.el('div', { className: 'file-error' }, `⚠ ${name}: not valid JSON -- ${e.message}`));
+      continue;
+    }
+    const errors = M.validate(data);
+    if (errors.length) {
+      output.appendChild(M.el('div', { className: 'file-error' },
+        `⚠ ${name}: ${errors.length} validation error${errors.length === 1 ? '' : 's'} -- see the Validator tool`));
+      continue;
+    }
+
+    let doc;
+    try {
+      doc = M.parseDocument(data);
+    } catch (e) {
+      output.appendChild(M.el('div', { className: 'file-error' }, `⚠ ${name}: ${e.message}`));
+      continue;
+    }
+
+    fileCount++;
+    output.appendChild(M.el('div', { className: 'file-header' }, `${name} (${doc.ciphertexts.length} ciphertext${doc.ciphertexts.length === 1 ? '' : 's'})`));
+    const ciphertexts = document.getElementById('sort-ids').checked
+      ? [...doc.ciphertexts].sort((a, b) => naturalCompare(a.id, b.id))
+      : doc.ciphertexts;
+    for (const ct of ciphertexts) {
+      ciphertextCount++;
+      for (const { line, title } of rowsForCiphertext(ct)) {
+        rowCount++;
+        output.appendChild(M.el('div', { className: 'row', title }, line));
+      }
+    }
+  }
+
+  setStatus(`Listed ${matching.length} matching file(s).`);
+  document.getElementById('summary').textContent =
+    `${fileCount} file(s) listed, ${ciphertextCount} ciphertext(s), ${rowCount} row(s) shown.`;
+}
+
+async function loadFileList(fileList) {
+  loadedFiles = [...fileList].filter(f => f.name.endsWith('.cryptml')).map(f => ({ name: f.name, file: f }));
+  await renderListing();
+}
+
+document.getElementById('btn-folder').addEventListener('click', () => folderInput.click());
+document.getElementById('btn-files').addEventListener('click', () => filesInput.click());
+folderInput.addEventListener('change', () => loadFileList(folderInput.files));
+filesInput.addEventListener('change', () => loadFileList(filesInput.files));
+document.getElementById('filter').addEventListener('input', renderListing);
+document.getElementById('sort-ids').addEventListener('change', renderListing);
+</script>
+<script data-goatcounter="https://mosherubin.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
