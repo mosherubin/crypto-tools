@@ -14,8 +14,9 @@
   input[type="text"] { font-family: monospace; padding: 0.35rem; font-size: 0.9rem; flex: 1; min-width: 12rem; }
   #status { font-family: sans-serif; color: #555; min-height: 1.2em; margin: 0.5rem 0 1rem; }
   #output { background: #f4f4f4; border: 1px solid #ccc; border-radius: 4px; padding: 1rem; overflow-x: auto; }
-  .file-header { font-family: sans-serif; font-weight: bold; margin: 1rem 0 0.3rem; white-space: nowrap; }
+  .file-header { font-family: sans-serif; font-weight: bold; margin: 1rem 0 0.15rem; white-space: nowrap; }
   .file-header:first-child { margin-top: 0; }
+  .file-uuid { font-family: monospace; color: #888; font-size: 0.82rem; margin: 0 0 0.3rem; }
   .file-error { color: #b00; font-family: sans-serif; margin: 1rem 0 0.3rem; white-space: nowrap; }
   .col-headers, .row { white-space: pre; font-size: 0.88rem; line-height: 1.5; }
   .col-headers { font-weight: bold; color: #555; }
@@ -184,6 +185,9 @@ async function renderListing() {
 
     fileCount++;
     output.appendChild(M.el('div', { className: 'file-header' }, `${name} (${doc.ciphertexts.length} ciphertext${doc.ciphertexts.length === 1 ? '' : 's'})`));
+    if (doc.cryptml_uuid) {
+      output.appendChild(M.el('div', { className: 'file-uuid' }, `(${doc.cryptml_uuid})`));
+    }
     const ciphertexts = document.getElementById('sort-ids').checked
       ? [...doc.ciphertexts].sort((a, b) => naturalCompare(a.id, b.id))
       : doc.ciphertexts;
