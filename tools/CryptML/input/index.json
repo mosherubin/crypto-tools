@@ -1,40 +1,254 @@
 {
-  "generated": "2026-07-19T19:19:08.631Z",
+  "generated": "2026-07-19T21:16:46.659Z",
   "files": [
     {
       "filename": "Cipher-Deavours-Course-Spring-1976.cryptml",
+      "uuid": "89895a81-7722-40a0-9d64-ce7b5f0d6bfa",
       "title": "Professor Cipher Deavours Spring 1976 course in Cryptography and Cryptanalysis",
       "ciphertext_count": 1
     },
     {
       "filename": "Cryptologia.cryptml",
+      "uuid": "dc9eb00e-fa6b-452b-bb22-7b7d029cdb62",
       "title": "Cryptologia - Ciphertexts",
       "ciphertext_count": 3
     },
     {
       "filename": "Gaines-Elementary_Cryptanalysis.cryptml",
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
       "title": "All ciphertexts in Helen Fouché Gaines's 'Cryptanalysis: A study of Ciphers and their Solution'",
       "ciphertext_count": 15
     },
     {
       "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml",
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
       "title": "Military Cryptanalytics, Part I, Problem Book",
       "ciphertext_count": 12
     },
     {
       "filename": "Military-Cryptanalytics-Part-I.cryptml",
+      "uuid": "fcc6c0d8-6d99-4751-b46b-6347296edbd9",
       "title": "Military Cryptanalytics, Part I",
       "ciphertext_count": 1
     },
     {
       "filename": "Military-Cryptanalytics-Part-III.cryptml",
+      "uuid": "aa435814-e482-4047-a276-8f43ebc4caba",
       "title": "Military Cryptanalytics, Part III",
       "ciphertext_count": 5
     },
     {
       "filename": "sinkov-elementary-cryptanalysis.cryptml",
+      "uuid": "64b20cd3-359c-4f15-aac7-178e92657f53",
       "title": "sinkov-elementary-cryptanalysis",
       "ciphertext_count": 4
+    }
+  ],
+  "ciphertexts": [
+    {
+      "uuid": "89895a81-7722-40a0-9d64-ce7b5f0d6bfa",
+      "id": "ASS-4-EX-2",
+      "filename": "Cipher-Deavours-Course-Spring-1976.cryptml"
+    },
+    {
+      "uuid": "dc9eb00e-fa6b-452b-bb22-7b7d029cdb62",
+      "id": "CC-1983-10",
+      "filename": "Cryptologia.cryptml"
+    },
+    {
+      "uuid": "dc9eb00e-fa6b-452b-bb22-7b7d029cdb62",
+      "id": "CC-1984-01",
+      "filename": "Cryptologia.cryptml"
+    },
+    {
+      "uuid": "dc9eb00e-fa6b-452b-bb22-7b7d029cdb62",
+      "id": "CC-1984-07",
+      "filename": "Cryptologia.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-II-FIG-2",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-II-EX-1",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-II-EX-2",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-II-EX-3",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-II-EX-4",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-II-EX-5",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-II-EX-6",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-III-EX-7",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-III-EX-8",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-III-EX-9",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-III-EX-10",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-III-EX-11",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-IV-EX-16",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-IV-EX-19",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
+      "id": "C-IV-EX-36",
+      "filename": "Gaines-Elementary_Cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-2-7",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-2-13",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-3-7",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-4-5",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-4-7",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-4-9a",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-4-9b",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-5-1",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-6-1",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-7-5",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-10-2",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
+      "id": "MC-I-6-4",
+      "filename": "Military-Cryptanalytics-Part-I-Problem-Book.cryptml"
+    },
+    {
+      "uuid": "fcc6c0d8-6d99-4751-b46b-6347296edbd9",
+      "id": "MC-I-section-41",
+      "filename": "Military-Cryptanalytics-Part-I.cryptml"
+    },
+    {
+      "uuid": "aa435814-e482-4047-a276-8f43ebc4caba",
+      "id": "MC-III-A-12",
+      "filename": "Military-Cryptanalytics-Part-III.cryptml"
+    },
+    {
+      "uuid": "aa435814-e482-4047-a276-8f43ebc4caba",
+      "id": "MC-III-B-8a",
+      "filename": "Military-Cryptanalytics-Part-III.cryptml"
+    },
+    {
+      "uuid": "aa435814-e482-4047-a276-8f43ebc4caba",
+      "id": "MC-III-B-8b",
+      "filename": "Military-Cryptanalytics-Part-III.cryptml"
+    },
+    {
+      "uuid": "aa435814-e482-4047-a276-8f43ebc4caba",
+      "id": "MC-III-C-4-1",
+      "filename": "Military-Cryptanalytics-Part-III.cryptml"
+    },
+    {
+      "uuid": "aa435814-e482-4047-a276-8f43ebc4caba",
+      "id": "MC-III-C-8",
+      "filename": "Military-Cryptanalytics-Part-III.cryptml"
+    },
+    {
+      "uuid": "64b20cd3-359c-4f15-aac7-178e92657f53",
+      "id": "Exercise-01",
+      "filename": "sinkov-elementary-cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "64b20cd3-359c-4f15-aac7-178e92657f53",
+      "id": "Exercise-02",
+      "filename": "sinkov-elementary-cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "64b20cd3-359c-4f15-aac7-178e92657f53",
+      "id": "Exercise-06-b",
+      "filename": "sinkov-elementary-cryptanalysis.cryptml"
+    },
+    {
+      "uuid": "64b20cd3-359c-4f15-aac7-178e92657f53",
+      "id": "Exercise-07",
+      "filename": "sinkov-elementary-cryptanalysis.cryptml"
     }
   ]
 }

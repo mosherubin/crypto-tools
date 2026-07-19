@@ -71,6 +71,7 @@ const CryptMLEditor = (() => {
     const defaults = resolveSettings({});
     return {
       cryptml_version: '1.0',
+      cryptml_uuid: null, // never auto-assigned -- see "Prepare for the corpus" in the editor
       title: '',
       defaults,
       sources: [],
@@ -177,6 +178,7 @@ const CryptMLEditor = (() => {
 
     return {
       cryptml_version: data.cryptml_version || '1.0',
+      cryptml_uuid: data.cryptml_uuid ?? null,
       title: data.title || '',
       defaults,
       sources: data.sources || [],
@@ -252,6 +254,7 @@ const CryptMLEditor = (() => {
       cryptml_version: doc.cryptml_version,
       ciphertexts: doc.ciphertexts.map(ct => serializeCiphertext(ct, doc.defaults)),
     };
+    if (doc.cryptml_uuid) out.cryptml_uuid = doc.cryptml_uuid;
     if (doc.title) out.title = doc.title;
     if (JSON.stringify(doc.defaults) !== JSON.stringify(DEFAULT_SETTINGS)) out.defaults = doc.defaults;
     const sources = doc.sources.map(s => trimObject(s)).filter(Boolean);
@@ -270,7 +273,8 @@ const CryptMLEditor = (() => {
   // validate(), field for field, so the two stay equivalent. Runs equally in the
   // browser and under Node (see the CommonJS export at the bottom of this file).
 
-  const DOCUMENT_FIELDS = new Set(['cryptml_version', 'title', 'defaults', 'sources', 'references', 'notes', 'chatter', 'ciphertexts']);
+  const DOCUMENT_FIELDS = new Set(['cryptml_version', 'cryptml_uuid', 'title', 'defaults', 'sources', 'references', 'notes', 'chatter', 'ciphertexts']);
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const DEFAULTS_FIELDS = new Set(['cipher_system', 'charset', 'casesensitive', 'ditschar', 'ignorechars', 'plaintext_charset']);
   const CIPHERTEXT_FIELDS = new Set([
     'id', 'raw', 'parts', 'cipher_system', 'charset', 'casesensitive', 'ditschar', 'ignorechars',
@@ -291,6 +295,10 @@ const CryptMLEditor = (() => {
 
   function isPlainObject(v) {
     return typeof v === 'object' && v !== null && !Array.isArray(v);
+  }
+
+  function isValidUuid(v) {
+    return typeof v === 'string' && UUID_RE.test(v);
   }
 
   function isSingleBracketedClass(pattern) {
@@ -367,6 +375,10 @@ const CryptMLEditor = (() => {
     if (!isPlainObject(data)) return [`document: expected an object, got ${typeof data}`];
 
     checkFields(data, DOCUMENT_FIELDS, 'document', errors);
+
+    if ('cryptml_uuid' in data && !isValidUuid(data.cryptml_uuid)) {
+      errors.push(`document.cryptml_uuid = ${JSON.stringify(data.cryptml_uuid)} is not a valid UUID`);
+    }
 
     const defaultsRaw = isPlainObject(data.defaults) ? data.defaults : {};
     checkFields(data.defaults ?? {}, DEFAULTS_FIELDS, 'defaults', errors);
@@ -610,6 +622,7 @@ const CryptMLEditor = (() => {
     parseDocument,
     serializeDocument,
     validate,
+    isValidUuid,
     SOURCE_FIELDS, HINT_FIELDS, REFERENCE_FIELDS, NOTE_FIELDS, CHATTER_FIELDS,
     ORIGIN_FIELDS, SOLUTION_FIELDS, SOLVER_FIELDS,
     el, buildFieldRow, renderObjectSection, renderRepeatable,

@@ -20,7 +20,8 @@ DEFAULT_SETTINGS = {
 
 _INHERITED_FIELDS = ("cipher_system", "charset", "casesensitive", "ditschar", "ignorechars")
 
-DOCUMENT_FIELDS = {"cryptml_version", "title", "defaults", "sources", "references", "notes", "chatter", "ciphertexts"}
+DOCUMENT_FIELDS = {"cryptml_version", "cryptml_uuid", "title", "defaults", "sources", "references", "notes", "chatter", "ciphertexts"}
+_UUID_RE = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', re.IGNORECASE)
 DEFAULTS_FIELDS = {"cipher_system", "charset", "casesensitive", "ditschar", "ignorechars", "plaintext_charset"}
 CIPHERTEXT_FIELDS = {
     "id", "raw", "parts", "cipher_system", "charset", "casesensitive", "ditschar", "ignorechars",
@@ -78,6 +79,7 @@ class CiphertextEntry:
 @dataclass
 class CryptMLDocument:
     cryptml_version: str = CRYPTML_VERSION
+    cryptml_uuid: str | None = None
     title: str = ""
     defaults: dict = field(default_factory=lambda: dict(DEFAULT_SETTINGS))
     sources: list = field(default_factory=list)
@@ -94,6 +96,10 @@ class CryptMLDocument:
 
 
 # ---------- validation ----------
+
+def _is_valid_uuid(value) -> bool:
+    return isinstance(value, str) and _UUID_RE.fullmatch(value) is not None
+
 
 def _is_single_bracketed_class(pattern: str) -> bool:
     if not (isinstance(pattern, str) and pattern.startswith('[') and pattern.endswith(']')):
@@ -187,6 +193,9 @@ def validate(data: dict) -> list:
         return [f"document: expected an object, got {type(data).__name__}"]
 
     _check_fields(data, DOCUMENT_FIELDS, "document", errors)
+
+    if 'cryptml_uuid' in data and not _is_valid_uuid(data['cryptml_uuid']):
+        errors.append(f"document.cryptml_uuid = {data['cryptml_uuid']!r} is not a valid UUID")
 
     defaults_raw = data.get('defaults', {})
     _check_fields(defaults_raw, DEFAULTS_FIELDS, "defaults", errors)
@@ -375,6 +384,7 @@ def load(path: str) -> CryptMLDocument:
 
     return CryptMLDocument(
         cryptml_version=data.get('cryptml_version', CRYPTML_VERSION),
+        cryptml_uuid=data.get('cryptml_uuid'),
         title=data.get('title', ''),
         defaults=defaults,
         sources=data.get('sources', []),
@@ -478,6 +488,8 @@ def save(document: CryptMLDocument, path: str) -> None:
         'cryptml_version': document.cryptml_version,
         'ciphertexts': [_serialize_ciphertext(ct, document.defaults) for ct in document.ciphertexts],
     }
+    if document.cryptml_uuid:
+        data['cryptml_uuid'] = document.cryptml_uuid
     if document.title:
         data['title'] = document.title
     if document.defaults != DEFAULT_SETTINGS:

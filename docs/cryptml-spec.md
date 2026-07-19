@@ -67,6 +67,12 @@ Version described here: **1.0** (draft — schema under review, not yet implemen
   alphabet* (e.g. `charset: "[א-ת]"`) works end-to-end through every tool —
   that depends on each tool's own character-handling, not on this encoding
   statement.
+- **Corpus membership is opt-in, not automatic.** A CryptML file is assumed
+  to carry nothing but ciphertext data by default. `cryptml_uuid` marks a
+  file as a member of the published corpus, and it's assigned deliberately —
+  never generated automatically on file creation — because most files
+  (working files, files produced by extract) are never meant to be part of
+  it. See [Corpus identity](#corpus-identity-cryptml_uuid).
 
 ## Node types and their legal fields
 
@@ -79,6 +85,7 @@ type is a validation error if it appears on the other.
 | Field | Required | Meaning |
 |---|---|---|
 | `cryptml_version` | no, default `"1.0"` | Format version. |
+| `cryptml_uuid` | no | Marks this file as a corpus member — see [Corpus identity](#corpus-identity-cryptml_uuid). Required only for files under `tools/CryptML/input/`, not by the schema itself. |
 | `title` | no | Name for this document/collection. |
 | `defaults` | no | Cascading scalar settings — see [Cascade rules](#cascade-rules). |
 | `sources` | no | Cascading list — see below. |
@@ -208,6 +215,50 @@ here.)
 
 Multiple occurrences in one `raw` are allowed; there's no cap.
 
+## Corpus identity (`cryptml_uuid`)
+
+`cryptml_uuid` is an optional document-level UUIDv4 string. Its presence
+marks a file as a member of the published corpus — something meant to be
+queried, searched, and merged into the CryptML database project
+(`tools/CryptML/input/` in the GitHub repo) — and it's what makes a
+ciphertext globally addressable from outside the file it lives in: an
+external consumer refers to a specific ciphertext as the pair
+`(cryptml_uuid, id)`.
+
+Most CryptML files never need one. A file is assumed to carry nothing but
+ciphertext data by default. Files produced by the extract tool never carry
+a `cryptml_uuid`, even if their source file had one — an extracted file is
+a working copy of ciphertext content, not a corpus member, and is never a
+candidate for inclusion. No CryptML-aware tool auto-generates
+`cryptml_uuid` on file creation; it's assigned only by an explicit action,
+taken when an author decides a file is actually meant to be submitted as a
+pull request into the corpus.
+
+`cryptml_uuid` is generated once and never regenerated. That's what lets a
+file be renamed or moved later without losing its identity: identity lives
+inside the file's own content, not in its filename or location. The
+published manifest (`tools/CryptML/input/index.json`) is a derived index
+built by reading every corpus file's own `cryptml_uuid` — it is never the
+source of truth, and it never assigns one itself.
+
+When ciphertexts from one file are folded into another via the merge tool,
+they adopt the target file's existing `cryptml_uuid`. A ciphertext's global
+identity is scoped to whichever corpus file currently contains it, not to
+the ciphertext itself — moving a ciphertext between files changes its
+`(cryptml_uuid, id)` address.
+
+Two validation tiers apply:
+
+- **Format** — enforced everywhere, by the same `validate()` the Editor,
+  Validator, List, and Search tools all share: if `cryptml_uuid` is
+  present, it must be a syntactically valid UUID. Its absence is not an
+  error; it just means the file isn't a corpus member.
+- **Corpus membership** — enforced only by the tooling that manages
+  `tools/CryptML/input/` (`generate-manifest.js`, the local pre-commit
+  hook, the GitHub Action), not by the general schema validator: every file
+  in that directory must have a `cryptml_uuid`, and no two corpus files may
+  share one.
+
 ## Validation rules
 
 - **`[...]` inside `raw`** is the reserved gap marker (see
@@ -243,6 +294,10 @@ Multiple occurrences in one `raw` are allowed; there's no cap.
   field (`cryptml_version`, `title`, `defaults`, `ciphertexts`) found on a
   ciphertext is an error.
 - **Duplicate `id` anywhere in `ciphertexts` is an error.**
+- **`cryptml_uuid`, if present, must be a syntactically valid UUID.**
+  Requiring it (and rejecting duplicates across files) is a separate,
+  stricter rule that applies only to corpus files — see
+  [Corpus identity](#corpus-identity-cryptml_uuid).
 - **`source.type`** must be one of the enumerated values (see below) — not
   an arbitrary string.
 - **`ditschar`** must be exactly one character.

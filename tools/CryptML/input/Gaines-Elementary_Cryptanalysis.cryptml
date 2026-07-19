@@ -1,5 +1,6 @@
 {
   "cryptml_version": "1.0",
+  "cryptml_uuid": "4ce98cd4-b4ec-4761-b29f-c32958cd8e1f",
   "title": "All ciphertexts in Helen Fouché Gaines's 'Cryptanalysis: A study of Ciphers and their Solution'",
   "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
   "sources": [

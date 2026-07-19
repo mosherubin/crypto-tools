@@ -1,5 +1,6 @@
 {
   "cryptml_version": "1.0",
+  "cryptml_uuid": "aa435814-e482-4047-a276-8f43ebc4caba",
   "title": "Military Cryptanalytics, Part III",
   "defaults": { "charset": "[A-Z0-9]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
   "sources": [

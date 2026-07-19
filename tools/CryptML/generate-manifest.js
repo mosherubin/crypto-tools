@@ -13,7 +13,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { validate } = require('../../docs/js/cryptml-editor.js');
+const { validate, isValidUuid } = require('../../docs/js/cryptml-editor.js');
 
 const INPUT_DIR = path.join(__dirname, 'input');
 const MANIFEST_PATH = path.join(INPUT_DIR, 'index.json');
@@ -24,7 +24,9 @@ function main() {
     .filter(f => f.endsWith('.cryptml') && !EXCLUDED.has(f))
     .sort();
 
-  const entries = [];
+  const fileEntries = [];
+  const ciphertextEntries = [];
+  const uuidOwner = new Map(); // uuid -> filename that first claimed it
   const errors = [];
 
   for (const filename of files) {
@@ -41,11 +43,32 @@ function main() {
       for (const err of fileErrors) errors.push(`${filename}: ${err}`);
       continue;
     }
-    entries.push({
+
+    // Schema validation treats cryptml_uuid as optional; membership in this
+    // directory requires it -- see "Corpus identity" in docs/cryptml-spec.md.
+    if (!isValidUuid(data.cryptml_uuid)) {
+      errors.push(`${filename}: missing or invalid cryptml_uuid -- every file under tools/CryptML/input/ must have one (assign it via the Editor's "Prepare for the corpus" action)`);
+      continue;
+    }
+    const uuid = data.cryptml_uuid;
+    if (uuidOwner.has(uuid)) {
+      errors.push(`${filename}: cryptml_uuid ${uuid} is already used by ${uuidOwner.get(uuid)}`);
+      continue;
+    }
+    uuidOwner.set(uuid, filename);
+
+    fileEntries.push({
       filename,
+      uuid,
       title: data.title || '',
       ciphertext_count: data.ciphertexts.length,
     });
+    // A lone ciphertext may omit 'id' and default to "1" -- resolve that
+    // here too, so the catalog never has an entry with no id.
+    for (const ct of data.ciphertexts) {
+      const id = ct.id ?? '1';
+      ciphertextEntries.push({ uuid, id, filename });
+    }
   }
 
   if (errors.length) {
@@ -54,9 +77,9 @@ function main() {
     process.exit(1);
   }
 
-  const manifest = { generated: new Date().toISOString(), files: entries };
+  const manifest = { generated: new Date().toISOString(), files: fileEntries, ciphertexts: ciphertextEntries };
   fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + '\n', 'utf-8');
-  console.log(`Wrote ${MANIFEST_PATH} (${entries.length} file(s)).`);
+  console.log(`Wrote ${MANIFEST_PATH} (${fileEntries.length} file(s), ${ciphertextEntries.length} ciphertext(s)).`);
 }
 
 main();

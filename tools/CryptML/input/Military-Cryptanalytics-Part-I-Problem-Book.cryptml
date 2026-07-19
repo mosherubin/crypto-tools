@@ -1,5 +1,6 @@
 {
   "cryptml_version": "1.0",
+  "cryptml_uuid": "e3ae0b71-a845-492e-931a-dd587b42ee3b",
   "title": "Military Cryptanalytics, Part I, Problem Book",
   "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
   "sources": [
