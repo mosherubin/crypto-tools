@@ -185,17 +185,25 @@ async function renderListing() {
 
   let fileCount = 0, ciphertextCount = 0, rowCount = 0;
 
-  for (const { name, file } of matching.sort((a, b) => a.name.localeCompare(b.name))) {
-    let text;
-    try {
-      text = await file.text();
-    } catch (e) {
+  // Kick every file's read off at once -- with many files (e.g. the whole published
+  // corpus), reading them one at a time here would mean one request completes before
+  // the next even starts, turning N requests into N sequential round-trips instead of
+  // one concurrent batch.
+  const sortedFiles = matching.sort((a, b) => a.name.localeCompare(b.name));
+  const textResults = await Promise.allSettled(sortedFiles.map(({ file }) => file.text()));
+
+  for (let i = 0; i < sortedFiles.length; i++) {
+    const { name } = sortedFiles[i];
+    const textResult = textResults[i];
+    if (textResult.status === 'rejected') {
+      const e = textResult.reason;
       const hint = e.name === 'NotReadableError'
         ? 'this file changed on disk since it was selected (e.g. edited and saved elsewhere) -- click "Choose folder…"/"Choose files…" again to refresh'
         : `could not be read -- ${e.message}`;
       output.appendChild(M.el('div', { className: 'file-error' }, `⚠ ${name}: ${hint}`));
       continue;
     }
+    const text = textResult.value;
     let data;
     try {
       data = JSON.parse(text);
