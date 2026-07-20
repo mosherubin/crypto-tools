@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-20T07:02:38.675Z",
+  "generated": "2026-07-20T13:21:34.195Z",
   "files": [
     {
       "filename": "Cipher-Deavours-Course-Spring-1976.cryptml",
@@ -36,12 +36,6 @@
       "uuid": "aa435814-e482-4047-a276-8f43ebc4caba",
       "title": "Military Cryptanalytics, Part III",
       "ciphertext_count": 5
-    },
-    {
-      "filename": "network-verify-test.cryptml",
-      "uuid": "250cb812-c28a-415c-9d10-a6e7b52cfa17",
-      "title": "Temporary network-verification marker -- safe to delete",
-      "ciphertext_count": 1
     },
     {
       "filename": "sinkov-elementary-cryptanalysis.cryptml",
@@ -235,11 +229,6 @@
       "uuid": "aa435814-e482-4047-a276-8f43ebc4caba",
       "id": "MC-III-C-8",
       "filename": "Military-Cryptanalytics-Part-III.cryptml"
-    },
-    {
-      "uuid": "250cb812-c28a-415c-9d10-a6e7b52cfa17",
-      "id": "CDN-VERIFY-TEST",
-      "filename": "network-verify-test.cryptml"
     },
     {
       "uuid": "64b20cd3-359c-4f15-aac7-178e92657f53",
