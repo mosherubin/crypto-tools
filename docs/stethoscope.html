@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.20)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.21)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -816,7 +816,7 @@ function runSuite(ct, displayCt, maxRepeats, deltaConfig, includeIsomorphs, rawT
             var text   = ct.letters;
             var groups = [];
             for (var gi = 0; gi < text.length; gi += groupSize) groups.push(text.slice(gi, gi + groupSize));
-            var groupsPerRow = Math.floor(lineLen / (groupSize + 1)) || 1;
+            var groupsPerRow = Math.floor((lineLen + 1) / (groupSize + 1)) || 1;
             var rows = [];
             for (var ri = 0; ri < groups.length; ri += groupsPerRow) rows.push(groups.slice(ri, ri + groupsPerRow).join(' '));
             for (var rj = 0; rj < rows.length; rj++) parts.push(rows[rj]);
@@ -875,7 +875,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.20)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.21)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
