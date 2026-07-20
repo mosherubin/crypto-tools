@@ -1,23 +1,54 @@
 {
   "cryptml_version": "1.0",
   "cryptml_uuid": "fcc6c0d8-6d99-4751-b46b-6347296edbd9",
-  "title": "Military Cryptanalytics, Part I",
-  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
-  "sources": [
-    { "type": "book", "title": "MC-I", "author": "Friedman and Callimahos" }
-  ],
-  "notes": [
-    {
-        "title": "Location",
-        "text": "https://www.nsa.gov/Portals/70/documents/news-features/declassified-documents/friedman-documents/publications/FOLDER_245/41748799078803.pdf"
-    }
-  ],
   "ciphertexts": [
     {
       "id": "MC-I-section-41",
-      "raw": "SFDZF IOGHL PZFGZ DYSPF HBZDS GVHTF UPLVD FGYVJ VFVHT GADZZ AITYD ZYFZJ ZTGPT VTZBD VFHTZ DFXSB GIDZY VTXOI YVTEF VMGZZ THLLV XZDFM HTZAI TYDZY BDVFH TZDFK ZDZZJ SXISG ZYGAV FSLGZ DTHHT CDZRS VTYZD OZFFH TZAIT YDZYG AVDGZ ZTKHI TYZYS DZGHU ZFZTG UPGDI XWGHX ASRUZ DFUID EGHTV EAGXX",
       "cipher_system": "monoalphabetic, mixed-alphabet cryptogram",
-      "notes": [ { "title": "byline", "text": "The student is now ready to resume his cryptanalytic s~udies. Note the following cryptogram:" } ]
+      "raw": "SFDZF IOGHL PZFGZ DYSPF HBZDS GVHTF UPLVD FGYVJ VFVHT GADZZ AITYD ZYFZJ ZTGPT VTZBD VFHTZ DFXSB GIDZY VTXOI YVTEF VMGZZ THLLV XZDFM HTZAI TYDZY BDVFH TZDFK ZDZZJ SXISG ZYGAV FSLGZ DTHHT CDZRS VTYZD OZFFH TZAIT YDZYG AVDGZ ZTKHI TYZYS DZGHU ZFZTG UPGDI XWGHX ASRUZ DFUID EGHTV EAGXX",
+      "notes": [
+        {
+          "title": "byline",
+          "text": "The student is now ready to resume his cryptanalytic studies. Note the following cryptogram:"
+        }
+      ]
+    },
+    {
+      "id": "MC-I-section-71e",
+      "cipher_system": "Playfair",
+      "raw": "VTQEU HIOFT CHXSC AKTVT RAZEV TAGAE OXTYM HCRLZ ZTQTD UMCYC XCTGM TYCZU SNOPD GXVXS CAKTV TPKPU TZPTW ZFNBG PTRKX IXBPR ZOEPU TOLZE KTTCS NHCQM VTRKM WCFZU BHTVY ABGIP RZKPC QFNLV OXOTU ZFACX XCPZX HCYNO TYOLG XXIIH TMSMX CPTOT CXOTT CYATE XHFAC XXCPZ XHYCT XWLZT SGPZT VYWCE TWGCC MBHMQ YXZPW GRTIV UXPUM QRKMW CXTMR SWGHB XCPTO TCXOT MIPYB NFGKI TCOLX UETPX XFSRS UZTDB HOZIG XRKIX ZPPVZ IDUHQ OTKTK CCHXX",
+      "solution": {
+        "plaintext": "ENEMYOUTPOSTHASBEXENDRIVENBACKTOHISMAINLINEOFRESISTANCEHISRIGHTFLANKHASBEXENDEFINITELYLOCATEDATROADIUNCTIONFIVEXEIGHTSEVENDASHBPRISONERSCAPTUREDBELONGTOTHIRDBATTALIONSIXTHINFANTRYTHEYSTATETHATTHEIRSECONDBATTALIONISHOLDINGALINEWHICHPASSESOVERHILLSIXZEROFIVEDASHATHEYALSOSTATETHATTHEYWIGOLBEREINFORCEDTODAYBYINFANTRYANDARTILLERYFROMTHEXEASTOKOK",
+        "key": "5X5 square, rows are: YIURZ/SCBAG/MEQKV/HTOXN/WPFDL"
+      },
+      "notes": [
+        {
+          "title": "byline",
+          "text": "The steps in the solution of a typical example of this cipher will now be illustrated"
+        },
+        {
+          "title": "display",
+          "text": "In MC-I, the text displays the text as digraphs, 15 across.  To print like the text in Stethoscope, use a line width of 44"
+        },
+        {
+          "title": "analysis",
+          "text": "For a full analysis, see Military Cryptanalytics I, section 71e"
+        }
+      ]
+    }
+  ],
+  "title": "Military Cryptanalytics, Part I",
+  "sources": [
+    {
+      "type": "book",
+      "title": "MC-I",
+      "author": "Friedman and Callimahos"
+    }
+  ],
+  "notes": [
+    {
+      "title": "Location",
+      "text": "https://www.nsa.gov/Portals/70/documents/news-features/declassified-documents/friedman-documents/publications/FOLDER_245/41748799078803.pdf"
     }
   ]
 }
