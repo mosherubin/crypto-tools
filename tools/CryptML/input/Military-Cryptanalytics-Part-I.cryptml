@@ -35,6 +35,55 @@
           "text": "For a full analysis, see Military Cryptanalytics I, section 71e"
         }
       ]
+    },
+    {
+      "id": "MC-I-section-60",
+      "cipher_system": "Multiliteral Substitution with Variants",
+      "raw": "QMDCV PLFNF DHNWJ WLKDK NHBPV RLTVM\nBKLWD WVHVK SHBCL PQKJR VWSML KGCNR\nLRNKV MGFXW JRGMV WGTJH QKXFN ZVFDM\nLTBPL PVFLM DCNWN HBCVZ NMLWQ FDHDW\nVZBRV KLCVC VRDHL RVTLF NCDKG MXWXM\nDTSCB CLZLR LMVTS ZNKBW VPBRN CLRXR\nDCNKV PBTNT GHJZL FQFVK BWDZX PNHSP\nGHLKL FVZLT VMLKD PQRNZ LZDTB MNTGM\nNZVFX KSFDC LZVTV FDFVR GCLPQ PNCDW\nVRJTN HLZLM VWNPV PDZDW JPNWL RJKVM\nXMDTS MGFDR DKLWJ FLPJM SFQWB FNCBZ\nDKVWG ZSHBH DHJCX",
+      "origin": {
+        "remarks": "Military Cryptanalytics, Part I, Section 60, in chapter on multiliteral substitution with variants"
+      },
+      "solution": {
+        "plaintext": "WEATHER FORECAST...",
+        "key": "ATMOSPHERIC (see Notes for biliteral square)"
+      },
+      "notes": [
+        {
+          "title": "square",
+          "text": "   PFCKT\\n   RMHWZ\\n   -----\\nLV|ATMOS\\nDN|PHERI\\nBJ|CBDFG\\nGS|KLNQU\\nQX|VWXYZ"
+        }
+      ]
+    },
+    {
+      "id": "MC-I-section-69c",
+      "cipher_system": "Four-square matrix systems",
+      "raw": "HFCAP GOQIL BSPKM NDUKE OHQNF BORUN\nQCLCH QBQBF HMAFX SIOKO QYFNS XMCGY\nXIFBE XAFDX LPMXH HRGKG QKQML FEQQI\nGOIHM UEORD CLTUF EQQCG QNHFX IFBEX\nFLBUQ FCHQO QMAFT XSYCB EPFNB SPKNU\nQITXE UQMLF EQQIG OIEUE HPIAN YTFLB\nFEEPI DHPCG NQIHB FHMHF XCKUP DGQPN\nCBCQL QPNFN PNITO RTENC CBCNT FHHAY\nZLQCI AAIQU CHTPC BIFGW KFCQS LQMCB\nOYCRQ QDPRX FNQML FIDGC CGIOG OIHHF\nIRCGG GNDLN OZTFG EERRP IFHOT FHHAY\nZLQCI AAIQU CHTP\n",
+      "solution": {
+        "plaintext": "ONE HUNDRED FIRST FIELD ARTILLERY FROM POSITIONS IN VICINITY OF BARLOW WILL BE IN GENERAL SUPPORT STOP DURING ATTACK SPECIAL ATTENTION WILL BE PAID TO ASSISTING ADVANCE OF FIRST BRIGADE STOP DURING ADVANCE IT WILL PLACE CONCENTRATIONS ON WOODS NORTH AND SOUTH OF THAYER FARM AND HILL SIX ZERO EIGHT DASH A AND ON WOODS EAST AND WEST THEREOF STOP COMMENCING AT ONE TEN PM SMOKE WILL BE USED ON HILL SIX ZERO EIGHT DASH A",
+        "key": "Here are the four squares, stack the following ten lines one on top of the other to see the squares in place: \"ABCDE SOCIE\" \"FGHIK TYABD\" \"LMNOP FGHKL\" \"QRSTU MNPQR\" \"VWXYZ UVWXZ\" \"EXPUL ABCDE\" \"SIONA FGHIK\" \"BCDFG LMNOP\" \"HKMQR QRSTU\" \"TVWYZ VWXYZ\""
+      },
+      "notes": [
+        {
+          "title": "context",
+          "text": "In a true digraphic system, such as a system making use of a 676-cell randomized table, relationships of the foregoing type are entirely absent, and for this reason such a system is cryptographically more secure than small-matrix systems.\n\nb. From the foregoing it is clear that when solution has progressed sufficiently to disclose a few values, the insertion of letters within the cells of the matrix to give the plaintext-ciphertext relationships indicated by the solved values immediately leads to the disclosure of additional values. Thus, the solution of only a few values soon leads to the breakdown of the entire matrix.\n\nc. The following example will serve to illustrate the procedure.\n\n(1) Let the message be as follows:"
+        }
+      ]
+    },
+    {
+      "id": "MC-I-section-69e",
+      "cipher_system": "Trinome-digraphic 98 system incorporating a four-square matrix",
+      "charset": "[0-9]",
+      "raw": "20323 85081 83450 27934 11503 09168\n27835 41804 50413 27416 33091 01092\n20805 74135 35473 32626 91160 03218\n46818 33930 91393 41104 41331 17296\n24302 83832 28359 38022 61043 69130\n15313 61041 00144 10101 82403 36168\n46536 62663 44007 18345 01402 88152\n47821 73933 81193 47924 04032 41306\n08703 70914 19391 11607 71371 53595\n00741 33381 33593 39340 63531 88133",
+      "solution": {
+        "plaintext": "ENEMY RECONNAISSANCE ...",
+        "key": "BRAHMS and WAGNER"
+      },
+      "notes": [
+        {
+          "title": "footnote-23",
+          "text": "If the cipher text were being examined \"from cryptanalytic scratch\", the limitations (003-595) of the cipher text when the latter is divided into trinomes for examination would have at once indicated that this grouping is the one which merits detailed analysis. The digraphic phi test would then give an indication of the digraphic nature of ihe cryptographic treatment."
+        }
+      ]
     }
   ],
   "title": "Military Cryptanalytics, Part I",

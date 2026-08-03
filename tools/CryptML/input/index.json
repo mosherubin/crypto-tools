@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-20T19:24:38.208Z",
+  "generated": "2026-08-03T06:59:38.578Z",
   "files": [
     {
       "filename": "Cipher-Deavours-Course-Spring-1976.cryptml",
@@ -29,7 +29,7 @@
       "filename": "Military-Cryptanalytics-Part-I.cryptml",
       "uuid": "fcc6c0d8-6d99-4751-b46b-6347296edbd9",
       "title": "Military Cryptanalytics, Part I",
-      "ciphertext_count": 2
+      "ciphertext_count": 5
     },
     {
       "filename": "Military-Cryptanalytics-Part-III.cryptml",
@@ -208,6 +208,21 @@
     {
       "uuid": "fcc6c0d8-6d99-4751-b46b-6347296edbd9",
       "id": "MC-I-section-71e",
+      "filename": "Military-Cryptanalytics-Part-I.cryptml"
+    },
+    {
+      "uuid": "fcc6c0d8-6d99-4751-b46b-6347296edbd9",
+      "id": "MC-I-section-60",
+      "filename": "Military-Cryptanalytics-Part-I.cryptml"
+    },
+    {
+      "uuid": "fcc6c0d8-6d99-4751-b46b-6347296edbd9",
+      "id": "MC-I-section-69c",
+      "filename": "Military-Cryptanalytics-Part-I.cryptml"
+    },
+    {
+      "uuid": "fcc6c0d8-6d99-4751-b46b-6347296edbd9",
+      "id": "MC-I-section-69e",
       "filename": "Military-Cryptanalytics-Part-I.cryptml"
     },
     {
