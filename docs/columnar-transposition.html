@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Columnar Transposition Table</title>
+<style>
+  body { font-family: monospace; max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: sans-serif; }
+  p, label { font-family: sans-serif; }
+  a { font-family: sans-serif; }
+  .field { margin-top: 1rem; }
+  .field label { display: block; margin-bottom: 0.3rem; }
+  input[type="text"] { font-family: monospace; font-size: 1rem; padding: 0.3rem; width: 100%; box-sizing: border-box; }
+  .radios { display: flex; gap: 1.5rem; }
+  .radios label { display: flex; align-items: center; gap: 0.4rem; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: sans-serif; cursor: pointer; }
+  #status { font-family: sans-serif; color: #b00; margin-top: 1rem; }
+  #grid-output {
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    /* A real table aligns columns by the browser's layout engine, not by character
+       width -- unlike a monospace <pre>, this can't be thrown off by a font whose
+       Hebrew/Arabic glyphs happen to render at a different width than its Latin ones. */
+    direction: ltr;
+    unicode-bidi: bidi-override;
+  }
+  #grid-output th, #grid-output td {
+    border: 1px solid #ccc;
+    padding: 0.2rem 0.6rem;
+    text-align: center;
+    font-family: monospace;
+    font-size: 1rem;
+  }
+  #grid-output th { background: #f4f4f4; border-bottom: 2px solid #999; }
+  #plaintext-output {
+    background: #f4f4f4;
+    padding: 1rem;
+    margin-top: 1rem;
+    overflow-x: auto;
+    white-space: pre;
+    border: 1px solid #ccc;
+    font-family: monospace;
+    font-size: 1rem;
+    /* Deliberately NOT bidi-overridden, unlike the grid: this text is meant to be
+       read as natural running text, so Hebrew/Arabic must flow right-to-left here. */
+  }
+  #grid-output td[data-pos] { cursor: default; }
+  .tooltip {
+    position: fixed;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    font-family: sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+  }
+  .tooltip[hidden] { display: none; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">&larr; back to tools</a></p>
+  <h1>Columnar Transposition Table</h1>
+  <p>Writes a ciphertext into a columnar transposition table under a given write-in key, for both
+     left-to-right (English, etc.) and right-to-left (Hebrew, Arabic, etc.) languages. Prints the
+     completed table, then the row-by-row read-out as &le;50-character lines for visual confirmation.</p>
+
+  <div class="field">
+    <label for="file-input">Ciphertext file</label>
+    <input type="file" id="file-input">
+    <p style="font-size: 0.85rem; color: #555; margin: 0.3rem 0 0;">Lines starting with '#' are treated as comments and ignored. Everything else is
+       concatenated with whitespace stripped.</p>
+  </div>
+
+  <div class="field">
+    <label>Language direction</label>
+    <div class="radios">
+      <label><input type="radio" name="direction" value="LTR" checked> Left-to-right</label>
+      <label><input type="radio" name="direction" value="RTL"> Right-to-left</label>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="key-input">Write-in column key (space, comma, or dash separated)</label>
+    <input type="text" id="key-input" placeholder="e.g. 5-2-4-1-3">
+  </div>
+
+  <button id="run">Build Table</button>
+
+  <div id="status"></div>
+  <table id="grid-output"></table>
+  <pre id="plaintext-output"></pre>
+  <div id="tooltip" class="tooltip" hidden></div>
+
+<script>
+function parseCiphertextFile(text) {
+  const kept = text.split(/\r?\n/).filter(line => !line.trimStart().startsWith('#'));
+  // Uppercasing is a no-op for scripts without case (Hebrew, Arabic) and matches
+  // the conventional display style for Latin-script ciphertext.
+  return kept.join('').replace(/\s+/g, '').toUpperCase();
+}
+
+function parseKey(keyText) {
+  const tokens = keyText.trim().split(/[\s,-]+/).filter(Boolean);
+  const key = tokens.map(Number);
+  if (key.some(n => !Number.isInteger(n))) {
+    throw new Error(`key contains a non-integer token: ${JSON.stringify(keyText)}`);
+  }
+  const w = key.length;
+  const seen = new Set(key);
+  const isPermutation = seen.size === w && key.every(n => n >= 1 && n <= w);
+  if (!isPermutation) {
+    throw new Error(`key must be a permutation of 1..${w} with no repeats or gaps; got [${key.join(', ')}]`);
+  }
+  return key;
+}
+
+// Builds the completed table in one pass: for each column (by natural, printed
+// position) we already know whether it's long or short from its position alone,
+// so we can walk the fill order by rank and hand each column exactly the
+// characters it needs, straight out of the ciphertext.
+function buildTable(ciphertext, key, direction) {
+  const w = key.length;
+  const n = ciphertext.length;
+  const shortRows = Math.floor(n / w);
+  const numLong = n % w;
+  const longRows = shortRows + (numLong === 0 ? 0 : 1);
+
+  const isLong = new Array(w + 1).fill(false); // 1-indexed by physical position
+  if (direction === 'LTR') {
+    for (let p = 1; p <= numLong; p++) isLong[p] = true;
+  } else {
+    for (let p = w - numLong + 1; p <= w; p++) isLong[p] = true;
+  }
+
+  const positionForRank = new Array(w + 1); // 1-indexed by rank
+  for (let p = 1; p <= w; p++) positionForRank[key[p - 1]] = p;
+
+  // Each cell keeps its 1-indexed position in the cleaned ciphertext (not just its
+  // character), so the grid can later be hovered to show where a letter came from.
+  const grid = Array.from({ length: longRows }, () => new Array(w + 1).fill(null));
+  let idx = 0;
+  for (let rank = 1; rank <= w; rank++) {
+    const p = positionForRank[rank];
+    const rows = isLong[p] ? longRows : shortRows;
+    for (let r = 0; r < rows; r++) {
+      grid[r][p] = { ch: ciphertext[idx], pos: idx + 1 };
+      idx++;
+    }
+  }
+
+  return { grid, w, longRows, key };
+}
+
+const TOOLTIP_DELAY_MS = 1000;
+const GROUP_SIZE = 5;
+let tooltipTimer = null;
+
+function groupNumber(pos) {
+  return Math.ceil(pos / GROUP_SIZE);
+}
+
+function showTooltip(cell, pos) {
+  const tooltip = document.getElementById('tooltip');
+  tooltip.innerHTML = '';
+  tooltip.appendChild(document.createElement('div')).textContent = `Position: ${pos}`;
+  tooltip.appendChild(document.createElement('div')).textContent = `Group: ${groupNumber(pos)}`;
+
+  const rect = cell.getBoundingClientRect();
+  tooltip.style.left = `${rect.left + rect.width / 2}px`;
+  tooltip.style.top = `${rect.bottom + 6}px`;
+  tooltip.hidden = false;
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').hidden = true;
+}
+
+function attachTooltip(td, pos) {
+  td.addEventListener('mouseenter', () => {
+    tooltipTimer = setTimeout(() => showTooltip(td, pos), TOOLTIP_DELAY_MS);
+  });
+  td.addEventListener('mouseleave', () => {
+    clearTimeout(tooltipTimer);
+    hideTooltip();
+  });
+}
+
+function renderGridTable(tableEl, { grid, w, longRows, key }) {
+  tableEl.innerHTML = '';
+  const headerRow = document.createElement('tr');
+  for (const k of key) {
+    const th = document.createElement('th');
+    th.textContent = k;
+    headerRow.appendChild(th);
+  }
+  tableEl.appendChild(headerRow);
+  for (let r = 0; r < longRows; r++) {
+    const row = document.createElement('tr');
+    for (let p = 1; p <= w; p++) {
+      const td = document.createElement('td');
+      const cell = grid[r][p];
+      if (cell === null) {
+        td.textContent = '-';
+      } else {
+        td.textContent = cell.ch;
+        td.dataset.pos = cell.pos;
+        attachTooltip(td, cell.pos);
+      }
+      row.appendChild(td);
+    }
+    tableEl.appendChild(row);
+  }
+}
+
+function readOut({ grid, w, longRows }, direction) {
+  let text = '';
+  const order = direction === 'LTR'
+    ? Array.from({ length: w }, (_, i) => i + 1)
+    : Array.from({ length: w }, (_, i) => w - i);
+  for (let r = 0; r < longRows; r++) {
+    for (const p of order) {
+      const cell = grid[r][p];
+      if (cell !== null) text += cell.ch;
+    }
+  }
+  return text;
+}
+
+function wrapLines(text, maxLen) {
+  const lines = [];
+  for (let i = 0; i < text.length; i += maxLen) lines.push(text.slice(i, i + maxLen));
+  return lines;
+}
+
+function run() {
+  const status = document.getElementById('status');
+  const gridTable = document.getElementById('grid-output');
+  const plaintextOutput = document.getElementById('plaintext-output');
+  const fileInput = document.getElementById('file-input');
+  const keyText = document.getElementById('key-input').value;
+  const direction = document.querySelector('input[name="direction"]:checked').value;
+
+  status.textContent = '';
+  gridTable.innerHTML = '';
+  plaintextOutput.textContent = '';
+
+  const file = fileInput.files[0];
+  if (!file) { status.textContent = 'ERROR: choose a ciphertext file first.'; return; }
+
+  file.text().then(rawText => {
+    let key;
+    try {
+      key = parseKey(keyText);
+    } catch (e) {
+      status.textContent = `ERROR: ${e.message}`;
+      return;
+    }
+
+    const ciphertext = parseCiphertextFile(rawText);
+    if (!ciphertext) { status.textContent = 'ERROR: no ciphertext content found (file is empty or all comments).'; return; }
+
+    const table = buildTable(ciphertext, key, direction);
+    renderGridTable(gridTable, table);
+
+    const plaintext = readOut(table, direction);
+    // Unlike the grid, this text is meant to be read naturally -- Hebrew/Arabic
+    // must flow right-to-left here, so no bidi override, just the base direction.
+    plaintextOutput.style.direction = direction === 'RTL' ? 'rtl' : 'ltr';
+    plaintextOutput.textContent = wrapLines(plaintext, 50).join('\n');
+  }).catch(e => {
+    status.textContent = `ERROR: could not read file -- ${e.message}`;
+  });
+}
+
+document.getElementById('run').addEventListener('click', run);
+</script>
+<script data-goatcounter="https://mosherubin.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

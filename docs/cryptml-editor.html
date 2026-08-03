@@ -481,7 +481,7 @@ document.getElementById('btn-save').addEventListener('click', async () => {
       fileHandle = await window.showSaveFilePicker(pickerOptions({ suggestedName: 'ciphertext.cryptml' }));
     }
     await writeToHandle(fileHandle);
-    setStatus(`Saved ${fileHandle.name}`);
+    setStatus(`Saved ${fileHandle.name} at ${new Date().toLocaleString()}`);
   } catch (e) {
     if (e.name !== 'AbortError') setStatus(`Save failed: ${e.message}`, true);
   }
@@ -494,7 +494,7 @@ document.getElementById('btn-save-as').addEventListener('click', async () => {
     );
     await writeToHandle(handle);
     fileHandle = handle;
-    setStatus(`Saved ${handle.name}`);
+    setStatus(`Saved ${handle.name} at ${new Date().toLocaleString()}`);
   } catch (e) {
     if (e.name !== 'AbortError') setStatus(`Save failed: ${e.message}`, true);
   }

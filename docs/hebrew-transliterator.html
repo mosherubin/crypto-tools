@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hebrew to Latin Transliterator</title>
+<style>
+  body { font-family: monospace; max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+  h1, h2 { font-family: sans-serif; }
+  p, label { font-family: sans-serif; }
+  a { font-family: sans-serif; }
+  .field { margin-top: 1rem; }
+  .field label { display: block; margin-bottom: 0.3rem; }
+  textarea { font-family: monospace; font-size: 1rem; padding: 0.5rem; width: 100%; box-sizing: border-box; }
+  #input { height: 6rem; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: sans-serif; cursor: pointer; }
+  #output {
+    background: #f4f4f4;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    min-height: 4rem;
+    overflow-y: auto;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    border: 1px solid #ccc;
+  }
+  table { border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
+  th, td { border: 1px solid #ccc; padding: 0.2rem 0.6rem; text-align: center; }
+  th { font-family: sans-serif; background: #f4f4f4; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">&larr; back to tools</a></p>
+  <h1>Hebrew to Latin Transliterator</h1>
+  <p>STETHOSCOPE and Isomorph Search only recognize printable ASCII, so a Hebrew ciphertext stored in a
+     <code>.cryptml</code> file (e.g. <code>charset: "[א-ת]"</code>) can't be run through them directly.
+     This maps each Hebrew letter to a fixed Latin stand-in so the same ciphertext can be analyzed there.
+     This is <strong>not</strong> a linguistic transliteration -- the mapping is an arbitrary
+     one-to-one substitution, chosen only to give each letter a distinct A-Z stand-in.</p>
+
+  <h2>Mapping</h2>
+  <table id="mapping-table"></table>
+  <p>Hebrew terminal (sofit) forms are normalized to their base letter before mapping (e.g.
+     <span lang="he">ך</span> is treated as <span lang="he">כ</span>):</p>
+  <table id="terminal-table"></table>
+  <p>Any other character besides a plain space will be reported as an error.</p>
+
+  <div class="field">
+    <label for="input">Hebrew text</label>
+    <textarea id="input" placeholder="Paste Hebrew ciphertext here"></textarea>
+  </div>
+
+  <button id="run">Transliterate</button>
+
+  <pre id="output"></pre>
+
+<script>
+const MAPPING = {
+  'א': 'A', 'ב': 'B', 'ג': 'G', 'ד': 'D', 'ה': 'O',
+  'ו': 'E', 'ז': 'Z', 'ח': 'H', 'ט': 'U', 'י': 'I',
+  'כ': 'K', 'ל': 'L', 'מ': 'M', 'נ': 'N', 'ס': 'C',
+  'ע': 'J', 'פ': 'P', 'צ': 'W', 'ק': 'Q', 'ר': 'R',
+  'ש': 'S', 'ת': 'T',
+};
+
+const TERMINAL_TO_BASE = {
+  'ך': 'כ',
+  'ם': 'מ',
+  'ן': 'נ',
+  'ף': 'פ',
+  'ץ': 'צ',
+};
+
+function transliterate(text) {
+  const output = [];
+  const errors = [];
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === ' ') { output.push(' '); continue; }
+    const base = TERMINAL_TO_BASE[ch] || ch;
+    if (base in MAPPING) { output.push(MAPPING[base]); continue; }
+    errors.push(`position ${i + 1}: '${ch}' -- not a recognized Hebrew letter or a space`);
+  }
+  return { output: output.join(''), errors };
+}
+
+function runTransliterate(text) {
+  if (!text) return 'ERROR: no input text.';
+  const { output, errors } = transliterate(text);
+  if (errors.length) {
+    const lines = [`${errors.length} error(s) found -- no output produced:`, ''];
+    for (const e of errors) lines.push('  ' + e);
+    return lines.join('\n');
+  }
+  return output;
+}
+
+function renderMappingTable() {
+  const table = document.getElementById('mapping-table');
+  const entries = Object.entries(MAPPING);
+  const header = document.createElement('tr');
+  header.appendChild(document.createElement('th')).textContent = 'Hebrew';
+  header.appendChild(document.createElement('th')).textContent = 'Latin';
+  table.appendChild(header);
+  for (const [hebrew, latin] of entries) {
+    const row = document.createElement('tr');
+    row.appendChild(document.createElement('td')).textContent = hebrew;
+    row.appendChild(document.createElement('td')).textContent = latin;
+    table.appendChild(row);
+  }
+}
+function renderTerminalTable() {
+  const table = document.getElementById('terminal-table');
+  const header = document.createElement('tr');
+  header.appendChild(document.createElement('th')).textContent = 'Terminal';
+  header.appendChild(document.createElement('th')).textContent = 'Base';
+  header.appendChild(document.createElement('th')).textContent = 'Latin';
+  table.appendChild(header);
+  for (const [terminal, base] of Object.entries(TERMINAL_TO_BASE)) {
+    const row = document.createElement('tr');
+    row.appendChild(document.createElement('td')).textContent = terminal;
+    row.appendChild(document.createElement('td')).textContent = base;
+    row.appendChild(document.createElement('td')).textContent = MAPPING[base];
+    table.appendChild(row);
+  }
+}
+
+renderMappingTable();
+renderTerminalTable();
+
+document.getElementById('run').addEventListener('click', () => {
+  document.getElementById('output').textContent = runTransliterate(document.getElementById('input').value);
+});
+</script>
+<script data-goatcounter="https://mosherubin.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
