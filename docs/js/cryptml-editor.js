@@ -531,7 +531,7 @@ const CryptMLEditor = (() => {
   ];
 
   const SOLUTION_FIELDS = [
-    { key: 'plaintext', label: 'Plaintext', type: 'textarea' },
+    { key: 'plaintext', label: 'Plaintext', type: 'textarea', monospace: true },
     { key: 'plaintext_charset', label: 'Plaintext charset (descriptive only)', type: 'text' },
     { key: 'key', label: 'Key', type: 'text' },
   ];
@@ -578,6 +578,7 @@ const CryptMLEditor = (() => {
       input = el('input', { type: 'text', onInput: e => { obj[spec.key] = e.target.value; if (onChange) onChange(); } });
       input.value = value ?? '';
     }
+    if (spec.monospace) input.classList.add('mono-field');
     input.id = `f_${Math.random().toString(36).slice(2)}`;
     const label = el('label', { for: input.id }, spec.label);
     return el('div', { className: 'field-row' }, [label, input]);

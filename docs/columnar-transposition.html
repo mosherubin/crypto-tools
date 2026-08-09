@@ -33,6 +33,7 @@
     font-size: 1rem;
   }
   #grid-output th { background: #f4f4f4; border-bottom: 2px solid #999; }
+  #grid-output td.row-number { background: #f4f4f4; font-weight: bold; }
   #plaintext-output {
     background: #f4f4f4;
     padding: 1rem;
@@ -83,6 +84,7 @@
     <div class="radios">
       <label><input type="radio" name="direction" value="LTR" checked> Left-to-right</label>
       <label><input type="radio" name="direction" value="RTL"> Right-to-left</label>
+      <label><input type="checkbox" id="row-numbers-checkbox"> Add row numbers</label>
     </div>
   </div>
 
@@ -192,17 +194,40 @@ function attachTooltip(td, pos) {
   });
 }
 
-function renderGridTable(tableEl, { grid, w, longRows, key }) {
+// Row numbers sit on the visual left for LTR and the visual right for RTL. The grid
+// is always laid out in fixed left-to-right DOM order (see the bidi-override comment
+// on #grid-output), so that's simply "first column" vs. "last column" here.
+function renderGridTable(tableEl, { grid, w, longRows, key }, direction, addRowNumbers) {
   tableEl.innerHTML = '';
+  const rowNumbersOnLeft = addRowNumbers && direction === 'LTR';
+  const rowNumbersOnRight = addRowNumbers && direction === 'RTL';
+
   const headerRow = document.createElement('tr');
+  if (rowNumbersOnLeft) {
+    const th = document.createElement('th');
+    th.textContent = '#';
+    headerRow.appendChild(th);
+  }
   for (const k of key) {
     const th = document.createElement('th');
     th.textContent = k;
     headerRow.appendChild(th);
   }
+  if (rowNumbersOnRight) {
+    const th = document.createElement('th');
+    th.textContent = '#';
+    headerRow.appendChild(th);
+  }
   tableEl.appendChild(headerRow);
+
   for (let r = 0; r < longRows; r++) {
     const row = document.createElement('tr');
+    if (rowNumbersOnLeft) {
+      const td = document.createElement('td');
+      td.textContent = r + 1;
+      td.classList.add('row-number');
+      row.appendChild(td);
+    }
     for (let p = 1; p <= w; p++) {
       const td = document.createElement('td');
       const cell = grid[r][p];
@@ -213,6 +238,12 @@ function renderGridTable(tableEl, { grid, w, longRows, key }) {
         td.dataset.pos = cell.pos;
         attachTooltip(td, cell.pos);
       }
+      row.appendChild(td);
+    }
+    if (rowNumbersOnRight) {
+      const td = document.createElement('td');
+      td.textContent = r + 1;
+      td.classList.add('row-number');
       row.appendChild(td);
     }
     tableEl.appendChild(row);
@@ -246,6 +277,7 @@ function run() {
   const fileInput = document.getElementById('file-input');
   const keyText = document.getElementById('key-input').value;
   const direction = document.querySelector('input[name="direction"]:checked').value;
+  const addRowNumbers = document.getElementById('row-numbers-checkbox').checked;
 
   status.textContent = '';
   gridTable.innerHTML = '';
@@ -267,7 +299,7 @@ function run() {
     if (!ciphertext) { status.textContent = 'ERROR: no ciphertext content found (file is empty or all comments).'; return; }
 
     const table = buildTable(ciphertext, key, direction);
-    renderGridTable(gridTable, table);
+    renderGridTable(gridTable, table, direction, addRowNumbers);
 
     const plaintext = readOut(table, direction);
     // Unlike the grid, this text is meant to be read naturally -- Hebrew/Arabic

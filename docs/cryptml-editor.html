@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CryptML Editor</title>
 <style>
-  body { font-family: monospace; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+  /* The generic 'monospace' keyword only guarantees a fixed-width font insofar as
+     the browser's chosen font actually covers every character used -- for any
+     character outside that font, the browser silently substitutes a fallback
+     font that may not share the same glyph width, breaking column alignment.
+     Naming specific, near-universally-available monospace fonts avoids that. */
+  :root { --mono-font: 'Courier New', Consolas, 'Liberation Mono', Menlo, monospace; }
+  body { font-family: var(--mono-font); max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
   h1, h2, h3 { font-family: sans-serif; }
   p, label, button, select { font-family: sans-serif; }
   a { font-family: sans-serif; }
@@ -20,11 +26,12 @@
   .field-row { display: flex; align-items: flex-start; gap: 0.6rem; margin: 0.4rem 0; }
   .field-row label { min-width: 160px; padding-top: 0.3rem; text-align: right; }
   .field-row input[type="text"], .field-row input[type="number"], .field-row select, .field-row textarea {
-    flex: 1; font-family: monospace; font-size: 0.9rem; padding: 0.3rem; box-sizing: border-box;
+    flex: 1; font-family: var(--mono-font); font-size: 0.9rem; padding: 0.3rem; box-sizing: border-box;
   }
   .field-row textarea { resize: vertical; }
   .field-row input[type="checkbox"] { margin-top: 0.5rem; }
-  #raw { width: 100%; min-height: 6rem; font-family: monospace; }
+  #raw { width: 100%; min-height: 6rem; font-family: var(--mono-font); }
+  .mono-field { font-family: var(--mono-font); }
   fieldset.repeat-item { margin: 0.6rem 0; padding: 0.6rem; }
   fieldset.repeat-item legend { font-family: sans-serif; font-weight: bold; display: flex; align-items: center; gap: 0.6rem; }
   button.remove-btn { padding: 0.15rem 0.5rem; font-size: 0.8rem; }
@@ -36,7 +43,7 @@
   details.subsection > summary { font-family: sans-serif; font-weight: bold; cursor: pointer; }
   .field-group h3 { margin-bottom: 0.3rem; }
   #json-preview { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; overflow-x: auto; max-height: 20rem; overflow-y: auto; border: 1px solid #ccc; }
-  #uuid-display { font-family: monospace; color: #555; }
+  #uuid-display { font-family: var(--mono-font); color: #555; }
   #uuid-display.unassigned { font-style: italic; }
 </style>
 </head>
@@ -255,7 +262,7 @@ function renderPart(part, index, ct, refreshParts) {
   box.appendChild(legend);
   box.appendChild(M.buildFieldRow({ key: 'part_id', label: 'Part ID', type: 'text' }, part, renderJsonPreview));
   const rawRow = M.el('div', { className: 'field-row' }, [M.el('label', {}, 'Ciphertext')]);
-  const rawTextarea = M.el('textarea', { rows: 4, onInput: e => { part.raw = e.target.value; renderJsonPreview(); } });
+  const rawTextarea = M.el('textarea', { className: 'mono-field', rows: 4, onInput: e => { part.raw = e.target.value; renderJsonPreview(); } });
   rawTextarea.value = part.raw;
   rawRow.appendChild(rawTextarea);
   box.appendChild(rawRow);
