@@ -7,7 +7,7 @@ import json
 import re
 from dataclasses import dataclass, field
 
-CRYPTML_VERSION = "1.0"
+CRYPTML_VERSION = "1.1"
 
 DEFAULT_SETTINGS = {
     "cipher_system": "unknown",
@@ -31,7 +31,7 @@ CIPHERTEXT_FIELDS = {
 PART_FIELDS = {"part_id", "raw", "remove_from_start", "remove_from_end", "origin", "solution", "hints"}
 # Ciphertext-level fields that move onto each part instead, once "parts" is used
 PART_ONLY_WHEN_SPLIT = {"remove_from_start", "remove_from_end", "origin", "solution", "hints"}
-ORIGIN_FIELDS = {"date", "originator", "method", "location", "remarks"}
+ORIGIN_FIELDS = {"date", "time", "originator", "method", "location", "remarks"}
 SOURCE_FIELDS = {"type", "title", "author", "publisher", "date", "page", "url", "note"}
 SOURCE_TYPES = {"book", "web", "letter", "periodical", "person", "competition", "other"}
 SOLUTION_FIELDS = {"plaintext", "plaintext_charset", "key", "solvers"}

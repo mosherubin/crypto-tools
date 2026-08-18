@@ -22,7 +22,11 @@ cryptogram's trailing sentence-punctuation (e.g. a period, if the book
 typesets the cryptogram as the end of a sentence) is the book's, not the
 cipher's — leave it out of `raw` rather than adding it to `ignorechars`.
 
-Version described here: **1.0** (draft — schema under review, not yet implemented).
+Version described here: **1.1**.
+
+**1.1** adds `origin.time` (see [origin](#origin)) alongside the existing `origin.date` —
+purely additive, optional, and non-breaking: files written under 1.0 remain valid as-is,
+with no need to edit or re-version them. **1.0** was the initial release.
 
 ## Design principles
 
@@ -84,7 +88,7 @@ type is a validation error if it appears on the other.
 
 | Field | Required | Meaning |
 |---|---|---|
-| `cryptml_version` | no, default `"1.0"` | Format version. |
+| `cryptml_version` | no, default `"1.1"` | Format version. |
 | `cryptml_uuid` | no | Marks this file as a corpus member — see [Corpus identity](#corpus-identity-cryptml_uuid). Required only for files under `tools/CryptML/input/`, not by the schema itself. |
 | `title` | no | Name for this document/collection. |
 | `defaults` | no | Cascading scalar settings — see [Cascade rules](#cascade-rules). |
@@ -338,6 +342,7 @@ and it cascades (see [Cascade rules](#cascade-rules)).
 | Field | Type | Meaning |
 |---|---|---|
 | `date` | string | When the message/cryptogram itself was created or transmitted — not when it was published. |
+| `time` | string | Time of day the message/cryptogram was created or transmitted, alongside `date`. Free text, like `date` — no enforced format (e.g. "0800Z", "14:32" are both fine). |
 | `originator` | string | Who composed or sent it — the puzzle's setter, or a real message's sender. Not the author of a book it later appeared in; see `source.author` for that. |
 | `method` | string | How this copy was produced or obtained, e.g. "transcribed from photo", "typed from book". |
 | `location` | string | Free text, e.g. where it was found or created. |

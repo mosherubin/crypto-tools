@@ -22,7 +22,7 @@ const CryptMLEditor = (() => {
   }
 
   function blankOrigin() {
-    return { date: '', originator: '', method: '', location: '', remarks: '' };
+    return { date: '', time: '', originator: '', method: '', location: '', remarks: '' };
   }
 
   function blankSolver() {
@@ -70,7 +70,7 @@ const CryptMLEditor = (() => {
   function newDocument() {
     const defaults = resolveSettings({});
     return {
-      cryptml_version: '1.0',
+      cryptml_version: '1.1',
       cryptml_uuid: null, // never auto-assigned -- see "Prepare for the corpus" in the editor
       title: '',
       defaults,
@@ -177,7 +177,7 @@ const CryptMLEditor = (() => {
     });
 
     return {
-      cryptml_version: data.cryptml_version || '1.0',
+      cryptml_version: data.cryptml_version || '1.1',
       cryptml_uuid: data.cryptml_uuid ?? null,
       title: data.title || '',
       defaults,
@@ -283,7 +283,7 @@ const CryptMLEditor = (() => {
   ]);
   const PART_FIELDS = new Set(['part_id', 'raw', 'remove_from_start', 'remove_from_end', 'origin', 'solution', 'hints']);
   const PART_ONLY_WHEN_SPLIT = ['remove_from_start', 'remove_from_end', 'origin', 'solution', 'hints'];
-  const ORIGIN_FIELD_SET = new Set(['date', 'originator', 'method', 'location', 'remarks']);
+  const ORIGIN_FIELD_SET = new Set(['date', 'time', 'originator', 'method', 'location', 'remarks']);
   const SOURCE_FIELD_SET = new Set(['type', 'title', 'author', 'publisher', 'date', 'page', 'url', 'note']);
   const SOURCE_TYPES = new Set(['book', 'web', 'letter', 'periodical', 'person', 'competition', 'other']);
   const SOLUTION_FIELD_SET = new Set(['plaintext', 'plaintext_charset', 'key', 'solvers']);
@@ -524,6 +524,7 @@ const CryptMLEditor = (() => {
 
   const ORIGIN_FIELDS = [
     { key: 'date', label: 'Date', type: 'text' },
+    { key: 'time', label: 'Time', type: 'text' },
     { key: 'originator', label: 'Originator', type: 'text' },
     { key: 'method', label: 'Method', type: 'text' },
     { key: 'location', label: 'Location', type: 'text' },
