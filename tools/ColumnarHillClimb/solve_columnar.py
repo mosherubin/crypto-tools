@@ -28,7 +28,7 @@ nothing fully solves.
 Usage:
     python solve_columnar.py <ciphertext_file> <min_key_length> <max_key_length> <quadgram_file>
         [--restarts N] [--seed N] [--verbose] [--heartbeat N]
-        [--try-bisection] [--try-reversal] [--top-n N]
+        [--try-bisection] [--try-reversal] [--top-n N] [--rtl]
 
 <ciphertext_file> is a plain text file (whitespace ignored); every other
 character must appear in <quadgram_file>'s alphabet. Hebrew final-form
@@ -44,6 +44,7 @@ import itertools
 import os
 import random
 import sys
+from datetime import datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Library'))
 
@@ -75,6 +76,14 @@ def print_banner(text: str) -> None:
     print(line)
     print(f" {text} ".center(BANNER_WIDTH, "="))
     print(line)
+
+
+def format_key(key: list, rtl: bool) -> tuple:
+    """1-indexed key, for display only -- decryption always uses the raw
+    0-indexed key regardless of rtl. For rtl, the key is printed in reverse
+    order to match reading columns right-to-left."""
+    key_1indexed = tuple(k + 1 for k in key)
+    return tuple(reversed(key_1indexed)) if rtl else key_1indexed
 
 
 def bisect_text(text: str) -> list:
@@ -150,21 +159,22 @@ class TopResults:
         return sorted(self._heap, key=lambda entry: entry[0], reverse=True)
 
 
-def print_top_results(top_results: TopResults) -> None:
+def print_top_results(top_results: TopResults, rtl: bool) -> None:
     entries = top_results.best_first()
     if not entries:
         return
 
     print_banner(f"TOP {len(entries)} RESULT{'S' if len(entries) != 1 else ''}")
     for rank, (score, _, key_length, key, variant_label, plaintext) in enumerate(entries, start=1):
-        key_1indexed = tuple(k + 1 for k in key)
-        print(f"#{rank}  score={score:.2f}  variant={variant_label}  key_length={key_length}  key={key_1indexed}")
+        key_display = format_key(key, rtl)
+        print(f"#{rank}  score={score:.2f}  variant={variant_label}  key_length={key_length}  key={key_display}")
         print(f"    {plaintext}")
         print()
 
 
 def solve_for_key_length(ciphertext: str, key_length: int, scorer, restarts: int, rng: random.Random,
-                          verbose: bool, heartbeat: int, top_results: TopResults, variant_label: str) -> None:
+                          verbose: bool, heartbeat: int, top_results: TopResults, variant_label: str,
+                          rtl: bool) -> None:
     rows, long_columns = divmod(len(ciphertext), key_length)
     if long_columns == 0:
         print(f"Complete rectangle (CCT): {rows} rows")
@@ -188,11 +198,40 @@ def solve_for_key_length(ciphertext: str, key_length: int, scorer, restarts: int
             print(f"[heartbeat] restart {restart_number}/{restarts}, best score so far: {best_score:.2f}")
 
     print()
-    key_1indexed = tuple(k + 1 for k in best_key)
-    print("Best key (1-indexed):", key_1indexed)
+    key_display = format_key(best_key, rtl)
+    print("Best key (1-indexed):", key_display)
     print(f"Score: {best_score:.2f}")
     print()
     print(decrypt(ciphertext, best_key))
+    print()
+
+
+# argparse converts hyphens in a flag's name to underscores for attribute
+# access (e.g. --top-n -> args.top_n); these are the only options where that
+# matters for display, since the rest are already single words or were
+# defined with underscores directly (the positional arguments).
+CLI_DISPLAY_NAME_OVERRIDES = {
+    "top_n": "top-n",
+    "try_bisection": "try-bisection",
+    "try_reversal": "try-reversal",
+}
+
+
+def print_args_summary(args: argparse.Namespace) -> None:
+    """Every CLI option's value, name sorted ascending, values aligned in a
+    column -- printed first, before any other output."""
+    def format_value(value):
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        return str(value)
+
+    rows = sorted(
+        (CLI_DISPLAY_NAME_OVERRIDES.get(dest, dest), format_value(value))
+        for dest, value in vars(args).items()
+    )
+    name_width = max(len(name) for name, _ in rows) + 2
+    for name, value in rows:
+        print(f"{name:<{name_width}}{value}")
     print()
 
 
@@ -214,10 +253,17 @@ def main():
     parser.add_argument("--top-n", type=int, default=10,
                          help="Number of best results (across every variant and key length) to report at the "
                               "end, 0 to disable (default: 10)")
+    parser.add_argument("--rtl", action="store_true",
+                         help="Right-to-left language: printed keys are reversed to match reading columns "
+                              "right-to-left (decryption itself is unaffected)")
     args = parser.parse_args()
 
     if args.min_key_length > args.max_key_length:
         parser.error("min_key_length must be <= max_key_length")
+
+    print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    print()
+    print_args_summary(args)
 
     counts = load_ngram_counts(args.quadgram_file)
     scorer = NgramScorer(counts)
@@ -239,9 +285,9 @@ def main():
         for key_length in range(args.min_key_length, args.max_key_length + 1):
             print_banner(f"KEY LENGTH {key_length}")
             solve_for_key_length(variant_text, key_length, scorer, args.restarts, rng, args.verbose,
-                                  args.heartbeat, top_results, label)
+                                  args.heartbeat, top_results, label, args.rtl)
 
-    print_top_results(top_results)
+    print_top_results(top_results, args.rtl)
 
 
 if __name__ == "__main__":
