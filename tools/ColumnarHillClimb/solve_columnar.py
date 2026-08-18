@@ -19,10 +19,16 @@ halves and swaps their order; for an odd length, both conventions for which
 half gets the extra character are tried, since there's no way to know which
 one the original encipherer (if any) used.
 
+Every restart's result, across every variant and key length tried, is a
+candidate for a running top-N leaderboard (see --top-n); once everything
+finishes, the N best-scoring results seen anywhere in the run are printed
+together, best first -- useful for spotting a promising near-miss even when
+nothing fully solves.
+
 Usage:
     python solve_columnar.py <ciphertext_file> <min_key_length> <max_key_length> <quadgram_file>
         [--restarts N] [--seed N] [--verbose] [--heartbeat N]
-        [--try-bisection] [--try-reversal]
+        [--try-bisection] [--try-reversal] [--top-n N]
 
 <ciphertext_file> is a plain text file (whitespace ignored); every other
 character must appear in <quadgram_file>'s alphabet. Hebrew final-form
@@ -33,6 +39,8 @@ letters are normalized to their base letter before matching.
 """
 
 import argparse
+import heapq
+import itertools
 import os
 import random
 import sys
@@ -103,8 +111,60 @@ def build_ciphertext_variants(ciphertext: str, try_bisection: bool, try_reversal
     return variants
 
 
-def solve_for_key_length(ciphertext: str, key_length: int, scorer, restarts: int,
-                          rng: random.Random, verbose: bool, heartbeat: int) -> None:
+class TopResults:
+    """Tracks the N best-scoring restart results seen anywhere in the run,
+    across every ciphertext variant and key length -- without duplicate
+    entries when more than one restart converges on the same (variant, key
+    length, key) result, which happens routinely once a key length actually
+    solves the cipher. Backed by a min-heap of size <= capacity, so
+    considering a result costs O(log N) and never requires decrypting a
+    candidate that won't make the cut."""
+
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self._heap = []
+        self._identities = set()  # (variant_label, key_length, key) already present in _heap
+        self._tie_breaker = itertools.count()  # avoids ever comparing two entries' key/plaintext
+
+    def consider(self, score: float, key_length: int, key: list, variant_label: str, ciphertext: str) -> None:
+        if self.capacity <= 0:
+            return
+        identity = (variant_label, key_length, tuple(key))
+        if identity in self._identities:
+            return  # this exact result is already represented in the list
+
+        makes_the_cut = len(self._heap) < self.capacity or score > self._heap[0][0]
+        if not makes_the_cut:
+            return
+
+        plaintext = decrypt(ciphertext, key)
+        entry = (score, next(self._tie_breaker), key_length, tuple(key), variant_label, plaintext)
+        if len(self._heap) < self.capacity:
+            heapq.heappush(self._heap, entry)
+        else:
+            evicted = heapq.heapreplace(self._heap, entry)
+            self._identities.discard((evicted[4], evicted[2], evicted[3]))
+        self._identities.add(identity)
+
+    def best_first(self) -> list:
+        return sorted(self._heap, key=lambda entry: entry[0], reverse=True)
+
+
+def print_top_results(top_results: TopResults) -> None:
+    entries = top_results.best_first()
+    if not entries:
+        return
+
+    print_banner(f"TOP {len(entries)} RESULT{'S' if len(entries) != 1 else ''}")
+    for rank, (score, _, key_length, key, variant_label, plaintext) in enumerate(entries, start=1):
+        key_1indexed = tuple(k + 1 for k in key)
+        print(f"#{rank}  score={score:.2f}  variant={variant_label}  key_length={key_length}  key={key_1indexed}")
+        print(f"    {plaintext}")
+        print()
+
+
+def solve_for_key_length(ciphertext: str, key_length: int, scorer, restarts: int, rng: random.Random,
+                          verbose: bool, heartbeat: int, top_results: TopResults, variant_label: str) -> None:
     rows, long_columns = divmod(len(ciphertext), key_length)
     if long_columns == 0:
         print(f"Complete rectangle (CCT): {rows} rows")
@@ -115,6 +175,7 @@ def solve_for_key_length(ciphertext: str, key_length: int, scorer, restarts: int
     best_key, best_score = None, float('-inf')
     for restart in range(restarts):
         key, score = hill_climb(ciphertext, key_length, scorer, rng)
+        top_results.consider(score, key_length, key, variant_label, ciphertext)
         if score > best_score:
             best_key, best_score = key, score
             if verbose:
@@ -150,6 +211,9 @@ def main():
                          help="Also try the ciphertext split into two halves with their order swapped")
     parser.add_argument("--try-reversal", action="store_true",
                          help="Also try the ciphertext reversed end-to-end")
+    parser.add_argument("--top-n", type=int, default=10,
+                         help="Number of best results (across every variant and key length) to report at the "
+                              "end, 0 to disable (default: 10)")
     args = parser.parse_args()
 
     if args.min_key_length > args.max_key_length:
@@ -164,6 +228,7 @@ def main():
     print()
 
     variants = build_ciphertext_variants(ciphertext, args.try_bisection, args.try_reversal)
+    top_results = TopResults(args.top_n)
 
     rng = random.Random(args.seed)
     for label, variant_text in variants:
@@ -173,7 +238,10 @@ def main():
             print()
         for key_length in range(args.min_key_length, args.max_key_length + 1):
             print_banner(f"KEY LENGTH {key_length}")
-            solve_for_key_length(variant_text, key_length, scorer, args.restarts, rng, args.verbose, args.heartbeat)
+            solve_for_key_length(variant_text, key_length, scorer, args.restarts, rng, args.verbose,
+                                  args.heartbeat, top_results, label)
+
+    print_top_results(top_results)
 
 
 if __name__ == "__main__":

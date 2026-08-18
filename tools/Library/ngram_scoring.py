@@ -1,9 +1,19 @@
 """
-Scores putative plaintext by summed log-frequency of overlapping n-grams,
-against a frequency table trained on a language corpus. N-grams absent from
-the training corpus are scored with a floor value, rather than being treated
-as impossible, since a corpus of realistic size will never contain every
-possible n-gram of a given language.
+Scores putative plaintext by (negative) cross entropy of its overlapping
+n-grams against a frequency table trained on a language corpus -- i.e. the
+mean, not the sum, of each n-gram's log2-probability under the reference
+model. N-grams absent from the training corpus are scored with a floor
+value, rather than being treated as impossible, since a corpus of realistic
+size will never contain every possible n-gram of a given language.
+
+Averaging rather than summing is what makes scores comparable across
+candidates of different lengths: a raw sum is biased toward shorter
+candidates purely because they have fewer terms, regardless of how
+language-like they actually are. That doesn't matter when every candidate
+being compared has the same length (e.g. hill climbing over keys alone,
+where transposition never changes length), but it matters as soon as
+length-changing transformations of the ciphertext are also candidates --
+e.g. testing insert/delete perturbations against the correct one.
 
 Scoring is vectorized: the log-frequency table is a dense NumPy array
 indexed by n-gram code (the n-gram's characters read as base-|alphabet|
@@ -49,10 +59,10 @@ class NgramScorer:
         alphabet_size = len(self.alphabet)
 
         total = sum(counts.values())
-        floor = math.log10(0.01 / total)
+        floor = math.log2(0.01 / total)
         self.log_frequency_table = np.full(alphabet_size ** self.n, floor, dtype=np.float64)
         for ngram, count in counts.items():
-            self.log_frequency_table[self._ngram_code(ngram)] = math.log10(count / total)
+            self.log_frequency_table[self._ngram_code(ngram)] = math.log2(count / total)
 
     def _ngram_code(self, ngram: str) -> int:
         code = 0
@@ -69,12 +79,15 @@ class NgramScorer:
 
     def score_encoded(self, codes_batch: np.ndarray) -> np.ndarray:
         """codes_batch: shape (num_candidates, text_length) alphabet codes.
-        Returns shape (num_candidates,): summed log-frequency of every
-        overlapping n-gram in each candidate."""
+        Returns shape (num_candidates,): negative cross entropy, in bits, of
+        each candidate's n-grams against the reference model -- higher is
+        better, and values are comparable across candidates of different
+        text_length (see module docstring)."""
         alphabet_size = len(self.alphabet)
         text_length = codes_batch.shape[1]
-        ngram_codes = np.zeros((codes_batch.shape[0], text_length - self.n + 1), dtype=np.int64)
+        num_ngrams = text_length - self.n + 1
+        ngram_codes = np.zeros((codes_batch.shape[0], num_ngrams), dtype=np.int64)
         for offset in range(self.n):
             power = alphabet_size ** (self.n - 1 - offset)
             ngram_codes += codes_batch[:, offset:text_length - self.n + 1 + offset] * power
-        return self.log_frequency_table[ngram_codes].sum(axis=1)
+        return self.log_frequency_table[ngram_codes].sum(axis=1) / num_ngrams
