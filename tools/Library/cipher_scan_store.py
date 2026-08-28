@@ -72,7 +72,6 @@ def write_output_log(logs_dir: str, pdf_path: str, start, end, page_results: lis
                       stopped_early: bool, error_message: str = None) -> None:
     log_path = log_path_for(pdf_path, logs_dir)
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
-    print(f"\nWriting scan output to {log_path}")
     matched_pages = [
         {
             "page_num": r.page_num,

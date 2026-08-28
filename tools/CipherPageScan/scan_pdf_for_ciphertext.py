@@ -123,17 +123,29 @@ def gather_specs(args) -> list:
     return specs
 
 
-def _init_worker():
+_print_lock = None
+
+
+def _init_worker(print_lock):
     # Pool workers are separate processes (spawned fresh on Windows) and do not
     # inherit the parent's in-memory tesseract_cmd setting, so it must be
     # rediscovered here. Also cap Tesseract's own threading to avoid
     # oversubscribing cores across many worker processes.
+    global _print_lock
+    _print_lock = print_lock
     os.environ["OMP_THREAD_LIMIT"] = "1"
     configure_tesseract()
 
 
 def _scan_worker(task):
-    pdf_path, dpi, langs, min_groups, min_lines, stop_at_first_hit, min_purity, psm = task
+    pdf_path, dpi, langs, min_groups, min_lines, stop_at_first_hit, min_purity, psm, logs_dir = task
+    # Announce before scanning starts, not after -- the output path only
+    # depends on pdf_path/logs_dir, not on results, so there's no need to
+    # wait. A shared lock keeps concurrent workers' announcements from
+    # interleaving mid-line.
+    with _print_lock:
+        print(f"\nWriting scan output to {log_path_for(pdf_path, logs_dir)}")
+
     start = datetime.now(timezone.utc)
     try:
         import fitz
@@ -166,11 +178,13 @@ def cmd_extract(args):
           f"({len(pdf_paths) - len(pending)} already cached and unchanged)")
 
     tasks = [
-        (p, args.dpi, args.langs, args.min_groups, args.min_lines, not args.exhaustive, args.min_purity, args.psm)
+        (p, args.dpi, args.langs, args.min_groups, args.min_lines, not args.exhaustive, args.min_purity, args.psm,
+         logs_dir)
         for p in pending
     ]
 
-    with multiprocessing.Pool(args.workers, initializer=_init_worker) as pool:
+    print_lock = multiprocessing.Lock()
+    with multiprocessing.Pool(args.workers, initializer=_init_worker, initargs=(print_lock,)) as pool:
         for i, (pdf_path, results, stopped_early, error, start, end) in enumerate(
                 pool.imap_unordered(_scan_worker, tasks), 1):
             write_output_log(logs_dir, pdf_path, start, end, results, stopped_early, error)

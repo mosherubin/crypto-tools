@@ -83,6 +83,13 @@ page is flagged (its purpose is finding *which PDFs* may contain coded
 messages, not cataloguing every such page). Pass `--exhaustive` to force a
 complete page-by-page scan of every PDF instead.
 
+`--dpi` (default 300) controls the resolution OCR renders each page at
+before recognizing it. Higher DPI costs more time and memory per page but
+can meaningfully improve accuracy on poor-quality scans -- e.g. a printed
+form whose ruled table/cell borders bleed into adjacent digits at 300 DPI
+may separate cleanly at 450-600. Worth raising for a specific troublesome
+batch, not as a blanket default given the extra cost across a whole archive.
+
 Re-run detection with a different threshold without touching OCR:
 
 ```

@@ -157,10 +157,24 @@ def strip_format_chars(text: str) -> str:
     return "".join(ch for ch in text if unicodedata.category(ch) != "Cf")
 
 
+BORDER_ARTIFACT_CHARS = "-|"
+
+
+def strip_border_artifacts(text: str) -> str:
+    """Remove dash and pipe characters, which routinely appear spliced into a
+    word's OCR bounding box when a printed form's ruled table/cell border
+    lines touch or overlap adjacent text -- corrupting a token's apparent
+    length and content without reflecting anything actually printed. Applied
+    per-word (not by splitting the whole line on these characters), so a
+    genuine mid-word hyphen merges into one longer token rather than being
+    split into two shorter ones."""
+    return "".join(ch for ch in text if ch not in BORDER_ARTIFACT_CHARS)
+
+
 def reconstruct_lines(ocr_data: dict) -> str:
     lines = {}
     for i, word in enumerate(ocr_data["text"]):
-        word = strip_format_chars(word.strip())
+        word = strip_border_artifacts(strip_format_chars(word.strip()))
         if not word:
             continue
         key = (ocr_data["block_num"][i], ocr_data["par_num"][i], ocr_data["line_num"][i])
