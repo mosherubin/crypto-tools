@@ -40,7 +40,7 @@ explicitly):
 - **Windows**: install from the
   [UB Mannheim build](https://github.com/UB-Mannheim/tesseract/wiki) — during
   install, check the box for the Hebrew language pack (English is included
-  by default). Let the installer add it to your `PATH`.
+  by default). Let the installer add it to your `PATH` (note: the installer did not offer to add it to PATH; you may have to add it yourself).
 - **macOS**: `brew install tesseract tesseract-lang` (the second package
   brings in all language packs, including Hebrew).
 - **Linux (Debian/Ubuntu)**: `sudo apt install tesseract-ocr tesseract-ocr-heb`
