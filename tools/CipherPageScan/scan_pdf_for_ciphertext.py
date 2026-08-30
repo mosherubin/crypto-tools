@@ -191,12 +191,12 @@ def cmd_extract(args):
             write_output_log(logs_dir, pdf_path, start, end, results, stopped_early, error)
             if error:
                 record_pdf_result(conn, pdf_path, [], False, status="error", error_message=error)
-                print(f"[{i}/{len(pending)}] ERROR {pdf_path}: {error}")
+                print(f"\n[{i}/{len(pending)}] ERROR {pdf_path}: {error}")
                 continue
             record_pdf_result(conn, pdf_path, results, stopped_early)
             matched_pages = [r.page_num for r in results if r.matched]
             status = f"FLAGGED pages {matched_pages}" if matched_pages else "clean"
-            print(f"[{i}/{len(pending)}] {pdf_path}: {status} ({len(results)} pages scanned)")
+            print(f"\n[{i}/{len(pending)}] {pdf_path}: {status} ({len(results)} pages scanned)")
 
     conn.close()
 
