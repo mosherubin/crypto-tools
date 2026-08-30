@@ -90,6 +90,10 @@ The workflow, in order:
 A typical first run:
 ```
 python scan_pdf_for_ciphertext.py extract --root D:\Scan --recursive D:\MyArchive
+```
+
+With extract finished, it's time to examine the result:
+```
 python scan_pdf_for_ciphertext.py export --root D:\Scan --output flagged.csv
 python scan_pdf_for_ciphertext.py export --root D:\Scan --output errors.csv --errors
 python scan_pdf_for_ciphertext.py export --root D:\Scan --output ambivalent.csv --ambivalent
