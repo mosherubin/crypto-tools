@@ -78,30 +78,48 @@ class PageResult:
     method: str  # "text_layer" | "ocr"
     text: str
     matched_lines: list = field(default_factory=list)  # list of (line_index, line_text, run_length)
+    ambivalent_lines: list = field(default_factory=list)  # same shape: qualifying lines with no adjacent match
 
     @property
     def matched(self) -> bool:
         return bool(self.matched_lines)
 
+    @property
+    def ambivalent(self) -> bool:
+        return bool(self.ambivalent_lines)
 
-def scan_page_text(text: str, min_groups: int, min_lines: int,
-                    min_purity: float = DEFAULT_MIN_PURITY) -> list:
-    """A line only counts as matched if an immediately adjacent line (either
+
+def scan_page_text(text: str, min_groups: int, min_lines: int, min_purity: float = DEFAULT_MIN_PURITY):
+    """Returns (matches, ambivalent_lines).
+
+    A line only counts as matched if an immediately adjacent line (either
     side) also independently qualifies. A genuine coded dispatch runs across
     multiple consecutive lines; a single isolated qualifying line -- however
-    it arose -- is treated as noise rather than as evidence on its own."""
+    it arose -- is treated as noise rather than as evidence on its own.
+
+    A qualifying line with no adjacent qualifying neighbor isn't just
+    discarded, though: it's reported separately as "ambivalent" -- the tool
+    found something structurally group-shaped but couldn't confirm it, which
+    is a different, more actionable state than "found nothing at all" (e.g.
+    worth a retry at higher --dpi, which might reveal a genuine neighbor the
+    current OCR pass missed)."""
     lines = text.splitlines()
     runs = [longest_group_run(line) for line in lines]
     qualifies = [runs[i] >= min_groups and line_purity(lines[i]) >= min_purity for i in range(len(lines))]
 
     matches = []
+    ambivalent_lines = []
     for i, line in enumerate(lines):
         if not qualifies[i]:
             continue
         has_adjacent = (i > 0 and qualifies[i - 1]) or (i + 1 < len(lines) and qualifies[i + 1])
         if has_adjacent:
             matches.append((i, line, runs[i]))
-    return matches if len(matches) >= min_lines else []
+        else:
+            ambivalent_lines.append((i, line, runs[i]))
+
+    matches = matches if len(matches) >= min_lines else []
+    return matches, ambivalent_lines
 
 
 def configure_tesseract() -> None:
@@ -201,8 +219,8 @@ def scan_page(page: fitz.Page, page_num: int, dpi: int, langs: str, min_groups: 
     if text is None:
         text = ocr_page_text(page, dpi, langs, psm)
         method = "ocr"
-    matches = scan_page_text(text, min_groups, min_lines, min_purity)
-    return PageResult(page_num, method, text, matches)
+    matches, ambivalent_lines = scan_page_text(text, min_groups, min_lines, min_purity)
+    return PageResult(page_num, method, text, matches, ambivalent_lines)
 
 
 def scan_pdf(pdf_path: str, dpi: int, langs: str, min_groups: int, min_lines: int,

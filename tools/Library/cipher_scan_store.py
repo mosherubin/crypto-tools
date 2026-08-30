@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS pages (
     matched INTEGER NOT NULL,
     best_run INTEGER NOT NULL,
     matched_lines_json TEXT,
+    ambivalent_lines_json TEXT,
     PRIMARY KEY (pdf_path, page_num)
 );
 """
@@ -47,6 +48,9 @@ def _migrate(conn: sqlite3.Connection) -> None:
     columns = {row[1] for row in conn.execute("PRAGMA table_info(pages)")}
     if "matched_lines_json" not in columns:
         conn.execute("ALTER TABLE pages ADD COLUMN matched_lines_json TEXT")
+        conn.commit()
+    if "ambivalent_lines_json" not in columns:
+        conn.execute("ALTER TABLE pages ADD COLUMN ambivalent_lines_json TEXT")
         conn.commit()
 
 
@@ -72,16 +76,18 @@ def write_output_log(logs_dir: str, pdf_path: str, start, end, page_results: lis
                       stopped_early: bool, error_message: str = None) -> None:
     log_path = log_path_for(pdf_path, logs_dir)
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    def _line_dicts(lines):
+        return [{"line_index": li, "run": run, "text": text} for li, text, run in lines]
+
     matched_pages = [
-        {
-            "page_num": r.page_num,
-            "matched_lines": [
-                {"line_index": line_index, "run": run, "text": line_text}
-                for line_index, line_text, run in r.matched_lines
-            ],
-        }
+        {"page_num": r.page_num, "matched_lines": _line_dicts(r.matched_lines)}
         for r in (page_results or [])
         if r.matched
+    ]
+    ambivalent_pages = [
+        {"page_num": r.page_num, "ambivalent_lines": _line_dicts(r.ambivalent_lines)}
+        for r in (page_results or [])
+        if r.ambivalent
     ]
     payload = {
         "pdf_path": pdf_path,
@@ -92,6 +98,7 @@ def write_output_log(logs_dir: str, pdf_path: str, start, end, page_results: lis
         "stopped_early": stopped_early,
         "pages_scanned": len(page_results) if page_results else 0,
         "matched_pages": matched_pages,
+        "ambivalent_pages": ambivalent_pages,
         "error_message": error_message,
     }
     with open(log_path, "w", encoding="utf-8") as f:
@@ -124,12 +131,13 @@ def record_pdf_result(conn: sqlite3.Connection, pdf_path: str, page_results: lis
                        stopped_early: bool, status: str = "done", error_message: str = None) -> None:
     conn.execute("DELETE FROM pages WHERE pdf_path = ?", (pdf_path,))
     conn.executemany(
-        "INSERT INTO pages (pdf_path, page_num, method, text, matched, best_run, matched_lines_json) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO pages (pdf_path, page_num, method, text, matched, best_run, "
+        "matched_lines_json, ambivalent_lines_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
             (pdf_path, r.page_num, r.method, r.text, int(r.matched),
              max((run for _, _, run in r.matched_lines), default=0),
-             json.dumps(r.matched_lines) if r.matched_lines else None)
+             json.dumps(r.matched_lines) if r.matched_lines else None,
+             json.dumps(r.ambivalent_lines) if r.ambivalent_lines else None)
             for r in page_results
         ],
     )
@@ -142,14 +150,17 @@ def record_pdf_result(conn: sqlite3.Connection, pdf_path: str, page_results: lis
     conn.commit()
 
 
-def update_page_match(conn: sqlite3.Connection, pdf_path: str, page_num: int, matches: list) -> None:
+def update_page_match(conn: sqlite3.Connection, pdf_path: str, page_num: int,
+                       matches: list, ambivalent_lines: list) -> None:
     """Used by `detect` to re-evaluate a cached page against a new threshold,
-    keeping matched_lines_json in sync with whatever matched/best_run become."""
+    keeping matched_lines_json/ambivalent_lines_json in sync with whatever
+    matched/best_run become."""
     best_run = max((run for _, _, run in matches), default=0)
     conn.execute(
-        "UPDATE pages SET matched = ?, best_run = ?, matched_lines_json = ? "
+        "UPDATE pages SET matched = ?, best_run = ?, matched_lines_json = ?, ambivalent_lines_json = ? "
         "WHERE pdf_path = ? AND page_num = ?",
-        (int(bool(matches)), best_run, json.dumps(matches) if matches else None, pdf_path, page_num),
+        (int(bool(matches)), best_run, json.dumps(matches) if matches else None,
+         json.dumps(ambivalent_lines) if ambivalent_lines else None, pdf_path, page_num),
     )
 
 
@@ -212,6 +223,74 @@ def export_report(conn: sqlite3.Connection, output_path: str) -> None:
                     for line in p["matched_lines"]
                 )
                 writer.writerow([pdf_path, lines_summary, page_nums, stopped_early, pages_scanned])
+
+
+def ambivalent_pdfs(conn: sqlite3.Connection) -> list:
+    """Return (pdf_path, ambivalent_pages, pages_scanned) for every PDF that
+    is NOT flagged but has at least one page with a qualifying line lacking
+    an adjacent qualifying neighbor -- the tool found something structurally
+    group-shaped but couldn't confirm it, which is a different state from
+    "scanned and genuinely found nothing." A PDF that's already flagged is
+    excluded here even if it also has an ambivalent page elsewhere, since
+    it'll already be opened for review regardless.
+    ambivalent_pages is [{"page_num": ..., "ambivalent_lines": [...]}, ...]."""
+    rows = conn.execute(
+        "SELECT pdf_path, pages_scanned FROM pdfs WHERE status = 'done'"
+    ).fetchall()
+
+    results = []
+    for pdf_path, pages_scanned in rows:
+        matched_count = conn.execute(
+            "SELECT COUNT(*) FROM pages WHERE pdf_path = ? AND matched = 1", (pdf_path,)
+        ).fetchone()[0]
+        if matched_count:
+            continue
+
+        page_rows = conn.execute(
+            "SELECT page_num, ambivalent_lines_json FROM pages WHERE pdf_path = ? "
+            "AND ambivalent_lines_json IS NOT NULL ORDER BY page_num",
+            (pdf_path,),
+        ).fetchall()
+        if not page_rows:
+            continue
+
+        ambivalent_pages = [
+            {
+                "page_num": page_num,
+                "ambivalent_lines": [
+                    {"line_index": line_index, "run": run, "text": text}
+                    for line_index, text, run in json.loads(ambivalent_lines_json)
+                ],
+            }
+            for page_num, ambivalent_lines_json in page_rows
+        ]
+        results.append((pdf_path, ambivalent_pages, pages_scanned))
+    return results
+
+
+def export_ambivalent_report(conn: sqlite3.Connection, output_path: str) -> None:
+    rows = ambivalent_pdfs(conn)
+    ext = os.path.splitext(output_path)[1].lower()
+
+    if ext == ".json":
+        payload = [
+            {"pdf_path": pdf_path, "ambivalent_pages": ambivalent_pages, "pages_scanned": pages_scanned}
+            for pdf_path, ambivalent_pages, pages_scanned in rows
+        ]
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, ensure_ascii=False)
+    else:
+        with open(output_path, "w", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["pdf_path", "ambivalent_lines", "ambivalent_pages", "pages_scanned"])
+            for pdf_path, ambivalent_pages, pages_scanned in rows:
+                page_nums = ";".join(str(p["page_num"]) for p in ambivalent_pages)
+                lines_summary = " | ".join(
+                    f"p{p['page_num']}: {line['text']}"
+                    for p in ambivalent_pages
+                    for line in p["ambivalent_lines"]
+                )
+                writer.writerow([pdf_path, lines_summary, page_nums, pages_scanned])
 
 
 def errored_pdfs(conn: sqlite3.Connection) -> list:

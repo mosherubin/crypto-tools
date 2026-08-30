@@ -144,6 +144,23 @@ to report those instead:
 3 PDF(s) failed to scan. Report written to errors.csv
 ```
 
+A third category sits between "flagged" and "clean": a PDF where some line
+was structurally group-shaped (met `--min-groups`/`--min-purity`) but had no
+adjacent qualifying neighbor, so it was never confirmed as a match (see the
+adjacency requirement below). That's not the same as genuinely finding
+nothing -- it's the tool being unsure, and a good candidate for a retry at
+higher `--dpi`, which might reveal a real neighboring line the original OCR
+pass missed. Pass `--ambivalent` to report these (a PDF that's already
+flagged is excluded, since it'll already be reviewed regardless):
+
+```
+> python scan_pdf_for_ciphertext.py export --root D:\Scan --output ambivalent.csv --ambivalent
+12 PDF(s) ambivalent (not flagged, but had an unresolved near-miss). Report written to ambivalent.csv
+```
+
+`--errors` and `--ambivalent` are mutually exclusive -- each `export` run
+produces one report type.
+
 # How detection works
 
 Two lengths matter for a token:
@@ -173,6 +190,10 @@ would be missed, but that's a deliberate trade-off: with an estimated 99.9%
 of a large archive containing no coded material at all, minimizing false
 positives across that overwhelming majority matters more than the rare case
 of a single-line dispatch whose PDF contains no other coded page to catch it.
+A qualifying line with no adjacent match isn't discarded outright, though --
+it's recorded as *ambivalent* (see `export --ambivalent` above), since it's
+a different, more actionable state than a page with nothing group-shaped
+on it at all.
 
 A page is flagged once it has `--min-lines` (default 1) matched lines. This
 is a pure structural pattern match — no dictionary or per-word frequency

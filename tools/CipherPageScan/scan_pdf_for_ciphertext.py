@@ -13,7 +13,8 @@ Four subcommands, split so re-tuning thresholds never requires re-OCRing:
   detect   Re-run the group-match logic over already-cached page text with a
            new --min-groups/--min-lines/--min-purity, no OCR involved.
   export   Write a CSV or JSON report of every flagged PDF and its matched
-           page numbers.
+           page numbers (or --errors / --ambivalent for the other report
+           types).
   forget   Clear cached results (and any stale .output log) for the given
            PDFs, so the next extract re-scans them from scratch instead of
            skipping them as already up to date.
@@ -49,9 +50,9 @@ from cipher_group_scan import (
     configure_tesseract, scan_pdf, scan_page_text,
 )
 from cipher_scan_store import (
-    errored_pdfs, export_errors_report, export_report, flagged_pdfs, forget_pdf,
-    is_pdf_up_to_date, log_path_for, open_store, record_pdf_result, resolve_root,
-    update_page_match, write_output_log,
+    ambivalent_pdfs, errored_pdfs, export_ambivalent_report, export_errors_report, export_report,
+    flagged_pdfs, forget_pdf, is_pdf_up_to_date, log_path_for, open_store, record_pdf_result,
+    resolve_root, update_page_match, write_output_log,
 )
 
 DEFAULT_MIN_GROUPS = 3
@@ -210,8 +211,8 @@ def cmd_detect(args):
             "SELECT page_num, text FROM pages WHERE pdf_path = ? ORDER BY page_num", (pdf_path,)
         ).fetchall()
         for page_num, text in rows:
-            matches = scan_page_text(text, args.min_groups, args.min_lines, args.min_purity)
-            update_page_match(conn, pdf_path, page_num, matches)
+            matches, ambivalent_lines = scan_page_text(text, args.min_groups, args.min_lines, args.min_purity)
+            update_page_match(conn, pdf_path, page_num, matches, ambivalent_lines)
         conn.commit()
 
     print(f"Re-evaluated {len(pdf_paths)} cached PDF(s) with "
@@ -227,6 +228,10 @@ def cmd_export(args):
     if args.errors:
         export_errors_report(conn, args.output)
         print(f"{len(errored_pdfs(conn))} PDF(s) failed to scan. Report written to {args.output}")
+    elif args.ambivalent:
+        export_ambivalent_report(conn, args.output)
+        print(f"{len(ambivalent_pdfs(conn))} PDF(s) ambivalent (not flagged, but had an unresolved "
+              f"near-miss). Report written to {args.output}")
     else:
         export_report(conn, args.output)
         print(f"{len(flagged_pdfs(conn))} PDF(s) flagged. Report written to {args.output}")
@@ -311,9 +316,14 @@ def build_parser():
     export = subparsers.add_parser("export", help="Write a report of flagged PDFs")
     add_root_argument(export)
     export.add_argument("--output", required=True, help="Report path (.csv or .json)")
-    export.add_argument("--errors", action="store_true",
-                         help="Report PDFs that failed during extract instead of flagged PDFs "
-                              "(pdf_path, error_message, completed_at)")
+    report_type = export.add_mutually_exclusive_group()
+    report_type.add_argument("--errors", action="store_true",
+                              help="Report PDFs that failed during extract instead of flagged PDFs "
+                                   "(pdf_path, error_message, completed_at)")
+    report_type.add_argument("--ambivalent", action="store_true",
+                              help="Report PDFs that are not flagged but have a qualifying line with "
+                                   "no adjacent qualifying neighbor -- structurally group-shaped but "
+                                   "unconfirmed, and worth a retry at higher --dpi")
     export.set_defaults(func=cmd_export)
 
     forget = subparsers.add_parser("forget", help="Clear cached results for PDFs, forcing re-extraction")
