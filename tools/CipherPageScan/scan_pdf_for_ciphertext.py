@@ -323,7 +323,7 @@ def build_parser():
     report_type.add_argument("--ambivalent", action="store_true",
                               help="Report PDFs that are not flagged but have a qualifying line with "
                                    "no adjacent qualifying neighbor -- structurally group-shaped but "
-                                   "unconfirmed, and worth a retry at higher --dpi")
+                                   "unconfirmed, worth opening by hand to check")
     export.set_defaults(func=cmd_export)
 
     forget = subparsers.add_parser("forget", help="Clear cached results for PDFs, forcing re-extraction")

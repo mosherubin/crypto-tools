@@ -153,21 +153,39 @@ def record_pdf_result(conn: sqlite3.Connection, pdf_path: str, page_results: lis
 def update_page_match(conn: sqlite3.Connection, pdf_path: str, page_num: int,
                        matches: list, ambivalent_lines: list) -> None:
     """Used by `detect` to re-evaluate a cached page against a new threshold,
-    keeping matched_lines_json/ambivalent_lines_json in sync with whatever
-    matched/best_run become."""
+    keeping matched_lines_json/best_run in sync with whatever matched becomes.
+
+    ambivalent_lines_json is sticky: once a page has been flagged ambivalent,
+    a later `detect` run only clears it by turning the page into a confirmed
+    match. It's never silently cleared back to "nothing found" just because a
+    different threshold no longer independently reproduces it -- a curator
+    who's already been told "this page is worth a look" shouldn't have that
+    withdrawn without a real resolution, since the only way to confirm or
+    dismiss it is opening the PDF and looking, not re-running detect."""
+    matched = bool(matches)
     best_run = max((run for _, _, run in matches), default=0)
+    if matched:
+        ambivalent_lines_json = None
+    elif ambivalent_lines:
+        ambivalent_lines_json = json.dumps(ambivalent_lines)
+    else:
+        existing = conn.execute(
+            "SELECT ambivalent_lines_json FROM pages WHERE pdf_path = ? AND page_num = ?",
+            (pdf_path, page_num),
+        ).fetchone()
+        ambivalent_lines_json = existing[0] if existing else None
     conn.execute(
         "UPDATE pages SET matched = ?, best_run = ?, matched_lines_json = ?, ambivalent_lines_json = ? "
         "WHERE pdf_path = ? AND page_num = ?",
-        (int(bool(matches)), best_run, json.dumps(matches) if matches else None,
-         json.dumps(ambivalent_lines) if ambivalent_lines else None, pdf_path, page_num),
+        (int(matched), best_run, json.dumps(matches) if matches else None,
+         ambivalent_lines_json, pdf_path, page_num),
     )
 
 
 def flagged_pdfs(conn: sqlite3.Connection) -> list:
     """Return (pdf_path, matched_pages, stopped_early, pages_scanned) for every
     PDF with at least one matched page, using whatever text is currently cached.
-    matched_pages is [{"page_num": ..., "matched_lines": [{"line_index", "run", "text"}, ...]}, ...]."""
+    matched_pages is [{"page_num": ..., "matched_lines": [...]}, ...]."""
     rows = conn.execute(
         "SELECT pdf_path, stopped_early, pages_scanned FROM pdfs WHERE status = 'done'"
     ).fetchall()
@@ -175,8 +193,8 @@ def flagged_pdfs(conn: sqlite3.Connection) -> list:
     results = []
     for pdf_path, stopped_early, pages_scanned in rows:
         page_rows = conn.execute(
-            "SELECT page_num, matched_lines_json FROM pages WHERE pdf_path = ? AND matched = 1 "
-            "ORDER BY page_num",
+            "SELECT page_num, matched_lines_json FROM pages "
+            "WHERE pdf_path = ? AND matched = 1 ORDER BY page_num",
             (pdf_path,),
         ).fetchall()
         if not page_rows:
@@ -214,7 +232,8 @@ def export_report(conn: sqlite3.Connection, output_path: str) -> None:
     else:
         with open(output_path, "w", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["pdf_path", "matched_lines", "flagged_pages", "stopped_early", "pages_scanned"])
+            writer.writerow(["pdf_path", "matched_lines", "flagged_pages",
+                              "stopped_early", "pages_scanned"])
             for pdf_path, matched_pages, stopped_early, pages_scanned in rows:
                 page_nums = ";".join(str(p["page_num"]) for p in matched_pages)
                 lines_summary = " | ".join(

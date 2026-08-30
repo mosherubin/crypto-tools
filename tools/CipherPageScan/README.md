@@ -148,10 +148,12 @@ A third category sits between "flagged" and "clean": a PDF where some line
 was structurally group-shaped (met `--min-groups`/`--min-purity`) but had no
 adjacent qualifying neighbor, so it was never confirmed as a match (see the
 adjacency requirement below). That's not the same as genuinely finding
-nothing -- it's the tool being unsure, and a good candidate for a retry at
-higher `--dpi`, which might reveal a real neighboring line the original OCR
-pass missed. Pass `--ambivalent` to report these (a PDF that's already
-flagged is excluded, since it'll already be reviewed regardless):
+nothing -- it's the tool being unsure, and worth a human opening the PDF and
+looking at the page directly, which is the point at which a person can
+instantly tell real coded groups from coincidental prose in a way this
+tool's pattern matching can't. Pass `--ambivalent` to report these (a PDF
+that's already flagged is excluded, since it'll already be reviewed
+regardless):
 
 ```
 > python scan_pdf_for_ciphertext.py export --root D:\Scan --output ambivalent.csv --ambivalent
@@ -193,7 +195,10 @@ of a single-line dispatch whose PDF contains no other coded page to catch it.
 A qualifying line with no adjacent match isn't discarded outright, though --
 it's recorded as *ambivalent* (see `export --ambivalent` above), since it's
 a different, more actionable state than a page with nothing group-shaped
-on it at all.
+on it at all. Once a page is marked ambivalent, `detect` re-runs never clear
+that on their own -- only a re-evaluation that turns the page into a
+confirmed match does. Resolving (or dismissing) an ambivalent page is a
+manual judgment call: open the PDF, look at the page.
 
 A page is flagged once it has `--min-lines` (default 1) matched lines. This
 is a pure structural pattern match — no dictionary or per-word frequency
