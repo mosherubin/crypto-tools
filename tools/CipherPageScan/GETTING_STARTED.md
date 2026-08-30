@@ -92,6 +92,7 @@ A typical first run:
 python scan_pdf_for_ciphertext.py extract --root D:\Scan --recursive D:\MyArchive
 python scan_pdf_for_ciphertext.py export --root D:\Scan --output flagged.csv
 python scan_pdf_for_ciphertext.py export --root D:\Scan --output errors.csv --errors
+python scan_pdf_for_ciphertext.py export --root D:\Scan --output ambivalent.csv --ambivalent
 ```
 
 Notes:
@@ -124,6 +125,15 @@ Notes:
   unreadable format, ...). These were never actually checked for coded
   content and need separate attention (repair, manual inspection, or a
   password) rather than being treated as "clean."
+- **`ambivalent.csv`** — PDFs that are not flagged but have a page with
+  something structurally group-shaped that couldn't be confirmed as a match
+  (see README.md's "adjacency requirement" for why). Not a false alarm and
+  not a confirmed hit either — it's the tool telling you "this is worth a
+  second look." Skim the `ambivalent_lines` column the same way as
+  `flagged.csv`, then open the PDF at the listed page to judge it yourself;
+  a person can tell real coded groups from coincidental prose at a glance in
+  a way this tool's pattern matching can't. A PDF already in `flagged.csv`
+  never appears here too, since it's already getting reviewed regardless.
 - **`<root>/logs/*.output`** — one JSON file per PDF scanned, mirroring its
   original folder path, recording exactly when it was scanned and — for a
   flagged PDF — the specific matched lines. Useful for auditing a specific
