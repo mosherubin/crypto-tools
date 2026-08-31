@@ -45,6 +45,14 @@
   #json-preview { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; overflow-x: auto; max-height: 20rem; overflow-y: auto; border: 1px solid #ccc; }
   #uuid-display { font-family: var(--mono-font); color: #555; }
   #uuid-display.unassigned { font-style: italic; }
+  dialog { border: 1px solid #999; border-radius: 6px; padding: 1.2rem; max-width: 32rem; }
+  dialog::backdrop { background: rgba(0, 0, 0, 0.3); }
+  dialog h2 { margin-top: 0; }
+  #export-list { width: 100%; font-family: var(--mono-font); font-size: 0.9rem; box-sizing: border-box; }
+  #export-list option.has-gap-marker { color: #b00; }
+  #export-error { font-family: sans-serif; color: #b00; min-height: 1.2em; margin: 0.5rem 0; }
+  .radios { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.8rem 0; }
+  .radios label { display: flex; align-items: center; gap: 0.4rem; }
 </style>
 </head>
 <body>
@@ -63,8 +71,25 @@
     <button id="btn-save">Save</button>
     <button id="btn-save-as">Save As...</button>
     <button id="btn-sample">Load Sample</button>
+    <button id="btn-export">Export...</button>
   </div>
   <div id="status"></div>
+
+  <dialog id="export-dialog">
+    <h2>Export ciphertexts</h2>
+    <p>Select one or more ciphertexts to write into a single text file, each preceded by a comment
+       naming its source file and ID.</p>
+    <div class="radios">
+      <label><input type="radio" name="export-trim" value="trim" checked> Apply 'Remove from start'/'Remove from end' trimming</label>
+      <label><input type="radio" name="export-trim" value="full"> Export the full raw text, untrimmed</label>
+    </div>
+    <select id="export-list" multiple size="12"></select>
+    <div id="export-error" class="error"></div>
+    <div class="toolbar">
+      <button type="button" id="export-cancel">Cancel</button>
+      <button type="button" id="export-ok">Export</button>
+    </div>
+  </dialog>
 
   <section class="block">
     <h2>Document</h2>
@@ -451,6 +476,7 @@ if (!fsaSupported) {
   document.getElementById('btn-open').disabled = true;
   document.getElementById('btn-save').disabled = true;
   document.getElementById('btn-save-as').disabled = true;
+  document.getElementById('btn-export').disabled = true;
 }
 
 function pickerOptions(extra) {
@@ -504,6 +530,139 @@ document.getElementById('btn-save-as').addEventListener('click', async () => {
     setStatus(`Saved ${handle.name} at ${new Date().toLocaleString()}`);
   } catch (e) {
     if (e.name !== 'AbortError') setStatus(`Save failed: ${e.message}`, true);
+  }
+});
+
+const GAP_MARKER = '[...]';
+
+// One entry per whole ciphertext, or one per part -- matching how List/Browse
+// and Search already treat parts as independently addressable rows. remove_from_start/
+// end and casesensitive live on the ciphertext for a plain raw, but on the part itself
+// for a parts-based one; ignorechars/charset always stay on the parent ciphertext even
+// for parts (see the spec's "system as a whole" vs. "one message's own content" split).
+function exportableEntries() {
+  const entries = [];
+  for (const ct of doc.ciphertexts) {
+    if (ct.parts) {
+      for (const part of ct.parts) {
+        entries.push({
+          label: `${ct.id}/${part.part_id}`, raw: part.raw,
+          removeFromStart: part.remove_from_start || 0, removeFromEnd: part.remove_from_end || 0,
+          ignorechars: ct.ignorechars, casesensitive: ct.casesensitive,
+        });
+      }
+    } else {
+      entries.push({
+        label: ct.id, raw: ct.raw,
+        removeFromStart: ct.remove_from_start || 0, removeFromEnd: ct.remove_from_end || 0,
+        ignorechars: ct.ignorechars, casesensitive: ct.casesensitive,
+      });
+    }
+  }
+  return entries;
+}
+
+// Mirrors tools/Stethoscope/Basic/ciphertext.py's _strip_ignored_boundary(): the counts
+// are in non-ignored characters, so a preamble/postamble can be specified by its cipher-letter
+// length without also counting intervening spaces. Also trims any ignored characters
+// immediately adjacent to the resulting boundary (e.g. the separating space right after a
+// preamble) -- unlike Stethoscope's own pipeline, this export doesn't run a second pass
+// that strips ignorechars throughout the whole string, so that has to happen here instead.
+function stripBoundary(raw, removeFromStart, removeFromEnd, ignoreRe) {
+  let start = 0;
+  if (removeFromStart) {
+    let seen = 0, found = false;
+    for (let i = 0; i < raw.length; i++) {
+      if (!ignoreRe.test(raw[i])) {
+        seen++;
+        if (seen === removeFromStart) { start = i + 1; found = true; break; }
+      }
+    }
+    if (!found) throw new Error(`remove_from_start=${removeFromStart} exceeds the number of non-ignored characters in raw (${seen} found)`);
+    while (start < raw.length && ignoreRe.test(raw[start])) start++;
+  }
+
+  let end = raw.length;
+  if (removeFromEnd) {
+    let seen = 0, found = false;
+    for (let i = raw.length - 1; i >= 0; i--) {
+      if (!ignoreRe.test(raw[i])) {
+        seen++;
+        if (seen === removeFromEnd) { end = i; found = true; break; }
+      }
+    }
+    if (!found) throw new Error(`remove_from_end=${removeFromEnd} exceeds the number of non-ignored characters in raw (${seen} found)`);
+    while (end > start && ignoreRe.test(raw[end - 1])) end--;
+  }
+
+  return raw.slice(start, end);
+}
+
+function buildExportText(filename, entries, honorTrim) {
+  return entries
+    .map(e => {
+      let text = e.raw;
+      if (honorTrim && (e.removeFromStart || e.removeFromEnd)) {
+        const ignoreRe = new RegExp(`^(?:${e.ignorechars})$`, e.casesensitive ? 'u' : 'iu');
+        text = stripBoundary(text, e.removeFromStart, e.removeFromEnd, ignoreRe);
+      }
+      return `# ${filename} :: ${e.label}\n${text.split(GAP_MARKER).join('')}`;
+    })
+    .join('\n\n');
+}
+
+document.getElementById('btn-export').addEventListener('click', () => {
+  const listEl = document.getElementById('export-list');
+  listEl.innerHTML = '';
+  document.getElementById('export-error').textContent = '';
+  for (const entry of exportableEntries()) {
+    const opt = document.createElement('option');
+    opt.value = entry.label;
+    const hasGap = entry.raw.includes(GAP_MARKER);
+    opt.textContent = entry.label + (hasGap ? '  ⚠ contains gap marker -- will be stripped' : '');
+    if (hasGap) opt.classList.add('has-gap-marker');
+    listEl.appendChild(opt);
+  }
+  document.getElementById('export-dialog').showModal();
+});
+
+document.getElementById('export-cancel').addEventListener('click', () => {
+  document.getElementById('export-dialog').close();
+});
+
+document.getElementById('export-ok').addEventListener('click', async () => {
+  const listEl = document.getElementById('export-list');
+  const selected = new Set([...listEl.selectedOptions].map(o => o.value));
+  if (!selected.size) {
+    document.getElementById('export-error').textContent = 'Select at least one ciphertext to export.';
+    return;
+  }
+
+  const entries = exportableEntries().filter(e => selected.has(e.label));
+  const filename = fileHandle ? fileHandle.name : '(unsaved document)';
+  const honorTrim = document.querySelector('input[name="export-trim"]:checked').value === 'trim';
+
+  let text;
+  try {
+    text = buildExportText(filename, entries, honorTrim);
+  } catch (e) {
+    document.getElementById('export-error').textContent = e.message;
+    return;
+  }
+  const suggestedName = fileHandle ? fileHandle.name.replace(/\.cryptml$/i, '') + '-export.txt' : 'ciphertexts-export.txt';
+
+  document.getElementById('export-dialog').close();
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName,
+      types: [{ description: 'Text files', accept: { 'text/plain': ['.txt'] } }],
+    });
+    const writable = await handle.createWritable();
+    await writable.write(text);
+    await writable.close();
+    setStatus(`Exported ${entries.length} ciphertext${entries.length === 1 ? '' : 's'} to ${handle.name}`);
+  } catch (e) {
+    if (e.name !== 'AbortError') setStatus(`Export failed: ${e.message}`, true);
   }
 });
 
