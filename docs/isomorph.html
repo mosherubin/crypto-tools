@@ -67,6 +67,11 @@
     line-height: 1;
     cursor: pointer;
   }
+  #import-btn {
+    padding: 5px 14px;
+    font-size: 0.9em;
+    cursor: pointer;
+  }
   input#description { width: 100%; }
   #run-btn {
     margin: 14px 0 4px 232px;
@@ -116,7 +121,15 @@
   <button id="guide-btn" onclick="window.open('isomorph-guide.html', '_blank')">Guide</button>
 </div>
 
+<div class="row" data-tooltip="Import one or more ciphertexts from a CryptML export file. Ciphertexts are separated by blank and/or comment ('#...') lines. The first ciphertext fills the first empty box below; any additional ones get new boxes.">
+  <span class="lbl">Ciphertext(s):</span>
+  <div class="ctrl">
+    <button type="button" id="import-btn" onclick="triggerImport()">Import</button>
+  </div>
+</div>
+
 <div id="ciphertext-container"></div>
+<input type="file" id="import-file-input" style="display:none" accept=".txt,.cryptml">
 
 <div class="row" data-tooltip="Optional label for this analysis run. Appears in the header of the output report.">
   <span class="lbl">Description (optional):</span>
@@ -501,6 +514,75 @@ function renumberCiphertextBoxes() {
         rows[i].querySelector('.ct-remove-btn').style.display = (i === 0) ? 'none' : '';
     }
 }
+
+// ── CryptML export import ────────────────────────────────────────────────────
+
+function parseCryptMLExport(text) {
+    // Ciphertexts are separated by blank and/or comment ('#...') lines; a
+    // ciphertext itself may span several lines with no blank line between them.
+    var lines = text.split(/\r\n|\r|\n/);
+    var blocks = [];
+    var current = [];
+
+    for (var i = 0; i < lines.length; i++) {
+        var trimmed = lines[i].trim();
+        if (trimmed === '' || trimmed.charAt(0) === '#') {
+            if (current.length > 0) {
+                blocks.push(current.join('\n'));
+                current = [];
+            }
+        } else {
+            current.push(lines[i]);
+        }
+    }
+    if (current.length > 0) blocks.push(current.join('\n'));
+
+    return blocks;
+}
+
+function populateCiphertextBoxes(blocks) {
+    if (blocks.length === 0) return;
+
+    var boxes = document.querySelectorAll('.ciphertext-box');
+    var targetIndex = -1;
+    for (var i = 0; i < boxes.length; i++) {
+        if (boxes[i].value.trim() === '') { targetIndex = i; break; }
+    }
+
+    var startIdx = 0;
+    if (targetIndex >= 0) {
+        boxes[targetIndex].value = blocks[0];
+        startIdx = 1;
+    }
+
+    for (var b = startIdx; b < blocks.length; b++) {
+        addCiphertextBox();
+        var current = document.querySelectorAll('.ciphertext-box');
+        current[current.length - 1].value = blocks[b];
+    }
+}
+
+function triggerImport() {
+    document.getElementById('import-file-input').click();
+}
+
+document.getElementById('import-file-input').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+        var blocks = parseCryptMLExport(evt.target.result);
+        if (blocks.length === 0) {
+            alert('No ciphertexts found in the selected file.');
+        } else {
+            populateCiphertextBoxes(blocks);
+        }
+    };
+    reader.readAsText(file);
+
+    e.target.value = ''; // allow re-selecting the same file later
+});
 
 // ── charset UI ────────────────────────────────────────────────────────────────
 
