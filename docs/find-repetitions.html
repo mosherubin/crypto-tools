@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIND REPETITIONS</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    background: #fff;
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 24px;
+  }
+  h1 {
+    letter-spacing: 6px;
+    font-size: 1.4em;
+    margin: 0;
+  }
+  #guide-btn {
+    position: absolute;
+    right: 0;
+    padding: 5px 14px;
+    font-size: 0.85em;
+    cursor: pointer;
+  }
+  .row {
+    display: flex;
+    align-items: flex-start;
+    margin: 8px 0;
+    gap: 12px;
+  }
+  .lbl {
+    min-width: 220px;
+    padding-top: 5px;
+    font-weight: bold;
+    text-align: right;
+  }
+  .ctrl { flex: 1; }
+  textarea.ciphertext-box {
+    display: block;
+    width: 100%;
+    height: 110px;
+    resize: both;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+  .ct-btn-row {
+    margin-top: 6px;
+    display: flex;
+    gap: 6px;
+  }
+  .ct-btn-row button {
+    width: 30px;
+    height: 26px;
+    font-family: monospace;
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+  }
+  #import-btn {
+    padding: 5px 14px;
+    font-size: 0.9em;
+    cursor: pointer;
+  }
+  input#description { width: 100%; }
+  #run-btn {
+    margin: 14px 0 4px 232px;
+    padding: 7px 30px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  #run-btn:disabled { cursor: wait; opacity: 0.6; }
+  #output {
+    display: block;
+    width: 100%;
+    height: 680px;
+    font-family: monospace;
+    font-size: 0.82em;
+    line-height: 1.35;
+    background: #f6f6f6;
+    border: 1px solid #ccc;
+    padding: 8px;
+    resize: vertical;
+    white-space: pre;
+    overflow: auto;
+    margin-top: 10px;
+  }
+  #pdf-btn {
+    margin: 6px 0 0 232px;
+    padding: 7px 30px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  #print-area { display: none; }
+  @media print {
+    body > * { display: none !important; }
+    #print-area {
+      display: block !important;
+      font-family: monospace;
+      font-size: 0.75em;
+      line-height: 1.35;
+      white-space: pre;
+    }
+  }
+</style>
+</head>
+<body>
+<p><a href="index.html">&larr; back to tools</a></p>
+<div class="header-row">
+  <h1>Find Repetitions <span style="letter-spacing:normal; font-size:0.75em;">(version 0.1)</span></h1>
+  <button id="guide-btn" onclick="window.open('find-repetitions-guide.html', '_blank')">Guide</button>
+</div>
+
+<div class="row" data-tooltip="Import one or more ciphertexts from a CryptML export file. Ciphertexts are separated by blank and/or comment ('#...') lines. The first ciphertext fills the first empty box below; any additional ones get new boxes.">
+  <span class="lbl">Ciphertext(s):</span>
+  <div class="ctrl">
+    <button type="button" id="import-btn" onclick="triggerImport()">Import</button>
+  </div>
+</div>
+
+<div id="ciphertext-container"></div>
+<input type="file" id="import-file-input" style="display:none" accept=".txt,.cryptml">
+
+<div class="row" data-tooltip="Optional label for this analysis run. Appears in the header of the output report.">
+  <span class="lbl">Description (optional):</span>
+  <div class="ctrl">
+    <input type="text" id="description" />
+  </div>
+</div>
+
+<div class="row" data-tooltip="The set of valid cipher symbols. [A-Za-z] for standard 26-letter alphabets, [0-9] for digit ciphers, [A-Za-z0-9] for alphanumeric ciphers. Choose 'Other' to enter a custom character set as a regular expression.">
+  <span class="lbl">Character set:</span>
+  <div class="ctrl" style="display:flex; align-items:center; gap:8px;">
+    <select id="charset" onchange="onCharsetChange()">
+      <option value="[A-Za-z]">[A-Za-z] -- 26 characters (default)</option>
+      <option value="[0-9]">[0-9] -- 10 characters</option>
+      <option value="[A-Za-z0-9]">[A-Za-z0-9] -- 36 characters</option>
+      <option value="[Other]">Other...</option>
+    </select>
+    <input type="text" id="custom_charset" style="display:none; font-family:monospace; width:16em;"
+           placeholder="e.g. ab or adfgvx or A-IK-Z">
+  </div>
+</div>
+
+<div class="row">
+  <span class="lbl"></span>
+  <div class="ctrl">
+    <label data-tooltip="When checked, the extracted letters of every ciphertext are printed in groups of five at the top of the output report.">
+      <input type="checkbox" id="display_ct">
+      Display ciphertext(s) in output
+    </label>
+  </div>
+</div>
+
+<div class="row" data-tooltip="Repeated sequences shorter than this length are ignored -- every alphabet has trivially repeating short substrings, so a floor is needed.">
+  <span class="lbl">Minimum Sequence Length:</span>
+  <div class="ctrl">
+    <input type="number" id="min_length" value="5" min="1" style="width:6em;"> (default: 5)
+  </div>
+</div>
+
+<button id="run-btn" onclick="runRepetitionSearch()" data-tooltip="Search every pairing of the ciphertext(s) above -- including each one against itself -- for exact repeated sequences.">Run</button>
+<button id="pdf-btn" onclick="savePdf()" data-tooltip="Open the browser print dialog to save the output report as a PDF or send to a printer.">Print</button>
+
+<textarea id="output" readonly></textarea>
+<pre id="print-area"></pre>
+
+<script>
+'use strict';
+
+// ── utility ──────────────────────────────────────────────────────────────────
+
+function padStart(s, n) { s = String(s); while (s.length < n) s = ' ' + s; return s; }
+
+// ── ciphertext cleaning ──────────────────────────────────────────────────────
+// Ported from ciphertext.py / stethoscope.html's createFromText
+
+function expandAlphabet(charsetRe, caseSensitive) {
+    var seen = {};
+    var result = [];
+    for (var code = 32; code <= 126; code++) {
+        var ch = String.fromCharCode(code);
+        var folded = caseSensitive ? ch : ch.toUpperCase();
+        if (charsetRe.test(folded) && !seen[folded]) {
+            seen[folded] = true;
+            result.push(folded);
+        }
+    }
+    return result.join('');
+}
+
+function cleanCiphertext(raw, charsetPattern, caseSensitive) {
+    var flags = caseSensitive ? '' : 'i';
+    var charsetRe = new RegExp('^(?:' + charsetPattern + ')$', flags);
+    var ignoreRe  = new RegExp('^(?:\\s)$');
+    var ditschar  = '-';
+
+    var letters = [];
+    var errors = [];
+
+    for (var i = 0; i < raw.length; i++) {
+        var ch = raw[i];
+        var folded = caseSensitive ? ch : ch.toUpperCase();
+        if (charsetRe.test(folded)) {
+            letters.push(folded);
+        } else if (folded === ditschar) {
+            // dits (null placeholders) are silently dropped
+        } else if (ignoreRe.test(ch)) {
+            // whitespace silently dropped
+        } else {
+            if (errors.length < 20)
+                errors.push("Invalid character '" + ch + "' at position " + i);
+        }
+    }
+
+    if (errors.length > 0)
+        throw new Error('Ciphertext contains invalid characters:\n' + errors.join('\n'));
+
+    return letters.join('');
+}
+
+// ── find_repetitions.py port ─────────────────────────────────────────────────
+
+function scanAlignment(lettersA, lettersB, offset, minLength) {
+    var lenA = lettersA.length, lenB = lettersB.length;
+    var positionA = Math.max(0, -offset);
+    var positionB = positionA + offset;
+
+    var found = [];
+    while (positionA < lenA && positionB < lenB) {
+        if (lettersA[positionA] === lettersB[positionB]) {
+            var length = 1;
+            while (positionA + length < lenA && positionB + length < lenB &&
+                   lettersA[positionA + length] === lettersB[positionB + length]) {
+                length++;
+            }
+            if (length >= minLength) {
+                found.push({ positionA: positionA, positionB: positionB, length: length });
+                positionA += length;
+                positionB += length;
+                continue;
+            }
+        }
+        positionA++;
+        positionB++;
+    }
+
+    return found;
+}
+
+function findBetween(lettersA, lettersB, minLength, selfSearch) {
+    var lenA = lettersA.length, lenB = lettersB.length;
+    var found = [];
+
+    if (selfSearch) {
+        // Offset 1 can only ever match a run of one repeated character (lettersA[i] ==
+        // lettersA[i+1] == lettersA[i+2] == ...), never a genuine multi-character
+        // sequence, so it is excluded as cryptanalytically uninteresting.
+        for (var offset = 2; offset < lenA; offset++) {
+            found = found.concat(scanAlignment(lettersA, lettersB, offset, minLength));
+        }
+    } else {
+        for (var offset2 = -(lenA - 1); offset2 < lenB; offset2++) {
+            found = found.concat(scanAlignment(lettersA, lettersB, offset2, minLength));
+        }
+    }
+
+    return found;
+}
+
+function countRepetitions(results) {
+    var counts = {};
+    for (var i = 0; i < results.length; i++) {
+        var text = results[i].text;
+        counts[text] = (counts[text] || 0) + 1;
+    }
+
+    var frequent = [];
+    for (var text2 in counts) {
+        if (counts.hasOwnProperty(text2) && counts[text2] > 2) {
+            frequent.push({ text: text2, count: counts[text2] });
+        }
+    }
+
+    frequent.sort(function(a, b) {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.text < b.text ? -1 : (a.text > b.text ? 1 : 0);
+    });
+
+    return frequent;
+}
+
+function locateRepetitions(ciphertexts, minLength) {
+    var results = [];
+    for (var i = 0; i < ciphertexts.length; i++) {
+        for (var j = i; j < ciphertexts.length; j++) {
+            var selfSearch = (i === j);
+            var found = findBetween(ciphertexts[i], ciphertexts[j], minLength, selfSearch);
+            for (var k = 0; k < found.length; k++) {
+                results.push({
+                    messageA: i, messageB: j,
+                    positionA: found[k].positionA, positionB: found[k].positionB,
+                    length: found[k].length,
+                    text: ciphertexts[i].slice(found[k].positionA, found[k].positionA + found[k].length),
+                });
+            }
+        }
+    }
+    return results;
+}
+
+// ── ciphertext box management ────────────────────────────────────────────────
+
+var _ctNextUid = 0;
+
+function ctBlockHtml(uid) {
+    return (
+        '<div class="row ct-row" data-uid="' + uid + '" data-tooltip="Enter or paste one ciphertext here. Spaces, punctuation, and dashes (dits) are handled automatically; only characters matching the selected character set are extracted for analysis.">' +
+        '<span class="lbl ct-label"></span>' +
+        '<div class="ctrl">' +
+        '<textarea class="ciphertext-box" placeholder="Paste ciphertext here..."></textarea>' +
+        '<div class="ct-btn-row">' +
+        '<button type="button" class="ct-add-btn" onclick="addCiphertextBox()" title="Add another ciphertext">+</button>' +
+        '<button type="button" class="ct-remove-btn" onclick="removeCiphertextBox(' + uid + ')" title="Remove this ciphertext">&minus;</button>' +
+        '</div>' +
+        '</div>' +
+        '</div>'
+    );
+}
+
+function addCiphertextBox() {
+    var uid = _ctNextUid++;
+    var container = document.getElementById('ciphertext-container');
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = ctBlockHtml(uid);
+    container.appendChild(wrapper.firstChild);
+    renumberCiphertextBoxes();
+}
+
+function removeCiphertextBox(uid) {
+    var row = document.querySelector('.ct-row[data-uid="' + uid + '"]');
+    if (row) row.parentNode.removeChild(row);
+    renumberCiphertextBoxes();
+}
+
+function renumberCiphertextBoxes() {
+    var rows = document.querySelectorAll('.ct-row');
+    for (var i = 0; i < rows.length; i++) {
+        rows[i].querySelector('.ct-label').textContent = 'Ciphertext ' + (i + 1) + ':';
+        rows[i].querySelector('.ct-remove-btn').style.display = (i === 0) ? 'none' : '';
+    }
+}
+
+// ── CryptML export import ────────────────────────────────────────────────────
+
+function parseCryptMLExport(text) {
+    // Ciphertexts are separated by blank and/or comment ('#...') lines; a
+    // ciphertext itself may span several lines with no blank line between them.
+    var lines = text.split(/\r\n|\r|\n/);
+    var blocks = [];
+    var current = [];
+
+    for (var i = 0; i < lines.length; i++) {
+        var trimmed = lines[i].trim();
+        if (trimmed === '' || trimmed.charAt(0) === '#') {
+            if (current.length > 0) {
+                blocks.push(current.join('\n'));
+                current = [];
+            }
+        } else {
+            current.push(lines[i]);
+        }
+    }
+    if (current.length > 0) blocks.push(current.join('\n'));
+
+    return blocks;
+}
+
+function populateCiphertextBoxes(blocks) {
+    if (blocks.length === 0) return;
+
+    var boxes = document.querySelectorAll('.ciphertext-box');
+    var targetIndex = -1;
+    for (var i = 0; i < boxes.length; i++) {
+        if (boxes[i].value.trim() === '') { targetIndex = i; break; }
+    }
+
+    var startIdx = 0;
+    if (targetIndex >= 0) {
+        boxes[targetIndex].value = blocks[0];
+        startIdx = 1;
+    }
+
+    for (var b = startIdx; b < blocks.length; b++) {
+        addCiphertextBox();
+        var current = document.querySelectorAll('.ciphertext-box');
+        current[current.length - 1].value = blocks[b];
+    }
+}
+
+function triggerImport() {
+    document.getElementById('import-file-input').click();
+}
+
+document.getElementById('import-file-input').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+        var blocks = parseCryptMLExport(evt.target.result);
+        if (blocks.length === 0) {
+            alert('No ciphertexts found in the selected file.');
+        } else {
+            populateCiphertextBoxes(blocks);
+        }
+    };
+    reader.readAsText(file);
+
+    e.target.value = ''; // allow re-selecting the same file later
+});
+
+// ── charset UI ────────────────────────────────────────────────────────────────
+
+var CHARSET_MAP = {
+    '[A-Za-z]':    { pattern: '[A-Z]',       caseSensitive: false },
+    '[0-9]':       { pattern: '[0-9]',        caseSensitive: true  },
+    '[A-Za-z0-9]': { pattern: '[A-Za-z0-9]', caseSensitive: false },
+};
+
+function normalizeCustomCharset(raw) {
+    var s = raw.trim();
+    if (!s) return null;
+    if (s[0] !== '[') s = '[' + s + ']';
+    try { new RegExp('^(?:' + s + ')$'); } catch (e) { return null; }
+    return s;
+}
+
+function onCharsetChange() {
+    var charsetKey = document.getElementById('charset').value;
+    document.getElementById('custom_charset').style.display = (charsetKey === '[Other]') ? '' : 'none';
+}
+
+// ── formatting ────────────────────────────────────────────────────────────────
+
+var _MONTHS = ['January','February','March','April','May','June',
+               'July','August','September','October','November','December'];
+
+function runHeader() {
+    var n    = new Date();
+    var dd   = String(n.getDate()).padStart(2, '0');
+    var mon  = _MONTHS[n.getMonth()];
+    var yyyy = n.getFullYear();
+    var hh   = String(n.getHours()).padStart(2, '0');
+    var mm   = String(n.getMinutes()).padStart(2, '0');
+    var ss   = String(n.getSeconds()).padStart(2, '0');
+    return 'FIND REPETITIONS (version 0.1)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+}
+
+function formatCiphertextBlock(letters, label) {
+    var lines = [label + ' (' + letters.length + ' letters):'];
+    var groups = [];
+    for (var gi = 0; gi < letters.length; gi += 5) groups.push(letters.slice(gi, gi + 5));
+    var rows = [];
+    for (var ri = 0; ri < groups.length; ri += 10) rows.push(groups.slice(ri, ri + 10).join(' '));
+    for (var rj = 0; rj < rows.length; rj++) lines.push(rows[rj]);
+    return lines.join('\n');
+}
+
+function formatResults(results, minLength) {
+    var lines = [];
+    lines.push('REPETITIONS FOUND  (minimum length ' + minLength + ')');
+    lines.push(padStart('MSG A', 6) + ' ' + padStart('MSG B', 6) + ' ' + padStart('POS A', 6) + ' ' +
+               padStart('POS B', 6) + ' ' + padStart('LEN', 4) + '   TEXT');
+
+    results.sort(function(a, b) {
+        if (b.length !== a.length) return b.length - a.length;
+        if (a.messageA !== b.messageA) return a.messageA - b.messageA;
+        if (a.messageB !== b.messageB) return a.messageB - b.messageB;
+        return a.positionA - b.positionA;
+    });
+
+    for (var i = 0; i < results.length; i++) {
+        var r = results[i];
+        lines.push(
+            padStart(r.messageA + 1, 6) + ' ' + padStart(r.messageB + 1, 6) + ' ' +
+            padStart(r.positionA + 1, 6) + ' ' + padStart(r.positionB + 1, 6) + ' ' +
+            padStart(r.length, 4) + '   ' + r.text
+        );
+    }
+
+    if (results.length === 0) lines.push('(none found)');
+    else {
+        lines.push('');
+        lines.push('Total repetitions found: ' + results.length);
+    }
+
+    return lines.join('\n');
+}
+
+function formatCounts(counts) {
+    var lines = [];
+    lines.push('REPETITION COUNTS  (count > 2)');
+    lines.push(padStart('COUNT', 6) + '  TEXT');
+    for (var i = 0; i < counts.length; i++) {
+        lines.push(padStart(counts[i].count, 6) + '  ' + counts[i].text);
+    }
+    if (counts.length === 0) lines.push('(none found)');
+    return lines.join('\n');
+}
+
+// ── main run ──────────────────────────────────────────────────────────────────
+
+function runRepetitionSearch() {
+    var btn = document.getElementById('run-btn');
+    btn.disabled = true;
+    var out = document.getElementById('output');
+    out.value = 'Running...';
+
+    try {
+        var charsetKey = document.getElementById('charset').value;
+        var charsetCfg;
+        if (charsetKey === '[Other]') {
+            var normalized = normalizeCustomCharset(document.getElementById('custom_charset').value);
+            if (!normalized) {
+                out.value = 'ERROR: Invalid or empty custom character set.';
+                btn.disabled = false;
+                return;
+            }
+            charsetCfg = { pattern: normalized, caseSensitive: false };
+        } else {
+            charsetCfg = CHARSET_MAP[charsetKey] || CHARSET_MAP['[A-Za-z]'];
+        }
+
+        var alphabet = expandAlphabet(new RegExp('^(?:' + charsetCfg.pattern + ')$', charsetCfg.caseSensitive ? '' : 'i'), charsetCfg.caseSensitive);
+        if (!alphabet) {
+            out.value = "ERROR: charset '" + charsetCfg.pattern + "' matched no characters.";
+            btn.disabled = false;
+            return;
+        }
+
+        var boxes = document.querySelectorAll('.ciphertext-box');
+        var ciphertexts = [];
+        for (var i = 0; i < boxes.length; i++) {
+            var letters = cleanCiphertext(boxes[i].value, charsetCfg.pattern, charsetCfg.caseSensitive);
+            if (letters.length > 0) ciphertexts.push(letters);
+        }
+
+        if (ciphertexts.length === 0) {
+            out.value = 'ERROR: Please enter at least one ciphertext.';
+            btn.disabled = false;
+            return;
+        }
+
+        var minLength = parseInt(document.getElementById('min_length').value, 10) || 5;
+        var displayCt = document.getElementById('display_ct').checked;
+        var desc = document.getElementById('description').value.trim();
+
+        var results = locateRepetitions(ciphertexts, minLength);
+
+        var parts = [runHeader(), ''];
+        if (desc) parts.push('Description: ' + desc);
+        parts.push('Character set: ' + charsetCfg.pattern + ' (' + alphabet.length + ' characters)');
+        parts.push('');
+
+        if (displayCt) {
+            for (var b = 0; b < ciphertexts.length; b++) {
+                parts.push(formatCiphertextBlock(ciphertexts[b], 'Ciphertext ' + (b + 1)));
+                parts.push('');
+            }
+        }
+
+        parts.push(formatResults(results, minLength));
+        parts.push('');
+        parts.push(formatCounts(countRepetitions(results)));
+
+        out.value = parts.join('\n');
+    } catch (e) {
+        out.value = 'ERROR: ' + e.message;
+    }
+
+    btn.disabled = false;
+}
+
+function savePdf() {
+    var content = document.getElementById('output').value;
+    if (!content || content === 'Running...') return;
+    document.getElementById('print-area').textContent = content;
+    window.print();
+}
+
+// ── init ──────────────────────────────────────────────────────────────────────
+
+addCiphertextBox();
+
+// ── tooltip ──────────────────────────────────────────────────────────────────
+(function() {
+    var tip = document.createElement('div');
+    tip.style.cssText = 'position:fixed;background:#222;color:#fff;padding:6px 10px;'
+        + 'border-radius:4px;font-size:0.82em;font-family:Arial,sans-serif;'
+        + 'letter-spacing:normal;line-height:1.4;white-space:normal;max-width:300px;'
+        + 'z-index:9999;pointer-events:none;display:none;'
+        + 'box-shadow:0 2px 6px rgba(0,0,0,0.35);';
+    document.body.appendChild(tip);
+
+    var _tipTimer = null;
+
+    function cancelTip() {
+        clearTimeout(_tipTimer);
+        _tipTimer = null;
+        tip.style.display = 'none';
+    }
+
+    document.addEventListener('mouseover', function(e) {
+        var el = e.target.closest('[data-tooltip]');
+        if (el) {
+            clearTimeout(_tipTimer);
+            _tipTimer = setTimeout(function() {
+                tip.textContent = el.dataset.tooltip;
+                tip.style.display = 'block';
+            }, 1000);
+        } else {
+            cancelTip();
+        }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (tip.style.display !== 'none') {
+            var x = e.clientX + 14;
+            var y = e.clientY + 14;
+            if (x + 310 > window.innerWidth)  x = e.clientX - 320;
+            if (y + tip.offsetHeight + 10 > window.innerHeight) y = e.clientY - tip.offsetHeight - 10;
+            tip.style.left = x + 'px';
+            tip.style.top  = y + 'px';
+        }
+    });
+
+    document.addEventListener('mouseout', function(e) {
+        if (!e.relatedTarget || !e.relatedTarget.closest('[data-tooltip]')) {
+            cancelTip();
+        }
+    });
+
+    document.addEventListener('mousedown', function() { cancelTip(); });
+})();
+</script>
+</body>
+</html>
