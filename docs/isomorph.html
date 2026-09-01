@@ -520,24 +520,45 @@ function renumberCiphertextBoxes() {
 function parseCryptMLExport(text) {
     // Ciphertexts are separated by blank and/or comment ('#...') lines; a
     // ciphertext itself may span several lines with no blank line between them.
+    // A comment line immediately preceding a ciphertext (e.g. "# FILE.cryptml
+    // :: ID") is captured as that ciphertext's source label; a ciphertext with
+    // no preceding comment gets label=null (e.g. one typed in by hand).
     var lines = text.split(/\r\n|\r|\n/);
     var blocks = [];
     var current = [];
+    var pendingLabel = null;
+
+    function flush() {
+        if (current.length > 0) {
+            blocks.push({ label: pendingLabel, text: current.join('\n') });
+            current = [];
+            pendingLabel = null;
+        }
+    }
 
     for (var i = 0; i < lines.length; i++) {
         var trimmed = lines[i].trim();
-        if (trimmed === '' || trimmed.charAt(0) === '#') {
-            if (current.length > 0) {
-                blocks.push(current.join('\n'));
-                current = [];
-            }
+        if (trimmed === '') {
+            flush();
+        } else if (trimmed.charAt(0) === '#') {
+            flush();
+            pendingLabel = trimmed.replace(/^#\s*/, '');
         } else {
             current.push(lines[i]);
         }
     }
-    if (current.length > 0) blocks.push(current.join('\n'));
+    flush();
 
     return blocks;
+}
+
+function applyImportedBlock(box, block) {
+    box.value = block.text;
+    if (block.label) {
+        box.setAttribute('data-ct-label', block.label);
+    } else {
+        box.removeAttribute('data-ct-label');
+    }
 }
 
 function populateCiphertextBoxes(blocks) {
@@ -551,16 +572,26 @@ function populateCiphertextBoxes(blocks) {
 
     var startIdx = 0;
     if (targetIndex >= 0) {
-        boxes[targetIndex].value = blocks[0];
+        applyImportedBlock(boxes[targetIndex], blocks[0]);
         startIdx = 1;
     }
 
     for (var b = startIdx; b < blocks.length; b++) {
         addCiphertextBox();
         var current = document.querySelectorAll('.ciphertext-box');
-        current[current.length - 1].value = blocks[b];
+        applyImportedBlock(current[current.length - 1], blocks[b]);
     }
 }
+
+// A box's source label is only trustworthy as long as its text is exactly what
+// was imported; once a human edits it by hand, drop the label rather than risk
+// mislabeling it. Setting .value from JS (as applyImportedBlock does) does not
+// fire 'input', so imported content keeps its label.
+document.getElementById('ciphertext-container').addEventListener('input', function(e) {
+    if (e.target.classList.contains('ciphertext-box')) {
+        e.target.removeAttribute('data-ct-label');
+    }
+});
 
 function triggerImport() {
     document.getElementById('import-file-input').click();
@@ -625,8 +656,8 @@ function runHeader() {
     return 'ISOMORPH SEARCH (version 0.1)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
-function formatCiphertextBlock(letters, label) {
-    var lines = [label + ' (' + letters.length + ' letters):'];
+function formatCiphertextBlock(letters, ordinalLabel, sourceLabel) {
+    var lines = [ordinalLabel + ' (' + (sourceLabel ? sourceLabel + ', ' : '') + letters.length + ' letters):'];
     var groups = [];
     for (var gi = 0; gi < letters.length; gi += 5) groups.push(letters.slice(gi, gi + 5));
     var rows = [];
@@ -698,9 +729,13 @@ function runIsomorphSearch() {
 
         var boxes = document.querySelectorAll('.ciphertext-box');
         var ciphertexts = [];
+        var ciphertextLabels = [];
         for (var i = 0; i < boxes.length; i++) {
             var letters = cleanCiphertext(boxes[i].value, charsetCfg.pattern, charsetCfg.caseSensitive);
-            if (letters.length > 0) ciphertexts.push(letters);
+            if (letters.length > 0) {
+                ciphertexts.push(letters);
+                ciphertextLabels.push(boxes[i].getAttribute('data-ct-label'));
+            }
         }
 
         if (ciphertexts.length === 0) {
@@ -736,7 +771,7 @@ function runIsomorphSearch() {
 
         if (displayCt) {
             for (var b = 0; b < ciphertexts.length; b++) {
-                parts.push(formatCiphertextBlock(ciphertexts[b], 'Ciphertext ' + (b + 1)));
+                parts.push(formatCiphertextBlock(ciphertexts[b], 'Ciphertext ' + (b + 1), ciphertextLabels[b]));
                 parts.push('');
             }
         }
