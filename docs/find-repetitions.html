@@ -343,7 +343,14 @@ function addCiphertextBox() {
     var container = document.getElementById('ciphertext-container');
     var wrapper = document.createElement('div');
     wrapper.innerHTML = ctBlockHtml(uid);
-    container.appendChild(wrapper.firstChild);
+    var row = wrapper.firstChild;
+    container.appendChild(row);
+    // Imported labels describe the text as imported; once the user edits it by hand
+    // the label can no longer be trusted to match, so drop it.
+    row.querySelector('.ciphertext-box').addEventListener('input', function() {
+        delete this.dataset.label;
+        renumberCiphertextBoxes();
+    });
     renumberCiphertextBoxes();
 }
 
@@ -356,7 +363,9 @@ function removeCiphertextBox(uid) {
 function renumberCiphertextBoxes() {
     var rows = document.querySelectorAll('.ct-row');
     for (var i = 0; i < rows.length; i++) {
-        rows[i].querySelector('.ct-label').textContent = 'Ciphertext ' + (i + 1) + ':';
+        var label = rows[i].querySelector('.ciphertext-box').dataset.label;
+        var text = 'Ciphertext ' + (i + 1) + (label ? ' (' + label + ')' : '') + ':';
+        rows[i].querySelector('.ct-label').textContent = text;
         rows[i].querySelector('.ct-remove-btn').style.display = (i === 0) ? 'none' : '';
     }
 }
@@ -366,22 +375,33 @@ function renumberCiphertextBoxes() {
 function parseCryptMLExport(text) {
     // Ciphertexts are separated by blank and/or comment ('#...') lines; a
     // ciphertext itself may span several lines with no blank line between them.
+    // A comment line immediately preceding a block (e.g. "# file.cryptml :: A50/18")
+    // is kept as that block's label; a blank line also clears the pending label,
+    // since it isn't attached to anything without an intervening comment.
     var lines = text.split(/\r\n|\r|\n/);
     var blocks = [];
     var current = [];
+    var pendingLabel = null;
 
     for (var i = 0; i < lines.length; i++) {
         var trimmed = lines[i].trim();
-        if (trimmed === '' || trimmed.charAt(0) === '#') {
+        if (trimmed.charAt(0) === '#') {
             if (current.length > 0) {
-                blocks.push(current.join('\n'));
+                blocks.push({ label: pendingLabel, text: current.join('\n') });
                 current = [];
             }
+            pendingLabel = trimmed.slice(1).trim();
+        } else if (trimmed === '') {
+            if (current.length > 0) {
+                blocks.push({ label: pendingLabel, text: current.join('\n') });
+                current = [];
+            }
+            pendingLabel = null;
         } else {
             current.push(lines[i]);
         }
     }
-    if (current.length > 0) blocks.push(current.join('\n'));
+    if (current.length > 0) blocks.push({ label: pendingLabel, text: current.join('\n') });
 
     return blocks;
 }
@@ -397,15 +417,20 @@ function populateCiphertextBoxes(blocks) {
 
     var startIdx = 0;
     if (targetIndex >= 0) {
-        boxes[targetIndex].value = blocks[0];
+        boxes[targetIndex].value = blocks[0].text;
+        boxes[targetIndex].dataset.label = blocks[0].label || '';
         startIdx = 1;
     }
 
     for (var b = startIdx; b < blocks.length; b++) {
         addCiphertextBox();
         var current = document.querySelectorAll('.ciphertext-box');
-        current[current.length - 1].value = blocks[b];
+        var box = current[current.length - 1];
+        box.value = blocks[b].text;
+        box.dataset.label = blocks[b].label || '';
     }
+
+    renumberCiphertextBoxes();
 }
 
 function triggerImport() {
@@ -467,8 +492,9 @@ function runHeader() {
     return 'FIND REPETITIONS (version 0.1)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
-function formatCiphertextBlock(letters, label) {
-    var lines = [label + ' (' + letters.length + ' letters):'];
+function formatCiphertextBlock(letters, index, importLabel) {
+    var header = 'Ciphertext ' + index + ' (' + (importLabel ? importLabel + ', ' : '') + letters.length + ' letters):';
+    var lines = [header];
     var groups = [];
     for (var gi = 0; gi < letters.length; gi += 5) groups.push(letters.slice(gi, gi + 5));
     var rows = [];
@@ -551,9 +577,13 @@ function runRepetitionSearch() {
 
         var boxes = document.querySelectorAll('.ciphertext-box');
         var ciphertexts = [];
+        var importLabels = [];
         for (var i = 0; i < boxes.length; i++) {
             var letters = cleanCiphertext(boxes[i].value, charsetCfg.pattern, charsetCfg.caseSensitive);
-            if (letters.length > 0) ciphertexts.push(letters);
+            if (letters.length > 0) {
+                ciphertexts.push(letters);
+                importLabels.push(boxes[i].dataset.label || '');
+            }
         }
 
         if (ciphertexts.length === 0) {
@@ -575,7 +605,7 @@ function runRepetitionSearch() {
 
         if (displayCt) {
             for (var b = 0; b < ciphertexts.length; b++) {
-                parts.push(formatCiphertextBlock(ciphertexts[b], 'Ciphertext ' + (b + 1)));
+                parts.push(formatCiphertextBlock(ciphertexts[b], b + 1, importLabels[b]));
                 parts.push('');
             }
         }
