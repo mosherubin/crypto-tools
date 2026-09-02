@@ -185,3 +185,133 @@ def locate_isomorphs(ciphertexts: list, min_isolen: int) -> list:
 
     maximal = _filter_maximal(results)
     return [c for c in maximal if not _is_disguised_repetition(c, min_isolen)]
+
+
+def prune_shallow(text: str) -> tuple:
+    """
+    Trim a leading and trailing run of "singleton" characters -- those occurring
+    exactly once anywhere in `text` -- using text's own letter-frequency count
+    (fixed before trimming starts, so removing one singleton cannot expose a
+    "new" one further in; trimming always stops at the first character, from
+    each side, that recurs elsewhere in the original text).
+
+    Returns (start, end): the surviving span as a [start, end) slice of `text`.
+    """
+    freq: dict = {}
+    for ch in text:
+        freq[ch] = freq.get(ch, 0) + 1
+
+    length = len(text)
+    start = 0
+    while start < length and freq[text[start]] == 1:
+        start += 1
+
+    end = length
+    while end > start and freq[text[end - 1]] == 1:
+        end -= 1
+
+    return start, end
+
+
+def prune_deep(text: str) -> tuple:
+    """
+    Find the single largest connected region of overlapping repeat-pairs within
+    `text`. Each character's occurrence and its next occurrence define an
+    interval [i, j] -- "this letter recurs here"; overlapping intervals (e.g.
+    R's pair and O's pair both spanning some of the same ground) are merged,
+    and the largest merged interval survives. An isolated bounded pair that
+    does not overlap anything else (e.g. a repeated letter with nothing else
+    recurring nearby) is discarded even though it is not a singleton, in favor
+    of a longer interlaced region elsewhere in the text.
+
+    Returns (start, end): the surviving span as a [start, end) slice of `text`,
+    or (0, 0) if no character in `text` repeats at all.
+    """
+    last_seen: dict = {}
+    intervals = []
+    for i, ch in enumerate(text):
+        if ch in last_seen:
+            intervals.append((last_seen[ch], i))
+        last_seen[ch] = i
+
+    if not intervals:
+        return 0, 0
+
+    intervals.sort()
+
+    best_start, best_end = intervals[0]
+    cur_start, cur_end = intervals[0]
+
+    def _span(s, e):
+        return e - s
+
+    for s, e in intervals[1:]:
+        if s <= cur_end:
+            cur_end = max(cur_end, e)
+        else:
+            if _span(cur_start, cur_end) > _span(best_start, best_end):
+                best_start, best_end = cur_start, cur_end
+            cur_start, cur_end = s, e
+
+    if _span(cur_start, cur_end) > _span(best_start, best_end):
+        best_start, best_end = cur_start, cur_end
+
+    return best_start, best_end + 1  # convert inclusive end -> exclusive
+
+
+PRUNE_MODES = ('raw', 'shallow', 'deep')
+
+
+def apply_pruning(candidate: IsomorphCandidate, mode: str, min_isolen: int) -> Optional[IsomorphCandidate]:
+    """
+    Apply a pruning mode to a located candidate, returning a new (shrunk)
+    IsomorphCandidate with adjusted position/length/text, or None if the
+    pruned result falls below min_isolen (including vanishing to nothing).
+    'raw' returns the candidate unchanged. Only text_a is used to determine
+    the trim span -- the pattern (and hence the span) is identical in text_b
+    by definition of isomorphism -- and the same span is applied to both.
+    """
+    if mode == 'raw':
+        return candidate
+
+    if mode == 'shallow':
+        start, end = prune_shallow(candidate.text_a)
+    elif mode == 'deep':
+        start, end = prune_deep(candidate.text_a)
+    else:
+        raise ValueError(f"unknown pruning mode {mode!r}")
+
+    length = end - start
+    if length < min_isolen:
+        return None
+
+    return IsomorphCandidate(
+        message_a=candidate.message_a, message_b=candidate.message_b,
+        position_a=candidate.position_a + start, position_b=candidate.position_b + start,
+        length=length,
+        text_a=candidate.text_a[start:end], text_b=candidate.text_b[start:end],
+    )
+
+
+def prune_candidates(candidates: list, mode: str, min_isolen: int) -> list:
+    """
+    Apply a pruning mode to every candidate in a located list, dropping any that
+    fall below min_isolen and de-duplicating any that converge on the same
+    pruned span. Distinct raw maximal candidates (e.g. two overlapping but
+    non-nested isomorphs at different alignments) can legitimately prune down
+    to an identical result -- shallow trimming or deep pruning's largest-
+    connected-region search may land on the same core letters from either
+    starting point -- so the same pruned isomorph must not be reported twice.
+    """
+    seen: set = set()
+    pruned = []
+    for candidate in candidates:
+        result = apply_pruning(candidate, mode, min_isolen)
+        if result is None:
+            continue
+        key = (result.message_a, result.message_b, result.position_a, result.position_b, result.length)
+        if key in seen:
+            continue
+        seen.add(key)
+        pruned.append(result)
+    return pruned

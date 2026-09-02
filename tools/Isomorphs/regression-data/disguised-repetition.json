@@ -1,0 +1,21 @@
+{
+  "test_case_id": "isomorph-disguised-repetition",
+  "description": "Regression fixture guarding against a specific defect: an isomorph whose core (after trimming mismatched boundary characters) is an exact repeat long enough to be independently notable is really a plain repetition wearing mismatched characters at each end -- e.g. MHTZAITYDZYB / FHTZAITYDZYG is just the repeated string HTZAITYDZY with a different letter tacked onto each end. Reported by Moshe Rubin 2026-07-15; fixed by isomorph_search._is_disguised_repetition (Python) / isDisguisedRepetition (JS). At min_isolen=4 this ciphertext's only raw candidate is exactly this disguised repetition, so expected_results.raw is intentionally empty; shallow/deep pruning shrink other, unrelated candidates below significance too, so all three lists are expected to be empty.",
+  "ciphertexts": [
+    {
+      "name": "Cryptologia-1984-Wheatstone",
+      "raw": "SFDZFIOGHLPZFGZDYSPFHBZDSGVHTFUPLVDFGYVJVFVHTGADZZAITYDZYFZJZTGPTVTZBDVFHTZDFXSBGIDZYVTXOIYVTEFVMGZZTHLLVXZDFMHTZAITYDZYBDVFHTZDFKZDZZJSXISGZYGAVFSLGZDTHHTCDZRSVTYZDOZFFHTZAITYDZYGAVDGZZTKHITYZYSDZGHUZFZTGUPGDIXWGHXASRUZDFUIDEGHTVEAGXX",
+      "charset": "[A-Z]"
+    }
+  ],
+  "parameters": {
+    "min_isolen": 4,
+    "max_expected": 0.5,
+    "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  },
+  "expected_results": {
+    "raw": [],
+    "shallow": [],
+    "deep": []
+  }
+}

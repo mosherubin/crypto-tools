@@ -176,6 +176,15 @@
   </div>
 </div>
 
+<div class="row" data-tooltip="Pruning trims characters from both ends of a raw isomorph before it is evaluated, to focus on the letters carrying the strongest evidence of a real substitution relationship. Check any combination -- each produces its own report section, in Deep / Shallow / Raw order.">
+  <span class="lbl">Pruning:</span>
+  <div class="ctrl">
+    <label style="margin-right:16px;"><input type="checkbox" id="prune_raw" checked> Raw</label>
+    <label style="margin-right:16px;"><input type="checkbox" id="prune_shallow"> Shallow</label>
+    <label><input type="checkbox" id="prune_deep"> Deep</label>
+  </div>
+</div>
+
 <button id="run-btn" onclick="runIsomorphSearch()" data-tooltip="Locate and evaluate all statistically significant isomorphs across the ciphertext(s) above.">Run</button>
 <button id="pdf-btn" onclick="savePdf()" data-tooltip="Open the browser print dialog to save the output report as a PDF or send to a printer.">Print</button>
 
@@ -403,6 +412,111 @@ function locateIsomorphs(ciphertexts, minIsolen) {
         if (!isDisguisedRepetition(maximal[m], minIsolen)) genuine.push(maximal[m]);
     }
     return genuine;
+}
+
+// ── pruning ───────────────────────────────────────────────────────────────────
+
+function pruneShallow(text) {
+    // Trim a leading and trailing run of "singleton" characters -- those
+    // occurring exactly once anywhere in text -- using text's own letter-
+    // frequency count (fixed before trimming starts). Returns [start, end):
+    // the surviving span as indices into text.
+    var freq = {};
+    for (var i = 0; i < text.length; i++) freq[text[i]] = (freq[text[i]] || 0) + 1;
+
+    var length = text.length;
+    var start = 0;
+    while (start < length && freq[text[start]] === 1) start++;
+
+    var end = length;
+    while (end > start && freq[text[end - 1]] === 1) end--;
+
+    return [start, end];
+}
+
+function pruneDeep(text) {
+    // Find the single largest connected region of overlapping repeat-pairs
+    // within text. Each character's occurrence and its next occurrence define
+    // an interval [i, j]; overlapping intervals are merged, and the largest
+    // merged interval survives -- an isolated bounded pair that overlaps
+    // nothing else is discarded even though it is not a singleton, in favor of
+    // a longer interlaced region elsewhere. Returns [start, end): the
+    // surviving span as indices into text, or [0, 0] if nothing repeats.
+    var lastSeen = {};
+    var intervals = [];
+    for (var i = 0; i < text.length; i++) {
+        var ch = text[i];
+        if (lastSeen.hasOwnProperty(ch)) intervals.push([lastSeen[ch], i]);
+        lastSeen[ch] = i;
+    }
+
+    if (intervals.length === 0) return [0, 0];
+
+    intervals.sort(function(a, b) { return a[0] - b[0] || a[1] - b[1]; });
+
+    var bestStart = intervals[0][0], bestEnd = intervals[0][1];
+    var curStart = intervals[0][0], curEnd = intervals[0][1];
+
+    for (var k = 1; k < intervals.length; k++) {
+        var s = intervals[k][0], e = intervals[k][1];
+        if (s <= curEnd) {
+            if (e > curEnd) curEnd = e;
+        } else {
+            if ((curEnd - curStart) > (bestEnd - bestStart)) { bestStart = curStart; bestEnd = curEnd; }
+            curStart = s; curEnd = e;
+        }
+    }
+    if ((curEnd - curStart) > (bestEnd - bestStart)) { bestStart = curStart; bestEnd = curEnd; }
+
+    return [bestStart, bestEnd + 1]; // convert inclusive end -> exclusive
+}
+
+function applyPruning(candidate, mode, minIsolen) {
+    // Apply a pruning mode to a located candidate, returning a new (shrunk)
+    // candidate with adjusted position/length/text, or null if the pruned
+    // result falls below minIsolen (including vanishing to nothing). 'raw'
+    // returns the candidate unchanged. Only textA is used to determine the
+    // trim span -- the pattern (and hence the span) is identical in textB by
+    // definition of isomorphism -- and the same span is applied to both.
+    if (mode === 'raw') return candidate;
+
+    var span;
+    if (mode === 'shallow') span = pruneShallow(candidate.textA);
+    else if (mode === 'deep') span = pruneDeep(candidate.textA);
+    else throw new Error("unknown pruning mode '" + mode + "'");
+
+    var start = span[0], end = span[1];
+    var length = end - start;
+    if (length < minIsolen) return null;
+
+    return {
+        messageA: candidate.messageA, messageB: candidate.messageB,
+        positionA: candidate.positionA + start, positionB: candidate.positionB + start,
+        length: length,
+        textA: candidate.textA.slice(start, end), textB: candidate.textB.slice(start, end),
+    };
+}
+
+function pruneCandidates(candidates, mode, minIsolen) {
+    // Apply a pruning mode to every candidate in a located list, dropping any
+    // that fall below minIsolen and de-duplicating any that converge on the
+    // same pruned span. Distinct raw maximal candidates (e.g. two overlapping
+    // but non-nested isomorphs at different alignments) can legitimately prune
+    // down to an identical result -- shallow trimming or deep pruning's
+    // largest-connected-region search may land on the same core letters from
+    // either starting point -- so the same pruned isomorph must not be
+    // reported twice.
+    var seen = {};
+    var pruned = [];
+    for (var i = 0; i < candidates.length; i++) {
+        var result = applyPruning(candidates[i], mode, minIsolen);
+        if (!result) continue;
+        var key = result.messageA + ',' + result.messageB + ',' + result.positionA + ',' + result.positionB + ',' + result.length;
+        if (seen.hasOwnProperty(key)) continue;
+        seen[key] = true;
+        pruned.push(result);
+    }
+    return pruned;
 }
 
 // ── isomorph_evaluation.py port ──────────────────────────────────────────────
@@ -744,6 +858,17 @@ function runIsomorphSearch() {
             return;
         }
 
+        var pruneModes = [];
+        if (document.getElementById('prune_raw').checked) pruneModes.push('raw');
+        if (document.getElementById('prune_shallow').checked) pruneModes.push('shallow');
+        if (document.getElementById('prune_deep').checked) pruneModes.push('deep');
+
+        if (pruneModes.length === 0) {
+            out.value = 'ERROR: Please select at least one pruning option (Raw, Shallow, or Deep).';
+            btn.disabled = false;
+            return;
+        }
+
         var minIsolen = parseInt(document.getElementById('min_isolen').value, 10) || 4;
         var maxExpected = parseFloat(document.getElementById('max_expected').value);
         if (isNaN(maxExpected)) maxExpected = 0.5;
@@ -752,16 +877,31 @@ function runIsomorphSearch() {
 
         var candidates = locateIsomorphs(ciphertexts, minIsolen);
 
-        var results = [];
-        for (var c = 0; c < candidates.length; c++) {
-            var candidate = candidates[c];
-            var selfSearch = candidate.messageA === candidate.messageB;
-            var significance = evaluateIsomorph(
-                candidate.textA, alphabet.length,
-                ciphertexts[candidate.messageA].length, ciphertexts[candidate.messageB].length,
-                selfSearch, maxExpected
-            );
-            if (significance.significant) results.push({ candidate: candidate, significance: significance });
+        // Output order is fixed regardless of checkbox order: Deep, then Shallow, then Raw.
+        var MODE_DISPLAY_ORDER = ['deep', 'shallow', 'raw'];
+        var MODE_HEADINGS = { raw: 'RAW (NO PRUNING)', shallow: 'SHALLOW PRUNING', deep: 'DEEP PRUNING' };
+
+        var sections = [];
+        for (var od = 0; od < MODE_DISPLAY_ORDER.length; od++) {
+            var mode = MODE_DISPLAY_ORDER[od];
+            if (pruneModes.indexOf(mode) === -1) continue;
+
+            var results = [];
+            var prunedCandidates = pruneCandidates(candidates, mode, minIsolen);
+            for (var c = 0; c < prunedCandidates.length; c++) {
+                var pruned = prunedCandidates[c];
+
+                var selfSearch = pruned.messageA === pruned.messageB;
+                var significance = evaluateIsomorph(
+                    pruned.textA, alphabet.length,
+                    ciphertexts[pruned.messageA].length, ciphertexts[pruned.messageB].length,
+                    selfSearch, maxExpected
+                );
+                if (significance.significant) results.push({ candidate: pruned, significance: significance });
+            }
+
+            var sep = repeatChar('=', 80);
+            sections.push(sep + '\n' + MODE_HEADINGS[mode] + '\n' + sep + '\n' + formatResults(results, minIsolen, maxExpected));
         }
 
         var parts = [runHeader(), ''];
@@ -776,7 +916,7 @@ function runIsomorphSearch() {
             }
         }
 
-        parts.push(formatResults(results, minIsolen, maxExpected));
+        parts.push(sections.join('\n\n'));
 
         out.value = parts.join('\n');
     } catch (e) {
