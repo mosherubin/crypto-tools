@@ -117,7 +117,7 @@ _HTML = """\
 </style>
 </head>
 <body>
-<h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.21)</span></h1>
+<h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.22)</span></h1>
 
 <div class="row">
   <span class="lbl">Ciphertext:</span>
@@ -170,7 +170,7 @@ function runHeader() {
   const hh   = String(n.getHours()).padStart(2, '0');
   const mm   = String(n.getMinutes()).padStart(2, '0');
   const ss   = String(n.getSeconds()).padStart(2, '0');
-  return `STETHOSCOPE PROGRAM (version 0.21)  (Moshe Rubin)  Timestamp  ${dd} ${mon} ${yyyy}  -  ${hh}:${mm}:${ss}`;
+  return `STETHOSCOPE PROGRAM (version 0.22)  (Moshe Rubin)  Timestamp  ${dd} ${mon} ${yyyy}  -  ${hh}:${mm}:${ss}`;
 }
 
 async function runTests() {
@@ -296,7 +296,7 @@ def _run_suite(ct, display_ct: bool, max_repeats: int = 50,
     ds_result = None
     if delta_config:
         offset   = delta_config['offset']
-        alphabet = delta_config['alphabet']
+        alphabet = delta_config['alphabet'] or ct.alphabet
         N = len(ct.letters)
         if 1 <= offset <= N - 1:
             from tests.delta_stream import DeltaEntry, DeltaResult, compute_stream
