@@ -121,7 +121,7 @@
   <button id="guide-btn" onclick="window.open('find-repetitions-guide.html', '_blank')">Guide</button>
 </div>
 
-<div class="row" data-tooltip="Import one or more ciphertexts from a CryptML export file. Ciphertexts are separated by blank and/or comment ('#...') lines. The first ciphertext fills the first empty box below; any additional ones get new boxes.">
+<div class="row" data-tooltip="Import one or more ciphertexts from a CryptML export file. Ciphertexts are separated by blank and/or comment ('#...') lines. The first ciphertext fills the first empty box below; any additional ones get new boxes. Any ciphertext that exactly matches one already in the list is flagged so it can be skipped, to guard against accidentally importing the same file twice.">
   <span class="lbl">Ciphertext(s):</span>
   <div class="ctrl">
     <button type="button" id="import-btn" onclick="triggerImport()">Import</button>
@@ -345,10 +345,12 @@ function addCiphertextBox() {
     wrapper.innerHTML = ctBlockHtml(uid);
     var row = wrapper.firstChild;
     container.appendChild(row);
-    // Imported labels describe the text as imported; once the user edits it by hand
-    // the label can no longer be trusted to match, so drop it.
+    // Imported metadata describes the text as imported; once the user edits it by
+    // hand it can no longer be trusted to match, so drop it.
     row.querySelector('.ciphertext-box').addEventListener('input', function() {
         delete this.dataset.label;
+        delete this.dataset.date;
+        delete this.dataset.time;
         renumberCiphertextBoxes();
     });
     renumberCiphertextBoxes();
@@ -372,38 +374,63 @@ function renumberCiphertextBoxes() {
 
 // ── CryptML export import ────────────────────────────────────────────────────
 
+var _DATE_FIELD_RE = /Date:\s*"([^"]*)"/;
+var _TIME_FIELD_RE = /Time:\s*"([^"]*)"/;
+
 function parseCryptMLExport(text) {
     // Ciphertexts are separated by blank and/or comment ('#...') lines; a
     // ciphertext itself may span several lines with no blank line between them.
-    // A comment line immediately preceding a block (e.g. "# file.cryptml :: A50/18")
-    // is kept as that block's label; a blank line also clears the pending label,
-    // since it isn't attached to anything without an intervening comment.
+    // A comment line immediately preceding a block is either metadata --
+    // 'Date: "..." Time: "..."', either field optional -- kept as that block's
+    // date/time, or otherwise the block's label (e.g. "file.cryptml :: A50/18").
+    // A blank line also clears everything pending, since it isn't attached to
+    // anything without an intervening comment.
     var lines = text.split(/\r\n|\r|\n/);
     var blocks = [];
     var current = [];
     var pendingLabel = null;
+    var pendingDate = null;
+    var pendingTime = null;
+
+    function flush() {
+        if (current.length > 0) {
+            blocks.push({ label: pendingLabel, date: pendingDate, time: pendingTime, text: current.join('\n') });
+            current = [];
+        }
+    }
 
     for (var i = 0; i < lines.length; i++) {
         var trimmed = lines[i].trim();
         if (trimmed.charAt(0) === '#') {
-            if (current.length > 0) {
-                blocks.push({ label: pendingLabel, text: current.join('\n') });
-                current = [];
+            flush();
+            var comment = trimmed.slice(1).trim();
+            var dateMatch = comment.match(_DATE_FIELD_RE);
+            var timeMatch = comment.match(_TIME_FIELD_RE);
+            if (dateMatch || timeMatch) {
+                if (dateMatch) pendingDate = dateMatch[1];
+                if (timeMatch) pendingTime = timeMatch[1];
+            } else {
+                pendingLabel = comment;
             }
-            pendingLabel = trimmed.slice(1).trim();
         } else if (trimmed === '') {
-            if (current.length > 0) {
-                blocks.push({ label: pendingLabel, text: current.join('\n') });
-                current = [];
-            }
+            flush();
             pendingLabel = null;
+            pendingDate = null;
+            pendingTime = null;
         } else {
             current.push(lines[i]);
         }
     }
-    if (current.length > 0) blocks.push({ label: pendingLabel, text: current.join('\n') });
+    flush();
 
     return blocks;
+}
+
+function applyBlockToBox(box, block) {
+    box.value = block.text;
+    box.dataset.label = block.label || '';
+    box.dataset.date = block.date || '';
+    box.dataset.time = block.time || '';
 }
 
 function populateCiphertextBoxes(blocks) {
@@ -417,17 +444,14 @@ function populateCiphertextBoxes(blocks) {
 
     var startIdx = 0;
     if (targetIndex >= 0) {
-        boxes[targetIndex].value = blocks[0].text;
-        boxes[targetIndex].dataset.label = blocks[0].label || '';
+        applyBlockToBox(boxes[targetIndex], blocks[0]);
         startIdx = 1;
     }
 
     for (var b = startIdx; b < blocks.length; b++) {
         addCiphertextBox();
         var current = document.querySelectorAll('.ciphertext-box');
-        var box = current[current.length - 1];
-        box.value = blocks[b].text;
-        box.dataset.label = blocks[b].label || '';
+        applyBlockToBox(current[current.length - 1], blocks[b]);
     }
 
     renumberCiphertextBoxes();
@@ -435,6 +459,39 @@ function populateCiphertextBoxes(blocks) {
 
 function triggerImport() {
     document.getElementById('import-file-input').click();
+}
+
+function findDuplicateBlocks(blocks) {
+    // Flags a block as a duplicate when its cleaned letters exactly match a
+    // ciphertext already present -- either sitting in an existing box, or an
+    // earlier block from this same import -- since re-importing the same file
+    // (or a file listing the same message twice) silently doubles every
+    // ciphertext and floods the results with trivial full-length self-matches.
+    var charsetCfg = getCharsetConfig();
+    if (!charsetCfg) return [];
+
+    var seen = {};
+    var existingBoxes = document.querySelectorAll('.ciphertext-box');
+    for (var i = 0; i < existingBoxes.length; i++) {
+        var existingLetters = cleanCiphertext(existingBoxes[i].value, charsetCfg.pattern, charsetCfg.caseSensitive);
+        if (existingLetters.length > 0) seen[existingLetters] = true;
+    }
+
+    var duplicates = [];
+    for (var b = 0; b < blocks.length; b++) {
+        var blockLetters;
+        try {
+            blockLetters = cleanCiphertext(blocks[b].text, charsetCfg.pattern, charsetCfg.caseSensitive);
+        } catch (e) {
+            continue; // an invalid character here will surface as a normal error at Run time
+        }
+        if (blockLetters.length > 0) {
+            if (seen[blockLetters]) duplicates.push(blocks[b]);
+            seen[blockLetters] = true;
+        }
+    }
+
+    return duplicates;
 }
 
 document.getElementById('import-file-input').addEventListener('change', function(e) {
@@ -446,6 +503,24 @@ document.getElementById('import-file-input').addEventListener('change', function
         var blocks = parseCryptMLExport(evt.target.result);
         if (blocks.length === 0) {
             alert('No ciphertexts found in the selected file.');
+            return;
+        }
+
+        var duplicates = findDuplicateBlocks(blocks);
+        if (duplicates.length > 0) {
+            var names = duplicates.map(function(block) { return block.label || '(unlabeled ciphertext)'; });
+            var skip = confirm(
+                'The following ciphertext(s) already appear in the list:\n\n  ' +
+                names.join('\n  ') +
+                '\n\nClick OK to skip them, or Cancel to import everything anyway.'
+            );
+            if (skip) {
+                blocks = blocks.filter(function(block) { return duplicates.indexOf(block) === -1; });
+            }
+        }
+
+        if (blocks.length === 0) {
+            alert('Every ciphertext in the selected file was already in the list; nothing new was imported.');
         } else {
             populateCiphertextBoxes(blocks);
         }
@@ -471,6 +546,15 @@ function normalizeCustomCharset(raw) {
     return s;
 }
 
+function getCharsetConfig() {
+    var charsetKey = document.getElementById('charset').value;
+    if (charsetKey === '[Other]') {
+        var normalized = normalizeCustomCharset(document.getElementById('custom_charset').value);
+        return normalized ? { pattern: normalized, caseSensitive: false } : null;
+    }
+    return CHARSET_MAP[charsetKey] || CHARSET_MAP['[A-Za-z]'];
+}
+
 function onCharsetChange() {
     var charsetKey = document.getElementById('charset').value;
     document.getElementById('custom_charset').style.display = (charsetKey === '[Other]') ? '' : 'none';
@@ -492,8 +576,11 @@ function runHeader() {
     return 'FIND REPETITIONS (version 0.1)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
-function formatCiphertextBlock(letters, index, importLabel) {
-    var header = 'Ciphertext ' + index + ' (' + (importLabel ? importLabel + ', ' : '') + letters.length + ' letters):';
+function formatCiphertextBlock(letters, index, importLabel, importDate, importTime) {
+    var suffix = '';
+    if (importDate) suffix += ', date: "' + importDate + '"';
+    if (importTime) suffix += ', time: "' + importTime + '"';
+    var header = 'Ciphertext ' + index + ' (' + (importLabel ? importLabel + ', ' : '') + letters.length + ' letters' + suffix + '):';
     var lines = [header];
     var groups = [];
     for (var gi = 0; gi < letters.length; gi += 5) groups.push(letters.slice(gi, gi + 5));
@@ -554,18 +641,11 @@ function runRepetitionSearch() {
     out.value = 'Running...';
 
     try {
-        var charsetKey = document.getElementById('charset').value;
-        var charsetCfg;
-        if (charsetKey === '[Other]') {
-            var normalized = normalizeCustomCharset(document.getElementById('custom_charset').value);
-            if (!normalized) {
-                out.value = 'ERROR: Invalid or empty custom character set.';
-                btn.disabled = false;
-                return;
-            }
-            charsetCfg = { pattern: normalized, caseSensitive: false };
-        } else {
-            charsetCfg = CHARSET_MAP[charsetKey] || CHARSET_MAP['[A-Za-z]'];
+        var charsetCfg = getCharsetConfig();
+        if (!charsetCfg) {
+            out.value = 'ERROR: Invalid or empty custom character set.';
+            btn.disabled = false;
+            return;
         }
 
         var alphabet = expandAlphabet(new RegExp('^(?:' + charsetCfg.pattern + ')$', charsetCfg.caseSensitive ? '' : 'i'), charsetCfg.caseSensitive);
@@ -578,11 +658,15 @@ function runRepetitionSearch() {
         var boxes = document.querySelectorAll('.ciphertext-box');
         var ciphertexts = [];
         var importLabels = [];
+        var importDates = [];
+        var importTimes = [];
         for (var i = 0; i < boxes.length; i++) {
             var letters = cleanCiphertext(boxes[i].value, charsetCfg.pattern, charsetCfg.caseSensitive);
             if (letters.length > 0) {
                 ciphertexts.push(letters);
                 importLabels.push(boxes[i].dataset.label || '');
+                importDates.push(boxes[i].dataset.date || '');
+                importTimes.push(boxes[i].dataset.time || '');
             }
         }
 
@@ -605,7 +689,7 @@ function runRepetitionSearch() {
 
         if (displayCt) {
             for (var b = 0; b < ciphertexts.length; b++) {
-                parts.push(formatCiphertextBlock(ciphertexts[b], b + 1, importLabels[b]));
+                parts.push(formatCiphertextBlock(ciphertexts[b], b + 1, importLabels[b], importDates[b], importTimes[b]));
                 parts.push('');
             }
         }
