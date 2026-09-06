@@ -179,6 +179,7 @@ const SAMPLE_DOCUMENT = {
 let doc = M.newDocument();
 let activeIndex = 0;
 let fileHandle = null;
+let lastExportHandle = null; // remembers where the last export was saved, for startIn on the next one
 
 function setStatus(text, isError = false) {
   const s = document.getElementById('status');
@@ -549,6 +550,7 @@ function exportableEntries() {
           label: `${ct.id}/${part.part_id}`, raw: part.raw,
           removeFromStart: part.remove_from_start || 0, removeFromEnd: part.remove_from_end || 0,
           ignorechars: ct.ignorechars, casesensitive: ct.casesensitive,
+          date: part.origin.date, time: part.origin.time,
         });
       }
     } else {
@@ -556,6 +558,7 @@ function exportableEntries() {
         label: ct.id, raw: ct.raw,
         removeFromStart: ct.remove_from_start || 0, removeFromEnd: ct.remove_from_end || 0,
         ignorechars: ct.ignorechars, casesensitive: ct.casesensitive,
+        date: ct.origin.date, time: ct.origin.time,
       });
     }
   }
@@ -598,6 +601,13 @@ function stripBoundary(raw, removeFromStart, removeFromEnd, ignoreRe) {
   return raw.slice(start, end);
 }
 
+function buildDateTimeComment(date, time) {
+  const parts = [];
+  if (date) parts.push(`Date: "${date}"`);
+  if (time) parts.push(`Time: "${time}"`);
+  return parts.length ? `\n# ${parts.join(' ')}` : '';
+}
+
 function buildExportText(filename, entries, honorTrim) {
   return entries
     .map(e => {
@@ -606,7 +616,8 @@ function buildExportText(filename, entries, honorTrim) {
         const ignoreRe = new RegExp(`^(?:${e.ignorechars})$`, e.casesensitive ? 'u' : 'iu');
         text = stripBoundary(text, e.removeFromStart, e.removeFromEnd, ignoreRe);
       }
-      return `# ${filename} :: ${e.label}\n${text.split(GAP_MARKER).join('')}`;
+      const dtLine = buildDateTimeComment(e.date, e.time);
+      return `# ${filename} :: ${e.label}${dtLine}\n${text.split(GAP_MARKER).join('')}`;
     })
     .join('\n\n');
 }
@@ -653,13 +664,17 @@ document.getElementById('export-ok').addEventListener('click', async () => {
 
   document.getElementById('export-dialog').close();
   try {
-    const handle = await window.showSaveFilePicker({
-      suggestedName,
-      types: [{ description: 'Text files', accept: { 'text/plain': ['.txt'] } }],
-    });
+    const saveOpts = { suggestedName, types: [{ description: 'Text files', accept: { 'text/plain': ['.txt'] } }] };
+    // Prefer the last folder actually exported to; before any export this session, the
+    // open CryptML file's folder is a reasonable starting guess.
+    if (lastExportHandle) saveOpts.startIn = lastExportHandle;
+    else if (fileHandle) saveOpts.startIn = fileHandle;
+
+    const handle = await window.showSaveFilePicker(saveOpts);
     const writable = await handle.createWritable();
     await writable.write(text);
     await writable.close();
+    lastExportHandle = handle;
     setStatus(`Exported ${entries.length} ciphertext${entries.length === 1 ? '' : 's'} to ${handle.name}`);
   } catch (e) {
     if (e.name !== 'AbortError') setStatus(`Export failed: ${e.message}`, true);
