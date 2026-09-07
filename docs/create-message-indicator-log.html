@@ -98,32 +98,67 @@
     color: #333;
     margin-bottom: 10px;
   }
+  #ciphertext-display {
+    font-family: monospace;
+    font-size: 0.85em;
+    white-space: pre;
+    margin-bottom: 14px;
+  }
+  #ciphertext-display .ct-header { font-weight: bold; margin-top: 8px; }
+  #ciphertext-display .ct-header:first-child { margin-top: 0; }
   #legend {
     font-family: Arial, sans-serif;
     font-size: 0.9em;
     margin-bottom: 12px;
   }
-  table#mil-table {
+  table#mil-table, table.diff-table {
     border-collapse: collapse;
     font-family: monospace;
     font-size: 0.9em;
   }
-  table#mil-table th, table#mil-table td {
+  table#mil-table th, table#mil-table td, table.diff-table th, table.diff-table td {
     border: 1px solid #ccc;
     padding: 4px 8px;
     text-align: center;
     white-space: nowrap;
   }
-  table#mil-table th {
+  table#mil-table th, table.diff-table th {
     background: #f0f0f0;
-    cursor: pointer;
-    user-select: none;
     font-family: Arial, sans-serif;
     font-size: 0.85em;
   }
+  table#mil-table th { cursor: pointer; user-select: none; }
   table#mil-table th:hover { background: #e2e2e2; }
   table#mil-table td.num { text-align: right; }
-  table#mil-table th.divider, table#mil-table td.divider { border-left: 2px solid #888; }
+  table#mil-table th.divider, table#mil-table td.divider,
+  table.diff-table th.divider, table.diff-table td.divider { border-left: 2px solid #888; }
+  table.diff-table td.key-col { background: #f7f7f7; font-weight: bold; }
+  #diff-btn {
+    margin: 16px 6px 4px 0;
+    padding: 7px 30px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  #diff-expand-btn, #diff-collapse-btn {
+    display: none;
+    margin: 16px 6px 4px 0;
+    padding: 7px 16px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  #diff-tables-container details {
+    margin: 6px 0;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 4px 10px;
+  }
+  #diff-tables-container summary {
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    padding: 4px 0;
+  }
+  #diff-tables-container table.diff-table { margin: 8px 0 6px; }
   #print-area { display: none; }
   @media print {
     body > * { display: none !important; }
@@ -176,6 +211,16 @@
   </div>
 </div>
 
+<div class="row">
+  <span class="lbl"></span>
+  <div class="ctrl">
+    <label data-tooltip="When checked, the extracted letters of every ciphertext are printed in groups of five at the top of the output, above the MIL table.">
+      <input type="checkbox" id="display_ct">
+      Display ciphertext(s) in output
+    </label>
+  </div>
+</div>
+
 <div class="row" data-tooltip="How many groups from the head of each message to show, labeled A1, A2, .... System discriminants and indicators are often found here.">
   <span class="lbl">Leading groups:</span>
   <div class="ctrl">
@@ -197,7 +242,12 @@
 
 <div id="output-section">
   <div id="report-meta"></div>
+  <div id="ciphertext-display"></div>
   <div id="output-container"></div>
+  <button id="diff-btn" onclick="generateDifferenceTables()" data-tooltip="For every group column, build a minuend table (that column minus every other, non-borrowing) and a subtrahend table (every other column minus that one). Surfaces shared discriminants/indicators and ascending sequences that are hard to spot by eye.">Generate Difference Tables</button>
+  <button id="diff-expand-btn" onclick="setAllDiffTablesOpen(true)" data-tooltip="Expand every difference table below.">Expand all tables</button>
+  <button id="diff-collapse-btn" onclick="setAllDiffTablesOpen(false)" data-tooltip="Collapse every difference table below.">Collapse all tables</button>
+  <div id="diff-tables-container"></div>
 </div>
 <div id="print-area"></div>
 
@@ -536,11 +586,27 @@ function buildRows(leadingCount, trailingCount, charsetCfg) {
             time: box.dataset.time || '',
             gr: groups.length,
             leading: leading,
-            trailing: trailing
+            trailing: trailing,
+            groups: groups
         });
     }
 
     return { rows: rows, legend: codeToName };
+}
+
+function groupColumnList(leadingCount, trailingCount) {
+    // The ordered list of group columns (A1..An, Z(m-1)..Z0) as they appear in
+    // the MIL table -- shared by columnDefs (which adds metadata columns
+    // around it) and the difference-table builder (which only ever needs
+    // these).
+    var cols = [];
+    for (var a = 0; a < leadingCount; a++) {
+        cols.push({ label: 'A' + (a + 1), side: 'leading', idx: a, divider: a === 0 });
+    }
+    for (var z = 0; z < trailingCount; z++) {
+        cols.push({ label: 'Z' + (trailingCount - 1 - z), side: 'trailing', idx: z, divider: z === 0 });
+    }
+    return cols;
 }
 
 function columnDefs(rows, leadingCount, trailingCount) {
@@ -559,11 +625,10 @@ function columnDefs(rows, leadingCount, trailingCount) {
     if (hasTime) cols.push({ key: 'time', label: 'Time', type: 'string', get: function(r) { return r.time; } });
     cols.push({ key: 'gr', label: 'GR', type: 'number', get: function(r) { return r.gr; } });
 
-    for (var a = 0; a < leadingCount; a++) {
-        cols.push(makeGroupColumn('a' + a, 'A' + (a + 1), a, 'leading', a === 0 ? 'divider' : null));
-    }
-    for (var z = 0; z < trailingCount; z++) {
-        cols.push(makeGroupColumn('z' + z, 'Z' + (trailingCount - 1 - z), z, 'trailing', z === 0 ? 'divider' : null));
+    var groupCols = groupColumnList(leadingCount, trailingCount);
+    for (var g = 0; g < groupCols.length; g++) {
+        var gc = groupCols[g];
+        cols.push(makeGroupColumn(gc.side.charAt(0) + gc.idx, gc.label, gc.idx, gc.side, gc.divider ? 'divider' : null));
     }
 
     return cols;
@@ -576,12 +641,131 @@ function makeGroupColumn(key, label, idx, side, rule) {
     };
 }
 
+// ── difference tables (minuend/subtrahend) ───────────────────────────────────
+// Non-borrowing, position-by-position subtraction: each character is mapped to
+// its index in the active charset's alphabet, subtracted independently of its
+// neighbors, and wrapped modulo the alphabet's length. This generalizes the
+// spec's digit (mod 10) and letter (mod 26) cases to whatever charset is
+// active -- the alphabet is already exactly what expandAlphabet computes for
+// charset validation, so no separate letters-vs-digits special-casing is
+// needed.
+
+function buildAlphabetIndex(charsetCfg) {
+    var charsetRe = new RegExp('^(?:' + charsetCfg.pattern + ')$', charsetCfg.caseSensitive ? '' : 'i');
+    var alphabet = expandAlphabet(charsetRe, charsetCfg.caseSensitive);
+    var index = {};
+    for (var i = 0; i < alphabet.length; i++) index[alphabet.charAt(i)] = i;
+    return { alphabet: alphabet, index: index };
+}
+
+function nonBorrowingSubtract(minuendText, subtrahendText, alphaIdx) {
+    if (minuendText == null || subtrahendText == null) return null;
+    if (minuendText.length !== subtrahendText.length) return null;
+    var modulus = alphaIdx.alphabet.length;
+    var result = '';
+    for (var i = 0; i < minuendText.length; i++) {
+        var a = alphaIdx.index[minuendText.charAt(i)];
+        var b = alphaIdx.index[subtrahendText.charAt(i)];
+        if (a === undefined || b === undefined) return null;
+        var diff = ((a - b) % modulus + modulus) % modulus;
+        result += alphaIdx.alphabet.charAt(diff);
+    }
+    return result;
+}
+
+// Builds one minuend or subtrahend difference table for a single key column.
+// mode 'minuend'    -> every other column shows (key - column)
+// mode 'subtrahend' -> every other column shows (column - key)
+function buildDifferenceTable(rows, groupCols, keyIndex, alphaIdx, mode) {
+    var keyCol = groupCols[keyIndex];
+    return rows.map(function(row) {
+        var keyVal = row[keyCol.side][keyCol.idx];
+        var cells = groupCols.map(function(col, i) {
+            if (i === keyIndex) return keyVal;
+            var otherVal = row[col.side][col.idx];
+            return mode === 'minuend'
+                ? nonBorrowingSubtract(keyVal, otherVal, alphaIdx)
+                : nonBorrowingSubtract(otherVal, keyVal, alphaIdx);
+        });
+        return { id: row.id, cells: cells };
+    });
+}
+
+function buildDifferenceTableElement(groupCols, keyIndex, diffRows) {
+    var table = document.createElement('table');
+    table.className = 'diff-table';
+
+    var thead = document.createElement('thead');
+    var headRow = document.createElement('tr');
+    headRow.appendChild(Object.assign(document.createElement('th'), { textContent: 'ID' }));
+    for (var c = 0; c < groupCols.length; c++) {
+        headRow.appendChild(Object.assign(document.createElement('th'), { textContent: groupCols[c].label }));
+    }
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    for (var r = 0; r < diffRows.length; r++) {
+        var tr = document.createElement('tr');
+        var idTd = document.createElement('td');
+        idTd.textContent = diffRows[r].id;
+        tr.appendChild(idTd);
+        for (var c2 = 0; c2 < diffRows[r].cells.length; c2++) {
+            var td = document.createElement('td');
+            var val = diffRows[r].cells[c2];
+            td.textContent = (val === null || val === undefined) ? '—' : val;
+            if (c2 === keyIndex) td.className = 'key-col';
+            tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+
+    return table;
+}
+
+function generateDifferenceTables() {
+    if (_currentRows.length === 0 || _currentGroupColumns.length === 0) return;
+
+    var container = document.getElementById('diff-tables-container');
+    container.innerHTML = '';
+
+    var modes = [
+        { mode: 'minuend',    label: function(k) { return 'Differencing (key as minuend): ' + k + ' − *'; } },
+        { mode: 'subtrahend', label: function(k) { return 'Differencing (key as subtrahend): * − ' + k; } }
+    ];
+
+    var viewRows = currentViewRows();
+
+    for (var m = 0; m < modes.length; m++) {
+        for (var k = 0; k < _currentGroupColumns.length; k++) {
+            var diffRows = buildDifferenceTable(viewRows, _currentGroupColumns, k, _currentAlphabet, modes[m].mode);
+            var details = document.createElement('details');
+            var summary = document.createElement('summary');
+            summary.textContent = modes[m].label(_currentGroupColumns[k].label) + ' (' + diffRows.length + ' rows)';
+            details.appendChild(summary);
+            details.appendChild(buildDifferenceTableElement(_currentGroupColumns, k, diffRows));
+            container.appendChild(details);
+        }
+    }
+
+    document.getElementById('diff-expand-btn').style.display = 'inline-block';
+    document.getElementById('diff-collapse-btn').style.display = 'inline-block';
+}
+
+function setAllDiffTablesOpen(isOpen) {
+    var detailsElements = document.querySelectorAll('#diff-tables-container details');
+    for (var i = 0; i < detailsElements.length; i++) detailsElements[i].open = isOpen;
+}
+
 // ── sorting + rendering ──────────────────────────────────────────────────────
 
 var _currentRows = [];
 var _currentColumns = [];
 var _currentLegend = {};
 var _sortState = { key: null, dir: 1 };
+var _currentGroupColumns = [];
+var _currentAlphabet = null;
 
 function sortRows(rows, columns, key, dir) {
     var col = null;
@@ -642,6 +826,41 @@ function buildTableElement(rows, columns) {
     return table;
 }
 
+function renderCiphertextDisplay(rows) {
+    // Matches find-repetitions.html's formatCiphertextBlock convention (header
+    // line + groups of five, ten per row), substituted here with this tool's
+    // own ID (rather than the raw import label) for consistency with the MIL
+    // table above it.
+    var container = document.getElementById('ciphertext-display');
+    container.innerHTML = '';
+    if (!document.getElementById('display_ct').checked) return;
+
+    for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var suffix = '';
+        if (row.date) suffix += ', date: "' + row.date + '"';
+        if (row.time) suffix += ', time: "' + row.time + '"';
+        var header = document.createElement('div');
+        header.className = 'ct-header';
+        header.textContent = 'Ciphertext ' + row.index + ' (' + row.id + ', ' + row.groups.join('').length + ' letters' + suffix + '):';
+        container.appendChild(header);
+
+        var body = document.createElement('div');
+        var lines = [];
+        for (var ri = 0; ri < row.groups.length; ri += 10) lines.push(row.groups.slice(ri, ri + 10).join(' '));
+        body.textContent = lines.join('\n');
+        container.appendChild(body);
+    }
+}
+
+function currentViewRows() {
+    // The MIL table's on-screen row order -- unsorted _currentRows, or sorted
+    // by whichever column the user last clicked. Difference tables must
+    // iterate in this same order, not the underlying unsorted data, so their
+    // rows line up with what the user is looking at.
+    return _sortState.key ? sortRows(_currentRows, _currentColumns, _sortState.key, _sortState.dir) : _currentRows;
+}
+
 function renderOutput() {
     var container = document.getElementById('output-container');
     container.innerHTML = '';
@@ -655,7 +874,7 @@ function renderOutput() {
         container.appendChild(legendDiv);
     }
 
-    var viewRows = _sortState.key ? sortRows(_currentRows, _currentColumns, _sortState.key, _sortState.dir) : _currentRows;
+    var viewRows = currentViewRows();
     container.appendChild(buildTableElement(viewRows, _currentColumns));
 }
 
@@ -710,11 +929,17 @@ function runBuildLog() {
         _currentRows = built.rows;
         _currentLegend = built.legend;
         _currentColumns = columnDefs(_currentRows, leadingCount, trailingCount);
+        _currentGroupColumns = groupColumnList(leadingCount, trailingCount);
+        _currentAlphabet = buildAlphabetIndex(charsetCfg);
         _sortState = { key: null, dir: 1 };
 
         clearRunError();
         document.getElementById('report-meta').textContent = runHeader();
+        renderCiphertextDisplay(_currentRows);
         renderOutput();
+        document.getElementById('diff-tables-container').innerHTML = ''; // stale from a previous Run
+        document.getElementById('diff-expand-btn').style.display = 'none';
+        document.getElementById('diff-collapse-btn').style.display = 'none';
         document.getElementById('output-section').style.display = 'block';
     } catch (e) {
         showRunError('ERROR: ' + e.message);
