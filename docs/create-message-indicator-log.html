@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CREATE MESSAGE INDICATOR LOG</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    background: #fff;
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 24px;
+  }
+  h1 {
+    letter-spacing: 6px;
+    font-size: 1.4em;
+    margin: 0;
+  }
+  .row {
+    display: flex;
+    align-items: flex-start;
+    margin: 8px 0;
+    gap: 12px;
+  }
+  .lbl {
+    min-width: 220px;
+    padding-top: 5px;
+    font-weight: bold;
+    text-align: right;
+  }
+  .ctrl { flex: 1; }
+  textarea.ciphertext-box {
+    display: block;
+    width: 100%;
+    height: 110px;
+    resize: both;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+  .ct-btn-row {
+    margin-top: 6px;
+    display: flex;
+    gap: 6px;
+  }
+  .ct-btn-row button {
+    width: 30px;
+    height: 26px;
+    font-family: monospace;
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+  }
+  #import-btn {
+    padding: 5px 14px;
+    font-size: 0.9em;
+    cursor: pointer;
+  }
+  input[type="number"] { width: 6em; }
+  #run-btn {
+    margin: 14px 0 4px 232px;
+    padding: 7px 30px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  #pdf-btn {
+    margin: 6px 0 0 232px;
+    padding: 7px 30px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  #run-error {
+    display: none;
+    margin: 10px 0 4px 232px;
+    padding: 8px 12px;
+    color: #900;
+    background: #fdecea;
+    border: 1px solid #f5b0a8;
+    border-radius: 3px;
+    font-family: Arial, sans-serif;
+    font-size: 0.9em;
+    max-width: 900px;
+    white-space: pre-wrap;
+  }
+  #output-section { display: none; margin-top: 20px; }
+  #report-meta {
+    font-family: monospace;
+    font-size: 0.85em;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  #legend {
+    font-family: Arial, sans-serif;
+    font-size: 0.9em;
+    margin-bottom: 12px;
+  }
+  table#mil-table {
+    border-collapse: collapse;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+  table#mil-table th, table#mil-table td {
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  table#mil-table th {
+    background: #f0f0f0;
+    cursor: pointer;
+    user-select: none;
+    font-family: Arial, sans-serif;
+    font-size: 0.85em;
+  }
+  table#mil-table th:hover { background: #e2e2e2; }
+  table#mil-table td.num { text-align: right; }
+  table#mil-table th.divider, table#mil-table td.divider { border-left: 2px solid #888; }
+  #print-area { display: none; }
+  @media print {
+    body > * { display: none !important; }
+    #print-area {
+      display: block !important;
+      font-family: Arial, sans-serif;
+      font-size: 0.85em;
+    }
+    #print-area table {
+      border-collapse: collapse;
+      font-family: monospace;
+      font-size: 0.85em;
+    }
+    #print-area th, #print-area td {
+      border: 1px solid #999;
+      padding: 3px 6px;
+      text-align: center;
+    }
+    #print-area th.divider, #print-area td.divider { border-left: 2px solid #555; }
+  }
+</style>
+</head>
+<body>
+<p><a href="index.html">&larr; back to tools</a></p>
+<div class="header-row">
+  <h1>Create Message Indicator Log <span style="letter-spacing:normal; font-size:0.75em;">(version 0.1)</span></h1>
+</div>
+
+<div class="row" data-tooltip="Import one or more ciphertexts from a CryptML export file. Ciphertexts are separated by blank and/or comment ('#...') lines. The first ciphertext fills the first empty box below; any additional ones get new boxes. Any ciphertext that exactly matches one already in the list is flagged so it can be skipped, to guard against accidentally importing the same file twice.">
+  <span class="lbl">Ciphertext(s):</span>
+  <div class="ctrl">
+    <button type="button" id="import-btn" onclick="triggerImport()">Import</button>
+  </div>
+</div>
+
+<div id="ciphertext-container"></div>
+<input type="file" id="import-file-input" style="display:none" accept=".txt,.cryptml">
+
+<div class="row" data-tooltip="The set of valid cipher symbols. [A-Za-z] for standard 26-letter alphabets, [0-9] for digit ciphers, [A-Za-z0-9] for alphanumeric ciphers. Choose 'Other' to enter a custom character set as a regular expression.">
+  <span class="lbl">Character set:</span>
+  <div class="ctrl" style="display:flex; align-items:center; gap:8px;">
+    <select id="charset" onchange="onCharsetChange()">
+      <option value="[A-Za-z]">[A-Za-z] -- 26 characters (default)</option>
+      <option value="[0-9]">[0-9] -- 10 characters</option>
+      <option value="[A-Za-z0-9]">[A-Za-z0-9] -- 36 characters</option>
+      <option value="[Other]">Other...</option>
+    </select>
+    <input type="text" id="custom_charset" style="display:none; font-family:monospace; width:16em;"
+           placeholder="e.g. ab or adfgvx or A-IK-Z">
+  </div>
+</div>
+
+<div class="row" data-tooltip="How many groups from the head of each message to show, labeled A1, A2, .... System discriminants and indicators are often found here.">
+  <span class="lbl">Leading groups:</span>
+  <div class="ctrl">
+    <input type="number" id="leading_count" value="5" min="0">
+  </div>
+</div>
+
+<div class="row" data-tooltip="How many groups from the tail of each message to show. Labeled counting back from the end -- Z0 is always the last group, Z1 the one before it, and so on.">
+  <span class="lbl">Trailing groups:</span>
+  <div class="ctrl">
+    <input type="number" id="trailing_count" value="2" min="0">
+  </div>
+</div>
+
+<button id="run-btn" onclick="runBuildLog()" data-tooltip="Build the Message Indicator Log table from the ciphertext(s) above. Click any column header afterward to sort by that column.">Run</button>
+<button id="pdf-btn" onclick="savePdf()" data-tooltip="Open the browser print dialog to save the log as a PDF or send to a printer.">Print</button>
+
+<div id="run-error"></div>
+
+<div id="output-section">
+  <div id="report-meta"></div>
+  <div id="output-container"></div>
+</div>
+<div id="print-area"></div>
+
+<script src="js/ciphertext-utils.js"></script>
+<script>
+'use strict';
+
+var expandAlphabet = CiphertextUtils.expandAlphabet;
+var cleanCiphertext = CiphertextUtils.cleanCiphertext;
+
+// ── ciphertext box management ────────────────────────────────────────────────
+
+var _ctNextUid = 0;
+
+function ctBlockHtml(uid) {
+    return (
+        '<div class="row ct-row" data-uid="' + uid + '" data-tooltip="Enter or paste one ciphertext here. Spaces, punctuation, and dashes (dits) are handled automatically; only characters matching the selected character set are extracted for analysis.">' +
+        '<span class="lbl ct-label"></span>' +
+        '<div class="ctrl">' +
+        '<textarea class="ciphertext-box" placeholder="Paste ciphertext here..."></textarea>' +
+        '<div class="ct-btn-row">' +
+        '<button type="button" class="ct-add-btn" onclick="addCiphertextBox()" title="Add another ciphertext">+</button>' +
+        '<button type="button" class="ct-remove-btn" onclick="removeCiphertextBox(' + uid + ')" title="Remove this ciphertext">&minus;</button>' +
+        '</div>' +
+        '</div>' +
+        '</div>'
+    );
+}
+
+function addCiphertextBox() {
+    var uid = _ctNextUid++;
+    var container = document.getElementById('ciphertext-container');
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = ctBlockHtml(uid);
+    var row = wrapper.firstChild;
+    container.appendChild(row);
+    // Imported metadata describes the text as imported; once the user edits it by
+    // hand it can no longer be trusted to match, so drop it.
+    row.querySelector('.ciphertext-box').addEventListener('input', function() {
+        delete this.dataset.label;
+        delete this.dataset.date;
+        delete this.dataset.time;
+        delete this.dataset.originator;
+        delete this.dataset.addressee;
+        renumberCiphertextBoxes();
+    });
+    renumberCiphertextBoxes();
+}
+
+function removeCiphertextBox(uid) {
+    var row = document.querySelector('.ct-row[data-uid="' + uid + '"]');
+    if (row) row.parentNode.removeChild(row);
+    renumberCiphertextBoxes();
+}
+
+function renumberCiphertextBoxes() {
+    var rows = document.querySelectorAll('.ct-row');
+    for (var i = 0; i < rows.length; i++) {
+        var label = rows[i].querySelector('.ciphertext-box').dataset.label;
+        var text = 'Ciphertext ' + (i + 1) + (label ? ' (' + label + ')' : '') + ':';
+        rows[i].querySelector('.ct-label').textContent = text;
+        rows[i].querySelector('.ct-remove-btn').style.display = (i === 0) ? 'none' : '';
+    }
+}
+
+// ── CryptML export import ────────────────────────────────────────────────────
+
+var _DATE_FIELD_RE = /Date:\s*"([^"]*)"/;
+var _TIME_FIELD_RE = /Time:\s*"([^"]*)"/;
+var _ORIGINATOR_FIELD_RE = /Originator:\s*(.+)/;
+var _ADDRESSEE_FIELD_RE = /Addressee:\s*(.+)/;
+
+function parseCryptMLExport(text) {
+    // Ciphertexts are separated by blank and/or comment ('#...') lines; a
+    // ciphertext itself may span several lines with no blank line between them.
+    // Each comment line immediately preceding a block carries either metadata --
+    // Date/Time/Originator/Addressee, any subset, any combination on one line or
+    // spread across several -- or, if none of those match, the block's label
+    // (e.g. "file.cryptml :: A50/18"). A blank line clears everything pending,
+    // since it isn't attached to anything without an intervening comment.
+    var lines = text.split(/\r\n|\r|\n/);
+    var blocks = [];
+    var current = [];
+    var pendingLabel = null;
+    var pendingDate = null;
+    var pendingTime = null;
+    var pendingOriginator = null;
+    var pendingAddressee = null;
+
+    function flush() {
+        if (current.length > 0) {
+            blocks.push({
+                label: pendingLabel, date: pendingDate, time: pendingTime,
+                originator: pendingOriginator, addressee: pendingAddressee,
+                text: current.join('\n')
+            });
+            current = [];
+        }
+    }
+
+    for (var i = 0; i < lines.length; i++) {
+        var trimmed = lines[i].trim();
+        if (trimmed.charAt(0) === '#') {
+            flush();
+            var comment = trimmed.slice(1).trim();
+            var dateMatch = comment.match(_DATE_FIELD_RE);
+            var timeMatch = comment.match(_TIME_FIELD_RE);
+            var originatorMatch = comment.match(_ORIGINATOR_FIELD_RE);
+            var addresseeMatch = comment.match(_ADDRESSEE_FIELD_RE);
+            if (dateMatch) pendingDate = dateMatch[1];
+            if (timeMatch) pendingTime = timeMatch[1];
+            if (originatorMatch) pendingOriginator = originatorMatch[1].trim();
+            if (addresseeMatch) pendingAddressee = addresseeMatch[1].trim();
+            if (!dateMatch && !timeMatch && !originatorMatch && !addresseeMatch) pendingLabel = comment;
+        } else if (trimmed === '') {
+            flush();
+            pendingLabel = null;
+            pendingDate = null;
+            pendingTime = null;
+            pendingOriginator = null;
+            pendingAddressee = null;
+        } else {
+            current.push(lines[i]);
+        }
+    }
+    flush();
+
+    return blocks;
+}
+
+function applyBlockToBox(box, block) {
+    box.value = block.text;
+    box.dataset.label = block.label || '';
+    box.dataset.date = block.date || '';
+    box.dataset.time = block.time || '';
+    box.dataset.originator = block.originator || '';
+    box.dataset.addressee = block.addressee || '';
+}
+
+function populateCiphertextBoxes(blocks) {
+    if (blocks.length === 0) return;
+
+    var boxes = document.querySelectorAll('.ciphertext-box');
+    var targetIndex = -1;
+    for (var i = 0; i < boxes.length; i++) {
+        if (boxes[i].value.trim() === '') { targetIndex = i; break; }
+    }
+
+    var startIdx = 0;
+    if (targetIndex >= 0) {
+        applyBlockToBox(boxes[targetIndex], blocks[0]);
+        startIdx = 1;
+    }
+
+    for (var b = startIdx; b < blocks.length; b++) {
+        addCiphertextBox();
+        var current = document.querySelectorAll('.ciphertext-box');
+        applyBlockToBox(current[current.length - 1], blocks[b]);
+    }
+
+    renumberCiphertextBoxes();
+}
+
+function triggerImport() {
+    document.getElementById('import-file-input').click();
+}
+
+function findDuplicateBlocks(blocks) {
+    // Flags a block as a duplicate when its cleaned letters exactly match a
+    // ciphertext already present -- either sitting in an existing box, or an
+    // earlier block from this same import -- since re-importing the same file
+    // (or a file listing the same message twice) silently doubles every
+    // ciphertext in the log.
+    var charsetCfg = getCharsetConfig();
+    if (!charsetCfg) return [];
+
+    var seen = {};
+    var existingBoxes = document.querySelectorAll('.ciphertext-box');
+    for (var i = 0; i < existingBoxes.length; i++) {
+        var existingLetters = cleanCiphertext(existingBoxes[i].value, charsetCfg.pattern, charsetCfg.caseSensitive);
+        if (existingLetters.length > 0) seen[existingLetters] = true;
+    }
+
+    var duplicates = [];
+    for (var b = 0; b < blocks.length; b++) {
+        var blockLetters;
+        try {
+            blockLetters = cleanCiphertext(blocks[b].text, charsetCfg.pattern, charsetCfg.caseSensitive);
+        } catch (e) {
+            continue; // an invalid character here will surface as a normal error at Run time
+        }
+        if (blockLetters.length > 0) {
+            if (seen[blockLetters]) duplicates.push(blocks[b]);
+            seen[blockLetters] = true;
+        }
+    }
+
+    return duplicates;
+}
+
+document.getElementById('import-file-input').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+        var blocks = parseCryptMLExport(evt.target.result);
+        if (blocks.length === 0) {
+            alert('No ciphertexts found in the selected file.');
+            return;
+        }
+
+        var duplicates = findDuplicateBlocks(blocks);
+        if (duplicates.length > 0) {
+            var names = duplicates.map(function(block) { return block.label || '(unlabeled ciphertext)'; });
+            var skip = confirm(
+                'The following ciphertext(s) already appear in the list:\n\n  ' +
+                names.join('\n  ') +
+                '\n\nClick OK to skip them, or Cancel to import everything anyway.'
+            );
+            if (skip) {
+                blocks = blocks.filter(function(block) { return duplicates.indexOf(block) === -1; });
+            }
+        }
+
+        if (blocks.length === 0) {
+            alert('Every ciphertext in the selected file was already in the list; nothing new was imported.');
+        } else {
+            populateCiphertextBoxes(blocks);
+        }
+    };
+    reader.readAsText(file);
+
+    e.target.value = ''; // allow re-selecting the same file later
+});
+
+// ── charset UI ────────────────────────────────────────────────────────────────
+
+var CHARSET_MAP = {
+    '[A-Za-z]':    { pattern: '[A-Z]',       caseSensitive: false },
+    '[0-9]':       { pattern: '[0-9]',        caseSensitive: true  },
+    '[A-Za-z0-9]': { pattern: '[A-Za-z0-9]', caseSensitive: false },
+};
+
+function normalizeCustomCharset(raw) {
+    var s = raw.trim();
+    if (!s) return null;
+    if (s[0] !== '[') s = '[' + s + ']';
+    try { new RegExp('^(?:' + s + ')$'); } catch (e) { return null; }
+    return s;
+}
+
+function getCharsetConfig() {
+    var charsetKey = document.getElementById('charset').value;
+    if (charsetKey === '[Other]') {
+        var normalized = normalizeCustomCharset(document.getElementById('custom_charset').value);
+        return normalized ? { pattern: normalized, caseSensitive: false } : null;
+    }
+    return CHARSET_MAP[charsetKey] || CHARSET_MAP['[A-Za-z]'];
+}
+
+function onCharsetChange() {
+    var charsetKey = document.getElementById('charset').value;
+    document.getElementById('custom_charset').style.display = (charsetKey === '[Other]') ? '' : 'none';
+}
+
+// ── message indicator log ────────────────────────────────────────────────────
+
+function extractId(label, fallbackIndex) {
+    // A label is either a bare note or "file.cryptml :: ID" -- the ID is
+    // whatever follows the last "::", trimmed.
+    if (!label) return 'Msg ' + fallbackIndex;
+    var idx = label.lastIndexOf('::');
+    if (idx === -1) return label.trim();
+    return label.slice(idx + 2).trim();
+}
+
+function abbreviate(name, nameToCode, codeToName) {
+    // A station's code is derived from its name (first letter of its first two
+    // words, or the first two letters of a single-word name) and reused across
+    // every message it appears in, whether as originator or addressee. On
+    // collision with a different station, a digit is appended to disambiguate.
+    if (nameToCode.hasOwnProperty(name)) return nameToCode[name];
+
+    var words = name.trim().split(/\s+/);
+    var base = words.length >= 2
+        ? (words[0].charAt(0) + words[1].charAt(0)).toUpperCase()
+        : words[0].slice(0, 2).toUpperCase();
+
+    var code = base;
+    var suffix = 2;
+    while (codeToName.hasOwnProperty(code) && codeToName[code] !== name) {
+        code = base + suffix;
+        suffix++;
+    }
+
+    nameToCode[name] = code;
+    codeToName[code] = name;
+    return code;
+}
+
+function buildRows(leadingCount, trailingCount, charsetCfg) {
+    var boxes = document.querySelectorAll('.ciphertext-box');
+    var rows = [];
+    var msgNumber = 0;
+    var nameToCode = {};
+    var codeToName = {};
+
+    for (var i = 0; i < boxes.length; i++) {
+        var box = boxes[i];
+        var letters = cleanCiphertext(box.value, charsetCfg.pattern, charsetCfg.caseSensitive);
+        if (letters.length === 0) continue;
+        msgNumber++;
+
+        var groups = [];
+        for (var gi = 0; gi < letters.length; gi += 5) groups.push(letters.slice(gi, gi + 5));
+
+        var originatorName = box.dataset.originator || '';
+        var addresseeName = box.dataset.addressee || '';
+
+        var leading = [];
+        for (var a = 0; a < leadingCount; a++) leading.push(a < groups.length ? groups[a] : null);
+
+        var trailing = [];
+        for (var z = trailingCount - 1; z >= 0; z--) {
+            var pos = groups.length - 1 - z;
+            trailing.push(pos >= 0 ? groups[pos] : null);
+        }
+
+        rows.push({
+            index: msgNumber,
+            id: extractId(box.dataset.label, msgNumber),
+            from: originatorName ? abbreviate(originatorName, nameToCode, codeToName) : '',
+            to: addresseeName ? abbreviate(addresseeName, nameToCode, codeToName) : '',
+            date: box.dataset.date || '',
+            time: box.dataset.time || '',
+            gr: groups.length,
+            leading: leading,
+            trailing: trailing
+        });
+    }
+
+    return { rows: rows, legend: codeToName };
+}
+
+function columnDefs(rows, leadingCount, trailingCount) {
+    var hasFrom = rows.some(function(r) { return r.from; });
+    var hasTo   = rows.some(function(r) { return r.to; });
+    var hasDate = rows.some(function(r) { return r.date; });
+    var hasTime = rows.some(function(r) { return r.time; });
+
+    var cols = [
+        { key: 'index', label: '#',  type: 'number', get: function(r) { return r.index; } },
+        { key: 'id',    label: 'ID', type: 'string',  get: function(r) { return r.id; } }
+    ];
+    if (hasFrom) cols.push({ key: 'from', label: 'From', type: 'string', get: function(r) { return r.from; } });
+    if (hasTo)   cols.push({ key: 'to',   label: 'To',   type: 'string', get: function(r) { return r.to; } });
+    if (hasDate) cols.push({ key: 'date', label: 'Date', type: 'string', get: function(r) { return r.date; } });
+    if (hasTime) cols.push({ key: 'time', label: 'Time', type: 'string', get: function(r) { return r.time; } });
+    cols.push({ key: 'gr', label: 'GR', type: 'number', get: function(r) { return r.gr; } });
+
+    for (var a = 0; a < leadingCount; a++) {
+        cols.push(makeGroupColumn('a' + a, 'A' + (a + 1), a, 'leading', a === 0 ? 'divider' : null));
+    }
+    for (var z = 0; z < trailingCount; z++) {
+        cols.push(makeGroupColumn('z' + z, 'Z' + (trailingCount - 1 - z), z, 'trailing', z === 0 ? 'divider' : null));
+    }
+
+    return cols;
+}
+
+function makeGroupColumn(key, label, idx, side, rule) {
+    return {
+        key: key, label: label, type: 'string', rule: rule,
+        get: function(r) { return r[side][idx]; }
+    };
+}
+
+// ── sorting + rendering ──────────────────────────────────────────────────────
+
+var _currentRows = [];
+var _currentColumns = [];
+var _currentLegend = {};
+var _sortState = { key: null, dir: 1 };
+
+function sortRows(rows, columns, key, dir) {
+    var col = null;
+    for (var i = 0; i < columns.length; i++) if (columns[i].key === key) { col = columns[i]; break; }
+    if (!col) return rows;
+
+    return rows.slice().sort(function(a, b) {
+        var va = col.get(a);
+        var vb = col.get(b);
+        if (col.type === 'number') return (va - vb) * dir;
+        va = va || '';
+        vb = vb || '';
+        return String(va).localeCompare(String(vb)) * dir;
+    });
+}
+
+function buildTableElement(rows, columns) {
+    var table = document.createElement('table');
+    table.id = 'mil-table';
+
+    var thead = document.createElement('thead');
+    var headRow = document.createElement('tr');
+    for (var c = 0; c < columns.length; c++) {
+        var col = columns[c];
+        var th = document.createElement('th');
+        th.textContent = col.label + (_sortState.key === col.key ? (_sortState.dir === 1 ? ' ▲' : ' ▼') : '');
+        if (col.rule === 'divider') th.className = 'divider';
+        th.addEventListener('click', (function(key) {
+            return function() {
+                if (_sortState.key === key) _sortState.dir *= -1;
+                else { _sortState.key = key; _sortState.dir = 1; }
+                renderOutput();
+            };
+        })(col.key));
+        headRow.appendChild(th);
+    }
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    for (var r = 0; r < rows.length; r++) {
+        var tr = document.createElement('tr');
+        for (var c2 = 0; c2 < columns.length; c2++) {
+            var col2 = columns[c2];
+            var td = document.createElement('td');
+            var val = col2.get(rows[r]);
+            td.textContent = (val === '' || val === null || val === undefined) ? '—' : val;
+            var cls = [];
+            if (col2.type === 'number') cls.push('num');
+            if (col2.rule === 'divider') cls.push('divider');
+            if (cls.length) td.className = cls.join(' ');
+            tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+
+    return table;
+}
+
+function renderOutput() {
+    var container = document.getElementById('output-container');
+    container.innerHTML = '';
+
+    var legendCodes = Object.keys(_currentLegend).sort();
+    if (legendCodes.length > 0) {
+        var legendDiv = document.createElement('div');
+        legendDiv.id = 'legend';
+        legendDiv.innerHTML = '<strong>Legend:</strong> &nbsp; ' +
+            legendCodes.map(function(code) { return code + ' = ' + _currentLegend[code]; }).join(' &nbsp;&nbsp; ');
+        container.appendChild(legendDiv);
+    }
+
+    var viewRows = _sortState.key ? sortRows(_currentRows, _currentColumns, _sortState.key, _sortState.dir) : _currentRows;
+    container.appendChild(buildTableElement(viewRows, _currentColumns));
+}
+
+// ── formatting ────────────────────────────────────────────────────────────────
+
+var _MONTHS = ['January','February','March','April','May','June',
+               'July','August','September','October','November','December'];
+
+function runHeader() {
+    var n    = new Date();
+    var dd   = String(n.getDate()).padStart(2, '0');
+    var mon  = _MONTHS[n.getMonth()];
+    var yyyy = n.getFullYear();
+    var hh   = String(n.getHours()).padStart(2, '0');
+    var mm   = String(n.getMinutes()).padStart(2, '0');
+    var ss   = String(n.getSeconds()).padStart(2, '0');
+    return 'MESSAGE INDICATOR LOG (version 0.1)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+}
+
+// ── main run ──────────────────────────────────────────────────────────────────
+
+function showRunError(message) {
+    var el = document.getElementById('run-error');
+    el.textContent = message;
+    el.style.display = 'block';
+    document.getElementById('output-section').style.display = 'none';
+}
+
+function clearRunError() {
+    document.getElementById('run-error').style.display = 'none';
+}
+
+function runBuildLog() {
+    try {
+        var charsetCfg = getCharsetConfig();
+        if (!charsetCfg) {
+            showRunError('Invalid or empty custom character set.');
+            return;
+        }
+
+        var leadingCount = parseInt(document.getElementById('leading_count').value, 10);
+        var trailingCount = parseInt(document.getElementById('trailing_count').value, 10);
+        if (isNaN(leadingCount) || leadingCount < 0) leadingCount = 0;
+        if (isNaN(trailingCount) || trailingCount < 0) trailingCount = 0;
+
+        var built = buildRows(leadingCount, trailingCount, charsetCfg);
+        if (built.rows.length === 0) {
+            showRunError('Please enter at least one ciphertext (after removing characters outside the selected character set, every box was empty -- check that "Character set" matches your ciphertext).');
+            return;
+        }
+
+        _currentRows = built.rows;
+        _currentLegend = built.legend;
+        _currentColumns = columnDefs(_currentRows, leadingCount, trailingCount);
+        _sortState = { key: null, dir: 1 };
+
+        clearRunError();
+        document.getElementById('report-meta').textContent = runHeader();
+        renderOutput();
+        document.getElementById('output-section').style.display = 'block';
+    } catch (e) {
+        showRunError('ERROR: ' + e.message);
+    }
+}
+
+function savePdf() {
+    var section = document.getElementById('output-section');
+    if (section.style.display === 'none') return;
+    document.getElementById('print-area').innerHTML = section.innerHTML;
+    window.print();
+}
+
+// ── init ──────────────────────────────────────────────────────────────────────
+
+addCiphertextBox();
+
+// ── tooltip ──────────────────────────────────────────────────────────────────
+(function() {
+    var tip = document.createElement('div');
+    tip.style.cssText = 'position:fixed;background:#222;color:#fff;padding:6px 10px;'
+        + 'border-radius:4px;font-size:0.82em;font-family:Arial,sans-serif;'
+        + 'letter-spacing:normal;line-height:1.4;white-space:normal;max-width:300px;'
+        + 'z-index:9999;pointer-events:none;display:none;'
+        + 'box-shadow:0 2px 6px rgba(0,0,0,0.35);';
+    document.body.appendChild(tip);
+
+    var _tipTimer = null;
+
+    function cancelTip() {
+        clearTimeout(_tipTimer);
+        _tipTimer = null;
+        tip.style.display = 'none';
+    }
+
+    document.addEventListener('mouseover', function(e) {
+        var el = e.target.closest('[data-tooltip]');
+        if (el) {
+            clearTimeout(_tipTimer);
+            _tipTimer = setTimeout(function() {
+                tip.textContent = el.dataset.tooltip;
+                tip.style.display = 'block';
+            }, 1000);
+        } else {
+            cancelTip();
+        }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (tip.style.display !== 'none') {
+            var x = e.clientX + 14;
+            var y = e.clientY + 14;
+            if (x + 310 > window.innerWidth)  x = e.clientX - 320;
+            if (y + tip.offsetHeight + 10 > window.innerHeight) y = e.clientY - tip.offsetHeight - 10;
+            tip.style.left = x + 'px';
+            tip.style.top  = y + 'px';
+        }
+    });
+
+    document.addEventListener('mouseout', function(e) {
+        if (!e.relatedTarget || !e.relatedTarget.closest('[data-tooltip]')) {
+            cancelTip();
+        }
+    });
+
+    document.addEventListener('mousedown', function() { cancelTip(); });
+})();
+</script>
+</body>
+</html>
