@@ -7,7 +7,7 @@ import json
 import re
 from dataclasses import dataclass, field
 
-CRYPTML_VERSION = "1.1"
+CRYPTML_VERSION = "1.2"
 
 DEFAULT_SETTINGS = {
     "cipher_system": "unknown",
@@ -16,22 +16,38 @@ DEFAULT_SETTINGS = {
     "ditschar": "-",
     "ignorechars": "[\\s]",
     "plaintext_charset": "[A-Z]",
+    "unit_type": None,
+    "codebook_id": None,
+    "unit_length": None,
+    "channel": None,
 }
 
-_INHERITED_FIELDS = ("cipher_system", "charset", "casesensitive", "ditschar", "ignorechars")
+_INHERITED_FIELDS = ("cipher_system", "charset", "casesensitive", "ditschar", "ignorechars",
+                      "unit_type", "codebook_id", "unit_length", "channel")
 
-DOCUMENT_FIELDS = {"cryptml_version", "cryptml_uuid", "title", "defaults", "sources", "references", "notes", "chatter", "ciphertexts"}
+DOCUMENT_FIELDS = {
+    "cryptml_version", "cryptml_uuid", "title", "defaults", "sources", "references", "notes", "chatter",
+    "ciphertexts", "service_records", "plaintext_records",
+}
 _UUID_RE = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', re.IGNORECASE)
-DEFAULTS_FIELDS = {"cipher_system", "charset", "casesensitive", "ditschar", "ignorechars", "plaintext_charset"}
+DEFAULTS_FIELDS = {
+    "cipher_system", "charset", "casesensitive", "ditschar", "ignorechars", "plaintext_charset",
+    "unit_type", "codebook_id", "unit_length", "channel",
+}
 CIPHERTEXT_FIELDS = {
     "id", "raw", "parts", "cipher_system", "charset", "casesensitive", "ditschar", "ignorechars",
     "remove_from_start", "remove_from_end", "origin", "sources", "references", "notes", "chatter",
     "solution", "hints",
+    # Archival message metadata (CryptML 1.2) -- see "Archival message metadata" in the spec.
+    "is_stub", "isa_file", "isa_page", "image_ref", "indicator_raw", "channel", "serial", "gr_stated",
+    "pages", "transcription_state", "legibility", "resend_of", "related", "anomaly_notes",
+    "preamble_raw", "service_line_raw",
+    "unit_type", "unit_type_asserted", "codebook_id", "unit_length", "extensions",
 }
 PART_FIELDS = {"part_id", "raw", "remove_from_start", "remove_from_end", "origin", "solution", "hints"}
 # Ciphertext-level fields that move onto each part instead, once "parts" is used
 PART_ONLY_WHEN_SPLIT = {"remove_from_start", "remove_from_end", "origin", "solution", "hints"}
-ORIGIN_FIELDS = {"date", "time", "originator", "method", "location", "remarks"}
+ORIGIN_FIELDS = {"date", "time", "originator", "addressee", "method", "location", "remarks"}
 SOURCE_FIELDS = {"type", "title", "author", "publisher", "date", "page", "url", "note"}
 SOURCE_TYPES = {"book", "web", "letter", "periodical", "person", "competition", "other"}
 SOLUTION_FIELDS = {"plaintext", "plaintext_charset", "key", "solvers"}
@@ -40,6 +56,17 @@ HINT_FIELDS = {"text", "position", "source", "confidence", "notes"}
 REFERENCE_FIELDS = {"citation", "url"}
 NOTE_FIELDS = {"title", "text"}
 CHATTER_FIELDS = {"author", "date", "text"}
+
+UNIT_TYPE_VALUES = {"codebook", "cipher", "unknown"}
+TRANSCRIPTION_STATE_VALUES = {"none", "head_tail", "full"}
+LEGIBILITY_VALUES = {"clean", "partial", "poor"}
+SERVICE_TYPE_VALUES = {"repeat_request", "receipt", "plain_message", "chatter", "other"}
+SERVICE_RECORD_FIELDS = {
+    "id", "isa_file", "isa_page", "origin", "service_type", "refers_channel", "refers_serial",
+    "text_verbatim", "extensions",
+}
+PLAINTEXT_RECORD_FIELDS = {"id", "isa_file", "isa_page", "origin", "message_ref", "plaintext_verbatim", "extensions"}
+INDICATOR_RE = re.compile(r'^([A-Za-z]+)(\d+)(?:/(\d+))?$')
 
 GAP_MARKER = "[...]"
 
@@ -74,6 +101,52 @@ class CiphertextEntry:
     references: list = field(default_factory=list)
     notes: list = field(default_factory=list)
     chatter: list = field(default_factory=list)
+    # Archival message metadata (CryptML 1.2)
+    is_stub: bool = False
+    isa_file: str | None = None
+    isa_page: str | None = None
+    image_ref: str | None = None
+    indicator_raw: str | None = None
+    channel: str | None = None
+    serial: int | None = None
+    gr_stated: int | None = None
+    pages: int | None = None
+    transcription_state: str | None = None
+    legibility: str | None = None
+    resend_of: str | None = None
+    related: list = field(default_factory=list)
+    anomaly_notes: str | None = None
+    preamble_raw: str | None = None
+    service_line_raw: str | None = None
+    unit_type: str | None = None
+    unit_type_asserted: str | None = None
+    codebook_id: str | None = None
+    unit_length: int | None = None
+    extensions: dict = field(default_factory=dict)
+
+
+@dataclass
+class ServiceRecord:
+    id: str
+    isa_file: str = ""
+    isa_page: str = ""
+    origin: dict = field(default_factory=dict)
+    service_type: str = ""
+    refers_channel: str | None = None
+    refers_serial: int | None = None
+    text_verbatim: str = ""
+    extensions: dict = field(default_factory=dict)
+
+
+@dataclass
+class PlaintextRecord:
+    id: str
+    isa_file: str = ""
+    isa_page: str = ""
+    origin: dict = field(default_factory=dict)
+    message_ref: str = ""
+    plaintext_verbatim: str = ""
+    extensions: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -87,6 +160,8 @@ class CryptMLDocument:
     notes: list = field(default_factory=list)
     chatter: list = field(default_factory=list)
     ciphertexts: list = field(default_factory=list)  # list[CiphertextEntry]
+    service_records: list = field(default_factory=list)  # list[ServiceRecord]
+    plaintext_records: list = field(default_factory=list)  # list[PlaintextRecord]
 
     def get(self, id_: str) -> CiphertextEntry:
         for ct in self.ciphertexts:
@@ -99,6 +174,77 @@ class CryptMLDocument:
 
 def _is_valid_uuid(value) -> bool:
     return isinstance(value, str) and _UUID_RE.fullmatch(value) is not None
+
+
+def _is_positive_int(value) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
+def _is_nonneg_int(value) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+
+def _parse_reference(ref):
+    """Splits a cross-document reference "<uuid> :: <id>" into its parts, or treats
+    a bare string as a same-document id (uuid: None). Returns None if ref isn't a
+    non-empty string."""
+    if not isinstance(ref, str) or not ref:
+        return None
+    sep = ref.find(' :: ')
+    if sep != -1 and _is_valid_uuid(ref[:sep]):
+        return {'uuid': ref[:sep], 'id': ref[sep + 4:]}
+    return {'uuid': None, 'id': ref}
+
+
+def _check_reference_field(ref, where: str, errors: list):
+    if not isinstance(ref, str) or not ref.strip():
+        errors.append(f"{where}: expected a non-empty reference string, got {ref!r}")
+        return None
+    parsed = _parse_reference(ref)
+    if not parsed['id']:
+        errors.append(f"{where}: reference {ref!r} has no id after ' :: '")
+        return None
+    return parsed
+
+
+def _clean_length(raw: str, ignore_re) -> int:
+    no_gaps = raw.replace(GAP_MARKER, '')
+    return sum(1 for ch in no_gaps if not ignore_re.fullmatch(ch))
+
+
+def _trim_boundary(raw: str, remove_from_start: int, remove_from_end: int, ignore_re):
+    """Strips remove_from_start/remove_from_end non-ignored characters from raw's ends,
+    exactly like _strip_ignored_boundary in tools/Stethoscope/Basic/ciphertext.py. Group-structure
+    checks must count the message's own content, not an embedded indicator token or other boundary
+    material that remove_from_start/remove_from_end trims away (e.g. RCA-Outgoing.cryptml embeds
+    the indicator in raw itself and strips it with remove_from_start). Returns None if a trim
+    amount exceeds the available non-ignored characters, so the caller skips the check rather than
+    guess at a length that can't actually be computed."""
+    start = 0
+    if remove_from_start:
+        seen = 0
+        for offset, ch in enumerate(raw):
+            if not ignore_re.fullmatch(ch):
+                seen += 1
+                if seen == remove_from_start:
+                    start = offset + 1
+                    break
+        else:
+            return None
+
+    end = len(raw)
+    if remove_from_end:
+        seen = 0
+        for offset in range(len(raw) - 1, -1, -1):
+            if not ignore_re.fullmatch(raw[offset]):
+                seen += 1
+                if seen == remove_from_end:
+                    end = offset
+                    break
+        else:
+            return None
+
+    return raw[start:end] if start <= end else None
 
 
 def _is_single_bracketed_class(pattern: str) -> bool:
@@ -129,10 +275,17 @@ def _check_fields(obj, allowed: set, where: str, errors: list) -> None:
             errors.append(f"{where}: unrecognized field '{key}'")
 
 
-def _check_origin(origin, where: str, errors: list) -> None:
+def _check_origin(origin, where: str, errors: list, required_fields=()) -> None:
     if origin is None:
+        if required_fields:
+            errors.append(f"{where}: required (missing {', '.join(required_fields)})")
         return
     _check_fields(origin, ORIGIN_FIELDS, where, errors)
+    if not isinstance(origin, dict):
+        return
+    for key in required_fields:
+        if not origin.get(key):
+            errors.append(f"{where}.{key}: required")
 
 
 def _check_solution(solution, where: str, errors: list) -> None:
@@ -184,6 +337,86 @@ def _check_raw_chars(raw: str, charset_re, ignore_re, ditschar: str, where: str,
         errors.append(f"{where}: characters not matched by charset/ditschar/ignorechars: {bad_chars!r}")
 
 
+def _check_service_records(records, where: str, errors: list, ids_seen: set, pending_references: list) -> None:
+    if records is None:
+        return
+    if not isinstance(records, list):
+        errors.append(f"{where}: expected an array, got {type(records).__name__}")
+        return
+    for idx, rec in enumerate(records):
+        rwhere = f"{where}[{idx}] (id={rec.get('id', '?') if isinstance(rec, dict) else '?'})"
+        _check_fields(rec, SERVICE_RECORD_FIELDS, rwhere, errors)
+        if not isinstance(rec, dict):
+            continue
+
+        rid = rec.get('id')
+        if not rid:
+            errors.append(f"{rwhere}: missing required 'id'")
+        else:
+            if rid in ids_seen:
+                errors.append(f"{rwhere}: duplicate id '{rid}'")
+            ids_seen.add(rid)
+
+        for key in ('isa_file', 'isa_page', 'service_type', 'text_verbatim'):
+            if not rec.get(key):
+                errors.append(f"{rwhere}.{key}: required")
+        if 'service_type' in rec and rec['service_type'] not in SERVICE_TYPE_VALUES:
+            errors.append(f"{rwhere}.service_type = {rec['service_type']!r} not in {sorted(SERVICE_TYPE_VALUES)}")
+
+        # 'addressee' is deliberately not required here: a margin annotation or file note
+        # captured as a service record may have no addressee at all, and forcing one would
+        # just invite a fabricated value.
+        _check_origin(rec.get('origin'), f"{rwhere}.origin", errors, required_fields=('date', 'originator'))
+
+        if 'refers_serial' in rec and not _is_nonneg_int(rec['refers_serial']):
+            errors.append(f"{rwhere}.refers_serial must be a non-negative integer, got {rec['refers_serial']!r}")
+
+        extensions = rec.get('extensions')
+        if extensions is not None and not isinstance(extensions, dict):
+            errors.append(f"{rwhere}.extensions must be an object, got {type(extensions).__name__}")
+
+        # refers_channel/refers_serial are descriptive only -- never required to resolve
+        # (service traffic routinely references messages that were never catalogued).
+
+
+def _check_plaintext_records(records, where: str, errors: list, ids_seen: set, pending_references: list) -> None:
+    if records is None:
+        return
+    if not isinstance(records, list):
+        errors.append(f"{where}: expected an array, got {type(records).__name__}")
+        return
+    for idx, rec in enumerate(records):
+        rwhere = f"{where}[{idx}] (id={rec.get('id', '?') if isinstance(rec, dict) else '?'})"
+        _check_fields(rec, PLAINTEXT_RECORD_FIELDS, rwhere, errors)
+        if not isinstance(rec, dict):
+            continue
+
+        rid = rec.get('id')
+        if not rid:
+            errors.append(f"{rwhere}: missing required 'id'")
+        else:
+            if rid in ids_seen:
+                errors.append(f"{rwhere}: duplicate id '{rid}'")
+            ids_seen.add(rid)
+
+        for key in ('isa_file', 'isa_page', 'plaintext_verbatim'):
+            if not rec.get(key):
+                errors.append(f"{rwhere}.{key}: required")
+
+        _check_origin(rec.get('origin'), f"{rwhere}.origin", errors)
+
+        if not rec.get('message_ref'):
+            errors.append(f"{rwhere}.message_ref: required")
+        else:
+            parsed = _check_reference_field(rec['message_ref'], f"{rwhere}.message_ref", errors)
+            if parsed:
+                pending_references.append({'parsed': parsed, 'where': f"{rwhere}.message_ref", 'raw': rec['message_ref']})
+
+        extensions = rec.get('extensions')
+        if extensions is not None and not isinstance(extensions, dict):
+            errors.append(f"{rwhere}.extensions must be an object, got {type(extensions).__name__}")
+
+
 def validate(data: dict) -> list:
     """Validate a parsed CryptML document against the full spec. Returns a list of
     error strings (empty if valid). Does not raise -- collects every problem found."""
@@ -207,6 +440,11 @@ def validate(data: dict) -> list:
     if not isinstance(defaults['ditschar'], str) or len(defaults['ditschar']) != 1:
         errors.append(f"defaults.ditschar must be exactly one character, got {defaults['ditschar']!r}")
 
+    if defaults.get('unit_type') is not None and defaults['unit_type'] not in UNIT_TYPE_VALUES:
+        errors.append(f"defaults.unit_type = {defaults['unit_type']!r} not in {sorted(UNIT_TYPE_VALUES)}")
+    if defaults.get('unit_length') is not None and not _is_positive_int(defaults['unit_length']):
+        errors.append(f"defaults.unit_length must be a positive integer, got {defaults['unit_length']!r}")
+
     _check_source_list(data.get('sources', []), "document.sources", errors)
     _check_note_list(data.get('notes', []), "document.notes", errors)
     _check_chatter_list(data.get('chatter', []), "document.chatter", errors)
@@ -217,6 +455,7 @@ def validate(data: dict) -> list:
         return errors
 
     ids_seen = set()
+    pending_references = []
     for idx, ct in enumerate(ciphertexts):
         where = f"ciphertexts[{idx}] (id={ct.get('id', '?') if isinstance(ct, dict) else '?'})"
         _check_fields(ct, CIPHERTEXT_FIELDS, where, errors)
@@ -232,12 +471,66 @@ def validate(data: dict) -> list:
                 errors.append(f"{where}: duplicate id '{cid}'")
             ids_seen.add(cid)
 
+        is_stub = ct.get('is_stub') is True
+        if 'is_stub' in ct and not isinstance(ct['is_stub'], bool):
+            errors.append(f"{where}.is_stub must be a boolean, got {ct['is_stub']!r}")
+
         has_raw = 'raw' in ct
         has_parts = 'parts' in ct
         if has_raw and has_parts:
             errors.append(f"{where}: has both 'raw' and 'parts' -- exactly one is required")
-        if not has_raw and not has_parts:
-            errors.append(f"{where}: has neither 'raw' nor 'parts' -- exactly one is required")
+        if is_stub and (has_raw or has_parts):
+            errors.append(f"{where}: is_stub is true but 'raw'/'parts' is also present -- a stub must have neither")
+        elif not is_stub and not has_raw and not has_parts:
+            errors.append(f"{where}: has neither 'raw' nor 'parts' -- exactly one is required (or set is_stub: true)")
+
+        for key in ('serial', 'gr_stated', 'pages'):
+            if key in ct and not _is_nonneg_int(ct[key]):
+                errors.append(f"{where}.{key} must be a non-negative integer, got {ct[key]!r}")
+        if 'transcription_state' in ct and ct['transcription_state'] not in TRANSCRIPTION_STATE_VALUES:
+            errors.append(f"{where}.transcription_state = {ct['transcription_state']!r} not in {sorted(TRANSCRIPTION_STATE_VALUES)}")
+        if 'legibility' in ct and ct['legibility'] not in LEGIBILITY_VALUES:
+            errors.append(f"{where}.legibility = {ct['legibility']!r} not in {sorted(LEGIBILITY_VALUES)}")
+        if 'unit_type' in ct and ct['unit_type'] not in UNIT_TYPE_VALUES:
+            errors.append(f"{where}.unit_type = {ct['unit_type']!r} not in {sorted(UNIT_TYPE_VALUES)}")
+        if 'unit_type_asserted' in ct and ct['unit_type_asserted'] not in UNIT_TYPE_VALUES:
+            errors.append(f"{where}.unit_type_asserted = {ct['unit_type_asserted']!r} not in {sorted(UNIT_TYPE_VALUES)}")
+        if 'unit_length' in ct and not _is_positive_int(ct['unit_length']):
+            errors.append(f"{where}.unit_length must be a positive integer, got {ct['unit_length']!r}")
+
+        extensions = ct.get('extensions')
+        if extensions is not None and not isinstance(extensions, dict):
+            errors.append(f"{where}.extensions must be an object, got {type(extensions).__name__}")
+
+        indicator_raw = ct.get('indicator_raw')
+        if isinstance(indicator_raw, str):
+            m = INDICATOR_RE.match(indicator_raw)
+            if m:
+                ind_channel, ind_serial = m.group(1), int(m.group(2))
+                ind_gr = int(m.group(3)) if m.group(3) is not None else None
+                effective_channel = ct.get('channel', defaults.get('channel'))
+                if effective_channel is not None and effective_channel != ind_channel:
+                    errors.append(f"{where}: channel = {effective_channel!r} doesn't match indicator_raw {indicator_raw!r} (expected {ind_channel!r})")
+                if 'serial' in ct and ct['serial'] != ind_serial:
+                    errors.append(f"{where}.serial = {ct['serial']!r} doesn't match indicator_raw {indicator_raw!r} (expected {ind_serial})")
+                if ind_gr is not None and 'gr_stated' in ct and ct['gr_stated'] != ind_gr:
+                    errors.append(f"{where}.gr_stated = {ct['gr_stated']!r} doesn't match indicator_raw {indicator_raw!r} (expected {ind_gr})")
+            # a non-matching indicator_raw is free text by design -- the cross-check is
+            # simply skipped, not an error.
+
+        if 'resend_of' in ct:
+            parsed = _check_reference_field(ct['resend_of'], f"{where}.resend_of", errors)
+            if parsed:
+                pending_references.append({'parsed': parsed, 'where': f"{where}.resend_of", 'raw': ct['resend_of']})
+        if 'related' in ct:
+            related = ct['related']
+            if not isinstance(related, list):
+                errors.append(f"{where}.related must be an array, got {type(related).__name__}")
+            else:
+                for ridx, r in enumerate(related):
+                    parsed = _check_reference_field(r, f"{where}.related[{ridx}]", errors)
+                    if parsed:
+                        pending_references.append({'parsed': parsed, 'where': f"{where}.related[{ridx}]", 'raw': r})
 
         ditschar = ct.get('ditschar', defaults['ditschar'])
         if not isinstance(ditschar, str) or len(ditschar) != 1:
@@ -298,11 +591,97 @@ def validate(data: dict) -> list:
             _check_solution(ct.get('solution'), f"{where}.solution", errors)
             _check_hints(ct.get('hints', []), f"{where}.hints", errors)
 
+            effective_unit_type = ct.get('unit_type_asserted', ct.get('unit_type', defaults.get('unit_type')))
+            effective_unit_length = ct.get('unit_length', defaults.get('unit_length'))
+            effective_codebook_id = ct.get('codebook_id', defaults.get('codebook_id'))
+            if effective_unit_type == 'codebook':
+                if not effective_codebook_id:
+                    errors.append(f"{where}: codebook_id is required when unit_type is 'codebook'")
+                if _is_positive_int(effective_unit_length) and isinstance(ct.get('raw'), str):
+                    trimmed = _trim_boundary(ct['raw'], ct.get('remove_from_start', 0), ct.get('remove_from_end', 0), ignore_re)
+                    if trimmed is not None:
+                        length = _clean_length(trimmed, ignore_re)
+                        if length % effective_unit_length != 0:
+                            errors.append(f"{where}: character count ({length}) is not a multiple of unit_length "
+                                          f"({effective_unit_length}) for a codebook channel")
+        elif is_stub:
+            # No raw to check characters/group-structure against, but origin/solution/hints are
+            # still ordinary ciphertext-level objects on a stub and must have their shape checked.
+            _check_origin(ct.get('origin'), f"{where}.origin", errors)
+            _check_solution(ct.get('solution'), f"{where}.solution", errors)
+            _check_hints(ct.get('hints', []), f"{where}.hints", errors)
+
         _check_source_list(ct.get('sources', []), f"{where}.sources", errors)
         _check_note_list(ct.get('notes', []), f"{where}.notes", errors)
         _check_chatter_list(ct.get('chatter', []), f"{where}.chatter", errors)
 
+    _check_service_records(data.get('service_records'), 'document.service_records', errors, ids_seen, pending_references)
+    _check_plaintext_records(data.get('plaintext_records'), 'document.plaintext_records', errors, ids_seen, pending_references)
+
+    for pref in pending_references:
+        parsed = pref['parsed']
+        if parsed['uuid'] is None or parsed['uuid'] == data.get('cryptml_uuid'):
+            if parsed['id'] not in ids_seen:
+                errors.append(f"{pref['where']}: reference {pref['raw']!r} does not resolve to any id in this document")
+
     return errors
+
+
+def validate_warnings(data: dict) -> list:
+    """Advisory findings that never affect validate()'s pass/fail contract: a
+    gr_stated mismatch, a poor-legibility-but-fully-transcribed message, or a
+    short final group on a cipher channel. See "Archival message metadata" in
+    the spec."""
+    warnings = []
+    if not isinstance(data, dict) or not isinstance(data.get('ciphertexts'), list):
+        return warnings
+
+    defaults_raw = data.get('defaults', {})
+    defaults = {**DEFAULT_SETTINGS, **(defaults_raw if isinstance(defaults_raw, dict) else {})}
+
+    for idx, ct in enumerate(data['ciphertexts']):
+        if not isinstance(ct, dict):
+            continue
+        where = f"ciphertexts[{idx}] (id={ct.get('id', '?')})"
+
+        if ct.get('legibility') == 'poor' and ct.get('transcription_state') == 'full':
+            warnings.append(f"{where}: legibility is 'poor' but transcription_state is 'full' -- "
+                            f"a statistic built on this transcription may be unreliable")
+
+        if ct.get('is_stub') is True or not isinstance(ct.get('raw'), str):
+            continue
+
+        ignorechars = ct.get('ignorechars', defaults['ignorechars'])
+        casesensitive = ct.get('casesensitive', defaults['casesensitive'])
+        flags = 0 if casesensitive else re.IGNORECASE
+        try:
+            ignore_re = re.compile(ignorechars, flags)
+        except re.error:
+            continue
+
+        effective_unit_type = ct.get('unit_type_asserted', ct.get('unit_type', defaults.get('unit_type')))
+        effective_unit_length = ct.get('unit_length', defaults.get('unit_length'))
+        if not _is_positive_int(effective_unit_length):
+            continue
+
+        trimmed = _trim_boundary(ct['raw'], ct.get('remove_from_start', 0), ct.get('remove_from_end', 0), ignore_re)
+        if trimmed is None:
+            continue
+        length = _clean_length(trimmed, ignore_re)
+        remainder = length % effective_unit_length
+        if effective_unit_type == 'cipher' and remainder != 0:
+            warnings.append(f"{where}: short final group of {remainder} character(s) "
+                            f"(group width {effective_unit_length}) -- preserved, not padded or trimmed")
+
+        # Only meaningful on a full transcription: on "head_tail"/"none", the counted total
+        # is legitimately partial and disagrees with gr_stated by design, not by error.
+        if 'gr_stated' in ct and ct.get('transcription_state') == 'full':
+            computed_groups = -(-length // effective_unit_length)  # ceil division
+            if computed_groups != ct['gr_stated']:
+                warnings.append(f"{where}: gr_stated ({ct['gr_stated']}) doesn't match the "
+                                f"counted group total ({computed_groups})")
+
+    return warnings
 
 
 # ---------- loading ----------
@@ -343,11 +722,35 @@ def _load_ciphertext(ct: dict, defaults: dict, sole_ciphertext: bool) -> Ciphert
         casesensitive=ct.get('casesensitive', defaults['casesensitive']),
         ditschar=ct.get('ditschar', defaults['ditschar']),
         ignorechars=ct.get('ignorechars', defaults['ignorechars']),
+        unit_type=ct.get('unit_type', defaults.get('unit_type')),
+        codebook_id=ct.get('codebook_id', defaults.get('codebook_id')),
+        unit_length=ct.get('unit_length', defaults.get('unit_length')),
+        channel=ct.get('channel', defaults.get('channel')),
         sources=ct.get('sources', []),
         references=ct.get('references', []),
         notes=ct.get('notes', []),
         chatter=ct.get('chatter', []),
+        is_stub=ct.get('is_stub', False),
+        isa_file=ct.get('isa_file'),
+        isa_page=ct.get('isa_page'),
+        image_ref=ct.get('image_ref'),
+        indicator_raw=ct.get('indicator_raw'),
+        serial=ct.get('serial'),
+        gr_stated=ct.get('gr_stated'),
+        pages=ct.get('pages'),
+        transcription_state=ct.get('transcription_state'),
+        legibility=ct.get('legibility'),
+        resend_of=ct.get('resend_of'),
+        related=ct.get('related', []),
+        anomaly_notes=ct.get('anomaly_notes'),
+        preamble_raw=ct.get('preamble_raw'),
+        service_line_raw=ct.get('service_line_raw'),
+        unit_type_asserted=ct.get('unit_type_asserted'),
+        extensions=ct.get('extensions', {}),
     )
+
+    if ct.get('is_stub'):
+        return CiphertextEntry(**common)
 
     if 'parts' in ct:
         return CiphertextEntry(
@@ -363,6 +766,32 @@ def _load_ciphertext(ct: dict, defaults: dict, sole_ciphertext: bool) -> Ciphert
         origin=ct.get('origin', {}),
         solution=_resolve_solution(ct.get('solution'), defaults),
         hints=ct.get('hints', []),
+    )
+
+
+def _load_service_record(rec: dict) -> ServiceRecord:
+    return ServiceRecord(
+        id=rec['id'],
+        isa_file=rec.get('isa_file', ''),
+        isa_page=rec.get('isa_page', ''),
+        origin=rec.get('origin', {}),
+        service_type=rec.get('service_type', ''),
+        refers_channel=rec.get('refers_channel'),
+        refers_serial=rec.get('refers_serial'),
+        text_verbatim=rec.get('text_verbatim', ''),
+        extensions=rec.get('extensions', {}),
+    )
+
+
+def _load_plaintext_record(rec: dict) -> PlaintextRecord:
+    return PlaintextRecord(
+        id=rec['id'],
+        isa_file=rec.get('isa_file', ''),
+        isa_page=rec.get('isa_page', ''),
+        origin=rec.get('origin', {}),
+        message_ref=rec.get('message_ref', ''),
+        plaintext_verbatim=rec.get('plaintext_verbatim', ''),
+        extensions=rec.get('extensions', {}),
     )
 
 
@@ -392,6 +821,8 @@ def load(path: str) -> CryptMLDocument:
         notes=data.get('notes', []),
         chatter=data.get('chatter', []),
         ciphertexts=ciphertexts,
+        service_records=[_load_service_record(r) for r in data.get('service_records', [])],
+        plaintext_records=[_load_plaintext_record(r) for r in data.get('plaintext_records', [])],
     )
 
 
@@ -440,14 +871,26 @@ def _serialize_part(part: Part, defaults: dict) -> dict:
     return out
 
 
+# 'channel' cascades the same way 'unit_type' does (see _INHERITED_FIELDS) and so is
+# deliberately excluded here, same as 'unit_type'/'codebook_id'/'unit_length'.
+_ARCHIVAL_FIELDS = (
+    'is_stub', 'isa_file', 'isa_page', 'image_ref', 'indicator_raw', 'serial', 'gr_stated',
+    'pages', 'transcription_state', 'legibility', 'resend_of', 'related', 'anomaly_notes',
+    'preamble_raw', 'service_line_raw',
+    'unit_type_asserted', 'extensions',
+)
+
+
 def _serialize_ciphertext(ct: CiphertextEntry, defaults: dict) -> dict:
     out = {'id': ct.id}
     for name in _INHERITED_FIELDS:
         value = getattr(ct, name)
-        if value != defaults[name]:
+        if value != defaults.get(name):
             out[name] = value
 
-    if ct.parts is not None:
+    if ct.is_stub:
+        pass  # a stub has neither raw nor parts
+    elif ct.parts is not None:
         out['parts'] = [_serialize_part(p, defaults) for p in ct.parts]
     else:
         out['raw'] = ct.raw
@@ -465,6 +908,18 @@ def _serialize_ciphertext(ct: CiphertextEntry, defaults: dict) -> dict:
         if hints:
             out['hints'] = hints
 
+    for name in _ARCHIVAL_FIELDS:
+        value = getattr(ct, name)
+        if value is None:
+            continue
+        if name == 'is_stub' and value is False:
+            continue
+        if name in ('related', 'extensions') and not value:
+            continue
+        if isinstance(value, str) and value == '':
+            continue
+        out[name] = value
+
     sources = _strip_empty_list(ct.sources)
     if sources:
         out['sources'] = sources
@@ -477,6 +932,34 @@ def _serialize_ciphertext(ct: CiphertextEntry, defaults: dict) -> dict:
     chatter = _strip_empty_list(ct.chatter)
     if chatter:
         out['chatter'] = chatter
+    return out
+
+
+def _serialize_service_record(rec: ServiceRecord) -> dict:
+    out = {'id': rec.id, 'isa_file': rec.isa_file, 'isa_page': rec.isa_page}
+    origin = _strip_empty(rec.origin) if rec.origin else {}
+    if origin:
+        out['origin'] = origin
+    out['service_type'] = rec.service_type
+    if rec.refers_channel:
+        out['refers_channel'] = rec.refers_channel
+    if rec.refers_serial is not None:
+        out['refers_serial'] = rec.refers_serial
+    out['text_verbatim'] = rec.text_verbatim
+    if rec.extensions:
+        out['extensions'] = rec.extensions
+    return out
+
+
+def _serialize_plaintext_record(rec: PlaintextRecord) -> dict:
+    out = {'id': rec.id, 'isa_file': rec.isa_file, 'isa_page': rec.isa_page}
+    origin = _strip_empty(rec.origin) if rec.origin else {}
+    if origin:
+        out['origin'] = origin
+    out['message_ref'] = rec.message_ref
+    out['plaintext_verbatim'] = rec.plaintext_verbatim
+    if rec.extensions:
+        out['extensions'] = rec.extensions
     return out
 
 
@@ -506,6 +989,10 @@ def save(document: CryptMLDocument, path: str) -> None:
     chatter = _strip_empty_list(document.chatter)
     if chatter:
         data['chatter'] = chatter
+    if document.service_records:
+        data['service_records'] = [_serialize_service_record(r) for r in document.service_records]
+    if document.plaintext_records:
+        data['plaintext_records'] = [_serialize_plaintext_record(r) for r in document.plaintext_records]
 
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)

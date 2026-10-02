@@ -19,6 +19,9 @@
   .invalid-header { font-family: sans-serif; font-weight: bold; color: #b00; margin-bottom: 0.5rem; }
   #errors { background: #fee; border: 1px solid #b00; padding: 1rem 1rem 1rem 2rem; border-radius: 4px; }
   #errors li { margin: 0.3rem 0; font-size: 0.9rem; }
+  .warnings-header { font-family: sans-serif; font-weight: bold; color: #960; margin: 1rem 0 0.5rem; }
+  #warnings { background: #ffc; border: 1px solid #a80; padding: 1rem 1rem 1rem 2rem; border-radius: 4px; }
+  #warnings li { margin: 0.3rem 0; font-size: 0.9rem; }
   .error-box { background: #fee; border: 1px solid #b00; padding: 1rem; border-radius: 4px; white-space: pre-wrap; }
 </style>
 </head>
@@ -74,6 +77,13 @@ function renderResult(text, filenameLabel) {
     resultEl.appendChild(M.el('div', { className: 'invalid-header' },
       `${errors.length} error${errors.length === 1 ? '' : 's'} found${label}:`));
     resultEl.appendChild(M.el('ul', { id: 'errors' }, errors.map(e => M.el('li', {}, e))));
+  }
+
+  const warnings = M.validateWarnings(data);
+  if (warnings.length) {
+    resultEl.appendChild(M.el('div', { className: 'warnings-header' },
+      `${warnings.length} warning${warnings.length === 1 ? '' : 's'} (non-blocking):`));
+    resultEl.appendChild(M.el('ul', { id: 'warnings' }, warnings.map(w => M.el('li', {}, w))));
   }
 }
 

@@ -6,236 +6,239 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>cryptml-spec</title>
   <style>
-
-html {
-color: #1a1a1a;
-background-color: #fdfdfd;
-}
-body {
-margin: 0 auto;
-max-width: 36em;
-padding-left: 50px;
-padding-right: 50px;
-padding-top: 50px;
-padding-bottom: 50px;
-hyphens: auto;
-overflow-wrap: break-word;
-text-rendering: optimizeLegibility;
-font-kerning: normal;
-}
-@media (max-width: 600px) {
-body {
-font-size: 0.9em;
-padding: 12px;
-}
-h1 {
-font-size: 1.8em;
-}
-}
-@media print {
-html {
-background-color: white;
-}
-body {
-background-color: transparent;
-color: black;
-font-size: 12pt;
-}
-p, h2, h3 {
-orphans: 3;
-widows: 3;
-}
-h2, h3, h4 {
-page-break-after: avoid;
-}
-}
-p {
-margin: 1em 0;
-}
-a {
-color: #1a1a1a;
-}
-a:visited {
-color: #1a1a1a;
-}
-img {
-max-width: 100%;
-}
-svg {
-height: auto;
-max-width: 100%;
-}
-h1, h2, h3, h4, h5, h6 {
-margin-top: 1.4em;
-}
-h5, h6 {
-font-size: 1em;
-font-style: italic;
-}
-h6 {
-font-weight: normal;
-}
-ol, ul {
-padding-left: 1.7em;
-margin-top: 1em;
-}
-li > ol, li > ul {
-margin-top: 0;
-}
-blockquote {
-margin: 1em 0 1em 1.7em;
-padding-left: 1em;
-border-left: 2px solid #e6e6e6;
-color: #606060;
-}
-code {
-white-space: pre-wrap;
-font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-font-size: 85%;
-margin: 0;
-hyphens: manual;
-}
-pre {
-margin: 1em 0;
-overflow: auto;
-}
-pre code {
-padding: 0;
-overflow: visible;
-overflow-wrap: normal;
-}
-.sourceCode {
-background-color: transparent;
-overflow: visible;
-}
-hr {
-border: none;
-border-top: 1px solid #1a1a1a;
-height: 1px;
-margin: 1em 0;
-}
-table {
-margin: 1em 0;
-border-collapse: collapse;
-width: 100%;
-overflow-x: auto;
-display: block;
-font-variant-numeric: lining-nums tabular-nums;
-}
-table caption {
-margin-bottom: 0.75em;
-}
-tbody {
-margin-top: 0.5em;
-border-top: 1px solid #1a1a1a;
-border-bottom: 1px solid #1a1a1a;
-}
-th {
-border-top: 1px solid #1a1a1a;
-padding: 0.25em 0.5em 0.25em 0.5em;
-}
-td {
-padding: 0.125em 0.5em 0.25em 0.5em;
-}
-header {
-margin-bottom: 4em;
-text-align: center;
-}
-#TOC li {
-list-style: none;
-}
-#TOC ul {
-padding-left: 1.3em;
-}
-#TOC > ul {
-padding-left: 0;
-}
-#TOC a:not(:hover) {
-text-decoration: none;
-}
-span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: 1.5em;}
-div.column{flex: auto;}
-@media screen {
-div.columns{gap: min(4vw, 1.5em);}
-div.column{overflow-x: auto;}
-}
-div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-
-ul.task-list[class]{list-style: none;}
-ul.task-list li input[type="checkbox"] {
-font-size: inherit;
-width: 0.8em;
-margin: 0 0.8em 0.2em -1.6em;
-vertical-align: middle;
-}
-.display.math{display: block; text-align: center; margin: 0.5rem auto;}
-
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-{ counter-reset: source-line 0; }
-pre.numberSource code > span
-{ position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-{ content: counter(source-line);
-position: relative; left: -1em; text-align: right; vertical-align: baseline;
-border: none; display: inline-block;
--webkit-touch-callout: none; -webkit-user-select: none;
--khtml-user-select: none; -moz-user-select: none;
--ms-user-select: none; user-select: none;
-padding: 0 4px; width: 4em;
-color: #aaaaaa;
-}
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
-div.sourceCode
-{ }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
-code span.al { color: #ff0000; font-weight: bold; } 
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
-code span.at { color: #7d9029; } 
-code span.bn { color: #40a070; } 
-code span.bu { color: #008000; } 
-code span.cf { color: #007020; font-weight: bold; } 
-code span.ch { color: #4070a0; } 
-code span.cn { color: #880000; } 
-code span.co { color: #60a0b0; font-style: italic; } 
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
-code span.do { color: #ba2121; font-style: italic; } 
-code span.dt { color: #902000; } 
-code span.dv { color: #40a070; } 
-code span.er { color: #ff0000; font-weight: bold; } 
-code span.ex { } 
-code span.fl { color: #40a070; } 
-code span.fu { color: #06287e; } 
-code span.im { color: #008000; font-weight: bold; } 
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
-code span.kw { color: #007020; font-weight: bold; } 
-code span.op { color: #666666; } 
-code span.ot { color: #007020; } 
-code span.pp { color: #bc7a00; } 
-code span.sc { color: #4070a0; } 
-code span.ss { color: #bb6688; } 
-code span.st { color: #4070a0; } 
-code span.va { color: #19177c; } 
-code span.vs { color: #4070a0; } 
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
-</style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
 </head>
 <body>
 <h1 id="cryptml-cryptographic-markup-language">CryptML — Cryptographic
@@ -263,8 +266,25 @@ trailing sentence-punctuation (e.g. a period, if the book typesets the
 cryptogram as the end of a sentence) is the book’s, not the cipher’s —
 leave it out of <code>raw</code> rather than adding it to
 <code>ignorechars</code>.</p>
-<p>Version described here: <strong>1.0</strong> (draft — schema under
-review, not yet implemented).</p>
+<p>Version described here: <strong>1.2</strong>.</p>
+<p><strong>1.2</strong> adds <a
+href="#archival-message-metadata">archival message metadata</a>: a
+<code>service_records</code>/ <code>plaintext_records</code> pair of
+document-level arrays for traffic with no ciphertext of its own, an
+<code>is_stub</code> ciphertext flag licensing a message record with
+neither <code>raw</code> nor <code>parts</code>, a cascading
+<code>unit_type</code>/
+<code>codebook_id</code>/<code>unit_length</code> classification for
+group-structure validation, <code>origin.addressee</code>, a reserved
+free-form <code>extensions</code> object, and a set of optional archival
+provenance/indicator/quality fields. A separate, non-blocking
+<code>validateWarnings()</code> channel is introduced alongside the
+existing pass/fail <code>validate()</code>. All of this is purely
+additive and optional: files written under 1.0 or 1.1 remain valid
+as-is, with no need to edit or re-version them. <strong>1.1</strong>
+added <code>origin.time</code> (see <a href="#origin">origin</a>)
+alongside the existing <code>origin.date</code>. <strong>1.0</strong>
+was the initial release.</p>
 <h2 id="design-principles">Design principles</h2>
 <ul>
 <li><strong>Defaults are robust.</strong> A file containing nothing but
@@ -297,8 +317,8 @@ belongs in a tool-specific fixture format —
 <code>tools/Stethoscope/Basic/</code>’s own JSON already serves that
 purpose — not in CryptML.)</li>
 <li><strong><code>id</code> is free-form.</strong> CryptML does not
-prescribe a naming convention — <code>&quot;1&quot;</code>, <code>&quot;GRP42&quot;</code>,
-<code>&quot;L2-P16-a&quot;</code> are all just opaque, unique strings. Choosing a
+prescribe a naming convention — <code>"1"</code>, <code>"GRP42"</code>,
+<code>"L2-P16-a"</code> are all just opaque, unique strings. Choosing a
 good convention is the author’s job, not the schema’s.</li>
 <li><strong>Vocabulary matches existing tools.</strong>
 <code>raw</code>, <code>charset</code>, <code>casesensitive</code>,
@@ -314,7 +334,7 @@ text (JSON’s own interchange encoding, per RFC 8259). Every string field
 character; the format itself imposes no language restriction. This
 guarantees free-text metadata can be written in any language. It does
 <strong>not</strong> by itself guarantee that a non-Latin <em>ciphertext
-alphabet</em> (e.g. <code>charset: &quot;[א-ת]&quot;</code>) works end-to-end
+alphabet</em> (e.g. <code>charset: "[א-ת]"</code>) works end-to-end
 through every tool — that depends on each tool’s own character-handling,
 not on this encoding statement.</li>
 <li><strong>Corpus membership is opt-in, not automatic.</strong> A
@@ -322,7 +342,8 @@ CryptML file is assumed to carry nothing but ciphertext data by default.
 <code>cryptml_uuid</code> marks a file as a member of the published
 corpus, and it’s assigned deliberately — never generated automatically
 on file creation — because most files (working files, files produced by
-extract) are never meant to be part of it. See <a href="#corpus-identity-cryptml_uuid">Corpus identity</a>.</li>
+extract) are never meant to be part of it. See <a
+href="#corpus-identity-cryptml_uuid">Corpus identity</a>.</li>
 </ul>
 <h2 id="node-types-and-their-legal-fields">Node types and their legal
 fields</h2>
@@ -347,15 +368,17 @@ validation error if it appears on the other.</p>
 <tbody>
 <tr>
 <td><code>cryptml_version</code></td>
-<td>no, default <code>&quot;1.0&quot;</code></td>
+<td>no, default <code>"1.2"</code></td>
 <td>Format version.</td>
 </tr>
 <tr>
 <td><code>cryptml_uuid</code></td>
 <td>no</td>
-<td>Marks this file as a corpus member — see <a href="#corpus-identity-cryptml_uuid">Corpus identity</a>. Required only
+<td>Marks this file as a corpus member — see <a
+href="#corpus-identity-cryptml_uuid">Corpus identity</a>. Required only
 for files under <code>tools/CryptML/input/</code>, not by the schema
-itself.</td>
+itself. Also used to qualify a cross-document reference — see <a
+href="#archival-message-metadata">Archival message metadata</a>.</td>
 </tr>
 <tr>
 <td><code>title</code></td>
@@ -393,6 +416,20 @@ rules</a>.</td>
 <td><strong>yes</strong>, ≥1 entry</td>
 <td>Array of <a href="#ciphertext-node">ciphertext nodes</a>.</td>
 </tr>
+<tr>
+<td><code>service_records</code></td>
+<td>no</td>
+<td>Array of <a href="#service-record">service records</a> — plaintext
+traffic with no ciphertext of its own. See <a
+href="#archival-message-metadata">Archival message metadata</a>.</td>
+</tr>
+<tr>
+<td><code>plaintext_records</code></td>
+<td>no</td>
+<td>Array of <a href="#plaintext-record">plaintext records</a> — a
+recovered plaintext for a known message. See <a
+href="#archival-message-metadata">Archival message metadata</a>.</td>
+</tr>
 </tbody>
 </table>
 <h3 id="ciphertext-node">Ciphertext node</h3>
@@ -413,28 +450,36 @@ rules</a>.</td>
 <tr>
 <td><code>id</code></td>
 <td>conditionally — see below</td>
-<td>Reference name, e.g. <code>&quot;1&quot;</code>, <code>&quot;GRP42&quot;</code>,
-<code>&quot;L2-P16-a&quot;</code>. Unique across the whole document.</td>
+<td>Reference name, e.g. <code>"1"</code>, <code>"GRP42"</code>,
+<code>"L2-P16-a"</code>. Unique across the whole document.</td>
 </tr>
 <tr>
 <td><code>raw</code></td>
 <td>conditionally — exactly one of <code>raw</code>/<code>parts</code>
-required</td>
+required, unless <code>is_stub</code></td>
 <td>The ciphertext text, exactly as transcribed.</td>
 </tr>
 <tr>
 <td><code>parts</code></td>
 <td>conditionally — exactly one of <code>raw</code>/<code>parts</code>
-required</td>
+required, unless <code>is_stub</code></td>
 <td>Array of ≥2 <a href="#part">part</a> objects, for one exercise made
 of several inseparable raw blocks (e.g. messages “a” and “b” that must
 be solved jointly). See below.</td>
 </tr>
 <tr>
+<td><code>is_stub</code></td>
+<td>no, default <code>false</code></td>
+<td>When <code>true</code>, licenses omitting <em>both</em>
+<code>raw</code> and <code>parts</code> — a catalogued record with no
+transcribed ciphertext. Illegal alongside either. See <a
+href="#archival-message-metadata">Archival message metadata</a>.</td>
+</tr>
+<tr>
 <td><code>cipher_system</code></td>
 <td>no, cascades</td>
-<td>e.g. <code>&quot;Vigenère&quot;</code>, <code>&quot;Hill&quot;</code>,
-<code>&quot;Quagmire III&quot;</code>, <code>&quot;unknown&quot;</code>.</td>
+<td>e.g. <code>"Vigenère"</code>, <code>"Hill"</code>,
+<code>"Quagmire III"</code>, <code>"unknown"</code>.</td>
 </tr>
 <tr>
 <td><code>charset</code></td>
@@ -481,8 +526,11 @@ multiple. Only legal alongside <code>raw</code>; with
 <tr>
 <td><code>origin</code></td>
 <td>no</td>
-<td>No cascade. Only legal alongside <code>raw</code>; with
-<code>parts</code>, each part has its own instead. See <a href="#origin">origin</a>.</td>
+<td>No cascade. Illegal on a ciphertext that uses <code>parts</code>
+(each part has its own instead); legal on both an ordinary
+<code>raw</code> message and a stub — see <a
+href="#stub-entries-is_stub">Stub entries</a>. See <a
+href="#origin">origin</a>.</td>
 </tr>
 <tr>
 <td><code>sources</code></td>
@@ -508,23 +556,79 @@ multiple. Only legal alongside <code>raw</code>; with
 <td><code>solution</code></td>
 <td>no</td>
 <td>No cascade (except <code>solution.plaintext_charset</code>, see
-below). Only legal alongside <code>raw</code>; with <code>parts</code>,
-each part has its own instead — independent messages sharing key
-material usually decrypt to different plaintexts. See <a href="#solution">solution</a>.</td>
+below). Illegal on a ciphertext that uses <code>parts</code> (each part
+has its own instead — independent messages sharing key material usually
+decrypt to different plaintexts); legal on both an ordinary
+<code>raw</code> message and a stub. See <a
+href="#solution">solution</a>.</td>
 </tr>
 <tr>
 <td><code>hints</code></td>
 <td>no</td>
-<td>No cascade. Only legal alongside <code>raw</code>; with
-<code>parts</code>, each part has its own instead — a crib usually
-applies to one message’s content, not the exercise in the abstract. See
-<a href="#hint">hint</a>.</td>
+<td>No cascade. Illegal on a ciphertext that uses <code>parts</code>
+(each part has its own instead — a crib usually applies to one message’s
+content, not the exercise in the abstract); legal on both an ordinary
+<code>raw</code> message and a stub. See <a href="#hint">hint</a>.</td>
+</tr>
+<tr>
+<td><code>unit_type</code></td>
+<td>no, cascades</td>
+<td><code>"codebook"</code> | <code>"cipher"</code> |
+<code>"unknown"</code> — what the group structure <em>is</em>, for
+arithmetic/validation purposes. See <a
+href="#archival-message-metadata">Archival message metadata</a>.</td>
+</tr>
+<tr>
+<td><code>unit_type_asserted</code></td>
+<td>no, no cascade</td>
+<td>Overrides the cascaded <code>unit_type</code> for rule-selection on
+this one message — highest precedence. Legal on any message, not just a
+stub. See <a href="#archival-message-metadata">Archival message
+metadata</a>.</td>
+</tr>
+<tr>
+<td><code>codebook_id</code></td>
+<td>no, cascades</td>
+<td>Free-string identifier of the codebook in use. Required whenever the
+effective <code>unit_type</code> is <code>"codebook"</code>.</td>
+</tr>
+<tr>
+<td><code>unit_length</code></td>
+<td>no, cascades</td>
+<td>Positive integer group/code-word width, used by the group-structure
+check.</td>
+</tr>
+<tr>
+<td><code>channel</code></td>
+<td>no, cascades</td>
+<td>Parsed channel prefix, e.g. <code>"A"</code>, <code>"NP"</code> —
+cascades because a survey typically holds one file per channel.
+Cross-checked against <code>indicator_raw</code> — see <a
+href="#archival-message-metadata">Archival message metadata</a>.</td>
+</tr>
+<tr>
+<td><code>isa_file</code>, <code>isa_page</code>,
+<code>image_ref</code>, <code>indicator_raw</code>, <code>serial</code>,
+<code>gr_stated</code>, <code>pages</code>,
+<code>transcription_state</code>, <code>legibility</code>,
+<code>resend_of</code>, <code>related</code>,
+<code>anomaly_notes</code>, <code>preamble_raw</code>,
+<code>service_line_raw</code></td>
+<td>no</td>
+<td>Archival provenance/indicator/quality/cross-reference fields — see
+<a href="#archival-message-metadata">Archival message metadata</a>.</td>
+</tr>
+<tr>
+<td><code>extensions</code></td>
+<td>no</td>
+<td>Reserved free-form object, entirely unvalidated — see <a
+href="#archival-message-metadata">Archival message metadata</a>.</td>
 </tr>
 </tbody>
 </table>
 <p><code>id</code> default rule: if <code>ciphertexts</code> has exactly
 one entry, <code>id</code> may be omitted and defaults to
-<code>&quot;1&quot;</code>. Whenever there’s more than one ciphertext in the file,
+<code>"1"</code>. Whenever there’s more than one ciphertext in the file,
 every one of them needs an explicit <code>id</code>, and all ids must be
 unique across the document.</p>
 <h3 id="part-item-of-a-parts-list"><code>part</code> (item of a
@@ -559,7 +663,7 @@ interception details, despite sharing key material.</p>
 <tr>
 <td><code>part_id</code></td>
 <td><strong>yes</strong></td>
-<td>Label for this part, e.g. <code>&quot;a&quot;</code>, <code>&quot;b&quot;</code>. Unique
+<td>Label for this part, e.g. <code>"a"</code>, <code>"b"</code>. Unique
 within the <code>parts</code> list. Free-form, like ciphertext
 <code>id</code> — no auto-default, since <code>parts</code> never has
 just one entry.</td>
@@ -606,7 +710,8 @@ Cryptanalytics, Part I, Lesson 4, Problem 9’s messages ‘a’ and ‘b’) �
 one <code>id</code> and one <code>cipher_system</code> shared by both,
 but each part carries its own <code>solution</code> since the two
 messages decrypt to different plaintexts:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;MC-I-4-9&quot;</span><span class="fu">,</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cipher_system&quot;</span><span class="fu">:</span> <span class="st">&quot;Vigenère (two messages in depth)&quot;</span><span class="fu">,</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;parts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
@@ -621,13 +726,30 @@ level:</p>
 <li><strong>Scalar override</strong> (<code>defaults</code>:
 <code>cipher_system</code>, <code>charset</code>,
 <code>casesensitive</code>, <code>ditschar</code>,
-<code>ignorechars</code>, <code>plaintext_charset</code>). A
-ciphertext’s own field, if present, wins; otherwise the document’s
-<code>defaults</code> value is used; otherwise the built-in default
-(<code>charset: &quot;[A-Z]&quot;</code>, <code>casesensitive: false</code>,
-<code>ditschar: &quot;-&quot;</code>, <code>ignorechars: &quot;[\\s]&quot;</code>,
-<code>cipher_system: &quot;unknown&quot;</code>,
-<code>plaintext_charset: &quot;[A-Z]&quot;</code>).</li>
+<code>ignorechars</code>, <code>plaintext_charset</code>,
+<code>unit_type</code>, <code>codebook_id</code>,
+<code>unit_length</code>, <code>channel</code>). A ciphertext’s own
+field, if present, wins; otherwise the document’s <code>defaults</code>
+value is used; otherwise the built-in default
+(<code>charset: "[A-Z]"</code>, <code>casesensitive: false</code>,
+<code>ditschar: "-"</code>, <code>ignorechars: "[\\s]"</code>,
+<code>cipher_system: "unknown"</code>,
+<code>plaintext_charset: "[A-Z]"</code>).
+<code>unit_type</code>/<code>codebook_id</code>/<code>unit_length</code>/
+<code>channel</code> have no built-in default — absent at every level
+simply means “not classified”/“not recorded.”
+<code>unit_type_asserted</code> is a related but
+<strong>non-cascading</strong> field — see <a
+href="#archival-message-metadata">Archival message metadata</a>.
+<code>channel</code> cascades because a real survey typically holds one
+file per channel (see <a href="#archival-message-metadata">Archival
+message metadata</a>), so repeating the same channel string on every one
+of several hundred messages would invite drift; the per-message override
+still exists for a document that mixes channels. The <a
+href="#archival-message-metadata">indicator consistency check</a>
+cross-checks the <em>effective</em> (cascaded) <code>channel</code>
+against each message’s own <code>indicator_raw</code>, not just a
+locally-set one.</li>
 <li><strong>List merge</strong> (<code>sources</code>,
 <code>references</code>, <code>notes</code>, <code>chatter</code>). A
 ciphertext’s effective list is
@@ -635,20 +757,28 @@ ciphertext’s effective list is
 document’s entries first, then the ciphertext’s own.</li>
 </ol>
 <p>Everything else — <code>id</code>, <code>raw</code>,
-<code>parts</code>, <code>remove_from_start</code>,
-<code>remove_from_end</code>, <code>origin</code>,
-<code>solution</code>, <code>hints</code> — is ciphertext-only and never
-cascades; it’s a validation error for any of these to appear on the
-document. <code>solution.plaintext_charset</code> is the one exception
-inside a non-cascading object: it still resolves via the scalar-override
-chain, because a plaintext alphabet is conceptually the same kind of
-setting as <code>charset</code>, just for the solution. Unlike
-<code>charset</code>, though, it’s <strong>descriptive, not
-enforced</strong> — see <a href="#solution">solution</a> for why.</p>
+<code>parts</code>, <code>is_stub</code>,
+<code>remove_from_start</code>, <code>remove_from_end</code>,
+<code>origin</code>, <code>solution</code>, <code>hints</code>,
+<code>unit_type_asserted</code>, <code>isa_file</code>,
+<code>isa_page</code>, <code>image_ref</code>,
+<code>indicator_raw</code>, <code>serial</code>, <code>gr_stated</code>,
+<code>pages</code>, <code>transcription_state</code>,
+<code>legibility</code>, <code>resend_of</code>, <code>related</code>,
+<code>anomaly_notes</code>, <code>preamble_raw</code>,
+<code>service_line_raw</code>, <code>extensions</code> — is
+ciphertext-only and never cascades; it’s a validation error for any of
+these to appear on the document. <code>solution.plaintext_charset</code>
+is the one exception inside a non-cascading object: it still resolves
+via the scalar-override chain, because a plaintext alphabet is
+conceptually the same kind of setting as <code>charset</code>, just for
+the solution. Unlike <code>charset</code>, though, it’s
+<strong>descriptive, not enforced</strong> — see <a
+href="#solution">solution</a> for why.</p>
 <h2 id="gap-marker">Gap marker</h2>
 <p><code>raw</code> (or a <code>part</code>’s own <code>raw</code>, if
 the ciphertext uses <code>parts</code>) may contain the literal reserved
-string <code>&quot;[...]&quot;</code> to mark a point where an unspecified number
+string <code>"[...]"</code> to mark a point where an unspecified number
 of groups/symbols from the original message were never transcribed —
 e.g. an analyst excerpting only the first several and last several
 groups of a long message log. This is different from
@@ -672,7 +802,8 @@ stream and is never counted as a <code>ditschar</code>.
 pass added to recognize and strip this token before its existing
 per-character scan runs — a real, if small, change to that parser, not
 just documentation here.)</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;AXBQP LKQRS DTMNC FVXWA QPLEZ TRSUV WNMKL [...] QRTSU VWXYZ ABCDE&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;AXBQP LKQRS DTMNC FVXWA QPLEZ TRSUV WNMKL [...] QRTSU VWXYZ ABCDE&quot;</span> <span class="fu">}</span></span></code></pre></div>
 <p>Multiple occurrences in one <code>raw</code> are allowed; there’s no
 cap.</p>
 <h2 id="corpus-identity-cryptml_uuid">Corpus identity
@@ -719,6 +850,457 @@ GitHub Action), not by the general schema validator: every file in that
 directory must have a <code>cryptml_uuid</code>, and no two corpus files
 may share one.</li>
 </ul>
+<h2 id="archival-message-metadata">Archival message metadata</h2>
+<p>This extension lets CryptML serve as the single authoritative store
+for an archival survey of real traffic — e.g. a diplomatic-cable
+catalogue — where most records are catalogued but never transcribed,
+plaintext service traffic (repeat requests, receipts, chatter) matters
+as much as ciphertext, and a recovered plaintext needs to point back at
+the message it solves. It was designed jointly with a downstream
+cataloguing project; CryptML validates <em>structure</em>, and that
+project’s own semantic validator (codebook membership, cross-channel
+consistency) builds on top of it.</p>
+<p>Three kinds of record are involved, but only the first needs a
+flag:</p>
+<ul>
+<li><strong>A message</strong> — an ordinary <a
+href="#ciphertext-node">ciphertext node</a>, optionally a
+<strong>stub</strong> (<code>is_stub: true</code>, no
+<code>raw</code>/<code>parts</code> — see below).</li>
+<li><strong>A service record</strong> — plaintext service traffic with
+no ciphertext and no required channel of its own
+(e.g. <code>"YOUR PN41 NEVER RECEIVED"</code>, sent in clear). Lives in
+the document-level <code>service_records</code> array, never inside
+<code>ciphertexts</code>. See <a
+href="#service-record"><code>service</code> record</a>.</li>
+<li><strong>A plaintext record</strong> — a recovered plaintext
+corresponding to a known message, the single highest-value record in a
+codebook survey (it yields the key by subtraction). Lives in
+<code>plaintext_records</code>. See <a
+href="#plaintext-record"><code>plaintext</code> record</a>.</li>
+</ul>
+<h3 id="stub-entries-is_stub">Stub entries (<code>is_stub</code>)</h3>
+<p>A ciphertext entry with <code>is_stub: true</code> must have
+<strong>neither</strong> <code>raw</code> nor <code>parts</code> — the
+reverse of the normal rule. It’s a validation error for
+<code>is_stub: true</code> to coexist with either. Every other
+ciphertext-level field (archival, <code>origin</code>,
+<code>solution</code>, <code>hints</code>, <code>sources</code>, …)
+behaves exactly as on a non-stub entry — including shape-checking: a
+stub’s <code>origin</code> (or <code>solution</code>/<code>hints</code>,
+however unusual those are on a stub) is validated field by field exactly
+as it would be on a transcribed message, even though there’s no
+<code>raw</code> for the rest of that branch’s checks to run against.
+Most of a large survey will typically be stubs: cataloguing a message’s
+indicator, preamble, and provenance doesn’t require transcribing it.</p>
+<h3
+id="group-structure-classification-unit_type-codebook_id-unit_length">Group-structure
+classification (<code>unit_type</code>, <code>codebook_id</code>,
+<code>unit_length</code>)</h3>
+<p>Different channels require different arithmetic — a codebook channel
+is differenced on code <em>numbers</em>, a cipher channel on
+<em>letters</em> — so the classification doubles as a safety interlock,
+not just a label.</p>
+<ul>
+<li><strong><code>unit_type</code></strong> — <code>"codebook"</code> |
+<code>"cipher"</code> | <code>"unknown"</code>. Cascades exactly like
+<code>cipher_system</code>/<code>charset</code> (document
+<code>defaults</code> → ciphertext, one level).</li>
+<li><strong><code>codebook_id</code></strong> — a free-string codebook
+identifier. <strong>Required</strong> whenever the effective
+<code>unit_type</code> is <code>"codebook"</code>.</li>
+<li><strong><code>unit_length</code></strong> — positive integer
+group/code-word width.</li>
+<li><strong><code>unit_type_asserted</code></strong> — a
+<em>separate</em>, <strong>non-cascading</strong>, ciphertext-only
+override. It exists for a stub (which has no groups to classify
+mechanically) or any message where a hand classification needs to win
+outright, and takes <strong>highest precedence</strong> over the
+cascaded <code>unit_type</code> for rule-selection purposes on that one
+message. Keeping it a distinct key from <code>unit_type</code> means a
+hand guess can never masquerade as a machine-computed classification
+downstream.</li>
+</ul>
+<p>Resolution order for which structural rule applies to a given
+message: <code>ciphertext.unit_type_asserted</code> →
+<code>ciphertext.unit_type</code> → <code>defaults.unit_type</code> → if
+none of those is set, the group-structure rules below are skipped
+entirely (only the ordinary charset check still applies).</p>
+<p><strong>Group-structure rules</strong>, once an effective
+<code>unit_type</code> is known and the message has a <code>raw</code>
+(a stub has no groups to check):</p>
+<ul>
+<li><strong><code>"codebook"</code></strong>: the character count must
+be a multiple of <code>unit_length</code> — <strong>a validation
+error</strong> if not (a transcription error or garble). Skipped if
+<code>unit_length</code> is unknown or if
+<code>remove_from_start</code>/<code>remove_from_end</code> can’t be
+applied (see below).</li>
+<li><strong><code>"cipher"</code></strong>: a short final group is
+legitimate and is never padded, trimmed, or treated as an error — but
+it’s flagged, with its length, as a <strong>warning</strong> (see <a
+href="#validatewarnings-non-blocking-findings"><code>validateWarnings()</code></a>
+below), since how a final group is handled is itself analytically
+significant.</li>
+</ul>
+<p><strong>Order of operations for the character count</strong>:
+<code>remove_from_start</code>/ <code>remove_from_end</code> are applied
+first, then the gap marker is stripped, then <code>ignorechars</code>
+characters are excluded — the same order a tool would apply to recover
+the message’s actual content, and the only order that gives a meaningful
+count. This matters immediately for real data:
+<code>tools/CryptML/input/RCA-Outgoing.cryptml</code> embeds each
+message’s indicator inside <code>raw</code> itself
+(<code>"A50/18 GYHTE DISEU …"</code>) and strips it with
+<code>remove_from_start: 6</code> — 96 non-ignored characters before the
+trim, 90 after. Counting before the trim would make a
+<code>unit_length: 5</code> codebook check fail on every message in that
+file; counting after it passes. If the trim amount itself can’t be
+applied (it exceeds the available non-ignored characters at that end of
+<code>raw</code>), the codebook/cipher checks are silently skipped for
+that message rather than counting against the wrong substring — the same
+fail-safe-by-omission the rest of this extension uses when a cascaded
+field is simply absent.</p>
+<h3 id="cross-references">Cross-references</h3>
+<p>A reference is one of:</p>
+<ul>
+<li>a bare <code>id</code> — resolved against the <em>same</em>
+document, or</li>
+<li><code>"&lt;cryptml_uuid&gt; :: &lt;id&gt;"</code> — a qualified
+reference into <em>another</em> document, using the document’s own
+<code>cryptml_uuid</code>. Resolution is syntax-only in that case: a
+single-document <code>validate()</code> call has no way to open the
+other file, so a qualified reference whose <code>uuid</code> isn’t this
+document’s own is accepted without resolving it.</li>
+</ul>
+<p>This is used by <code>resend_of</code> and <code>related</code>
+(ciphertext-level) and <code>message_ref</code> (plaintext record). A
+reference that fails to parse (empty, or nothing after
+<code>" :: "</code>) is a syntax error; a bare/same-document reference
+that doesn’t match any <code>id</code> in the document is a resolution
+error. <code>refers_channel</code>/<code>refers_serial</code> on a
+service record are the one exception: they’re <strong>descriptive only,
+never required to resolve</strong> — service traffic routinely refers to
+a message that was never catalogued, and a downstream extractor can
+report that as a “missing serial” statistic rather than a CryptML
+validation error.</p>
+<h3 id="provenance-indicator-and-quality-fields">Provenance, indicator,
+and quality fields</h3>
+<p>All optional, all on the ciphertext node, never required by CryptML’s
+generic validator — a downstream project’s own semantic validator is
+where “required for a message record” policy belongs, since
+<code>ciphertexts[]</code> is shared with the entire rest of the
+(non-archival) corpus.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>isa_file</code></td>
+<td>string</td>
+<td>Archive file reference.</td>
+</tr>
+<tr>
+<td><code>isa_page</code></td>
+<td>string</td>
+<td>Page or range, e.g. <code>"107-112"</code>.</td>
+</tr>
+<tr>
+<td><code>image_ref</code></td>
+<td>string</td>
+<td>Scan filename, so the source image can be re-found.</td>
+</tr>
+<tr>
+<td><code>indicator_raw</code></td>
+<td>string</td>
+<td>The indicator <strong>verbatim, unnormalised</strong>,
+e.g. <code>"A42/53"</code>, <code>"NA9"</code>. Recorded as written — if
+a channel turns out to use its indicator differently than currently
+assumed, only the raw form reveals that.</td>
+</tr>
+<tr>
+<td><code>preamble_raw</code></td>
+<td>string</td>
+<td>The whole header line(s), <strong>verbatim</strong>, exactly as
+transcribed —
+e.g. <code>"ISR6 NEWYORK JAN 27\nCDE PALOFFICE GENEVA"</code>.
+<code>origin.originator</code>/<code>origin.addressee</code>/<code>origin.date</code>/<code>origin.time</code>
+are the analyst’s <em>parsed-out</em> reading of this same line;
+<code>preamble_raw</code> is what’s actually on the page, so a parsing
+mistake or an unusual indicator convention stays recoverable from the
+raw text rather than silently lost.</td>
+</tr>
+<tr>
+<td><code>service_line_raw</code></td>
+<td>string</td>
+<td>Trailing service text, <strong>verbatim</strong> — acknowledgements,
+routing, relay annotations appended after the message body
+(e.g. <code>"ACKPLS ISR\nRECD ISR2 HE 1633 TU"</code>). Distinct from
+<code>anomaly_notes</code> (which records something <em>wrong</em> with
+the transcription) and from a <code>service_records</code> entry (which
+is a separate, standalone plaintext message in its own right, not an
+annotation trailing this one).</td>
+</tr>
+<tr>
+<td><code>channel</code></td>
+<td>string, <strong>cascades</strong></td>
+<td>Parsed channel prefix, e.g. <code>"A"</code>, <code>"NP"</code> —
+the one archival field that cascades from
+<code>document.defaults</code>, since a survey typically holds one file
+per channel (see <a href="#cascade-rules">Cascade rules</a>).
+Cross-checked against <code>indicator_raw</code> — see below.</td>
+</tr>
+<tr>
+<td><code>serial</code></td>
+<td>non-negative integer</td>
+<td>Parsed running number. Cross-checked against
+<code>indicator_raw</code>.</td>
+</tr>
+<tr>
+<td><code>gr_stated</code></td>
+<td>non-negative integer</td>
+<td>Group count as given <em>in the indicator itself</em>, if any. Its
+absence is a significant fact about the channel, distinct from “not yet
+recorded” — don’t default it to anything. On a
+<code>transcription_state: "full"</code> message, a mismatch against the
+counted group total is a <a
+href="#validatewarnings-non-blocking-findings">warning</a>, not an
+error: it may be a garble, a miscount, or evidence the indicator’s
+second number isn’t a group count at all. The check is skipped on
+<code>"none"</code>/<code>"head_tail"</code>, where the counted total is
+legitimately partial and would mismatch by design, not by error.</td>
+</tr>
+<tr>
+<td><code>pages</code></td>
+<td>non-negative integer</td>
+<td>Transmission page count.</td>
+</tr>
+<tr>
+<td><code>transcription_state</code></td>
+<td><code>"none"</code> | <code>"head_tail"</code> |
+<code>"full"</code></td>
+<td>How much of the message has actually been transcribed into
+<code>raw</code>.</td>
+</tr>
+<tr>
+<td><code>legibility</code></td>
+<td><code>"clean"</code> | <code>"partial"</code> |
+<code>"poor"</code></td>
+<td>Legibility of the source. <code>"poor"</code> combined with
+<code>transcription_state: "full"</code> is a <a
+href="#validatewarnings-non-blocking-findings">warning</a> — a statistic
+built on an unreliable transcription is worse than no statistic.</td>
+</tr>
+<tr>
+<td><code>resend_of</code></td>
+<td><a href="#cross-references">reference</a></td>
+<td>The message this one retransmits.</td>
+</tr>
+<tr>
+<td><code>related</code></td>
+<td>array of <a href="#cross-references">reference</a></td>
+<td>Other records bearing on this one.</td>
+</tr>
+<tr>
+<td><code>anomaly_notes</code></td>
+<td>string</td>
+<td>Anything anomalous, verbatim — overstrikes, struck-through groups,
+garbles, corrections, marginalia. (Distinct from the existing,
+list-shaped <code>notes</code> field.)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Indicator consistency check</strong>: a best-effort pattern,
+<code>^([A-Za-z]+)(\d+)(?:/(\d+))?$</code>, parses
+<code>indicator_raw</code>’s common shorthand
+(e.g. <code>"A42/53"</code> → channel <code>"A"</code>, serial
+<code>42</code>, <code>gr_stated</code> <code>53</code>). When
+<code>indicator_raw</code> matches, the <em>effective</em>
+<code>channel</code> (the message’s own if set, otherwise the cascaded
+<code>defaults.channel</code>) is cross-checked against it, along with
+<code>serial</code>/<code>gr_stated</code>. When it doesn’t match —
+<code>indicator_raw</code> is free text by design — the cross-check is
+silently skipped, not an error.</p>
+<h3 id="extensions"><code>extensions</code></h3>
+<p>A reserved, per-record free-form object (on a ciphertext, a service
+record, or a plaintext record) whose contents are entirely unvalidated —
+the escape hatch for anything project-specific that hasn’t earned a
+place in the fixed vocabulary yet. This is deliberately a dedicated key,
+not a prefix convention on ordinary field names: that separation is what
+lets the validator keep distinguishing a genuine <em>unrecognized
+field</em> (almost always a typo, and still a hard error) from a
+deliberate <em>extension field</em>. An extension key must never become
+load-bearing for any CryptML-aware tool; if one proves generally useful,
+promote it into the fixed vocabulary instead of leaning on it
+indefinitely.</p>
+<h3 id="service-record"><code>service</code> record</h3>
+<p>Lives in the document-level <code>service_records</code> array.
+Unlike a ciphertext entry, these required fields <em>are</em> strictly
+enforced by CryptML’s generic validator, since this is a dedicated,
+single-purpose array rather than one shared with the rest of the
+corpus.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><strong>yes</strong></td>
+<td>string</td>
+<td>Stable key, referenceable from
+<code>related</code>/<code>resend_of</code>. Unique across
+<code>ciphertexts</code>, <code>service_records</code>, and
+<code>plaintext_records</code> together.</td>
+</tr>
+<tr>
+<td><code>isa_file</code>, <code>isa_page</code></td>
+<td><strong>yes</strong></td>
+<td>string</td>
+<td>As on a ciphertext.</td>
+</tr>
+<tr>
+<td><code>origin</code></td>
+<td><strong>yes</strong></td>
+<td>object</td>
+<td>Same shape as ciphertext <a href="#origin"><code>origin</code></a>.
+<code>date</code> and <code>originator</code> are required within it for
+a service record specifically; <code>addressee</code> is not — a margin
+annotation or file note captured this way may have none, and forcing one
+would just invite a fabricated value.</td>
+</tr>
+<tr>
+<td><code>service_type</code></td>
+<td><strong>yes</strong></td>
+<td><code>"repeat_request"</code> | <code>"receipt"</code> |
+<code>"plain_message"</code> | <code>"chatter"</code> |
+<code>"other"</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>refers_channel</code></td>
+<td>no</td>
+<td>string</td>
+<td>Channel named in the text, if any. Descriptive only — see <a
+href="#cross-references">Cross-references</a>.</td>
+</tr>
+<tr>
+<td><code>refers_serial</code></td>
+<td>no</td>
+<td>non-negative integer</td>
+<td>Serial named in the text, if any. Descriptive only.</td>
+</tr>
+<tr>
+<td><code>text_verbatim</code></td>
+<td><strong>yes</strong></td>
+<td>string</td>
+<td>The full text, exactly as written.</td>
+</tr>
+<tr>
+<td><code>extensions</code></td>
+<td>no</td>
+<td>object</td>
+<td>See <a href="#extensions"><code>extensions</code></a> above.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="plaintext-record"><code>plaintext</code> record</h3>
+<p>Lives in the document-level <code>plaintext_records</code> array.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><strong>yes</strong></td>
+<td>string</td>
+<td>Stable key. Unique across <code>ciphertexts</code>,
+<code>service_records</code>, and <code>plaintext_records</code>
+together.</td>
+</tr>
+<tr>
+<td><code>isa_file</code>, <code>isa_page</code></td>
+<td><strong>yes</strong></td>
+<td>string</td>
+<td>As on a ciphertext.</td>
+</tr>
+<tr>
+<td><code>origin</code></td>
+<td>no</td>
+<td>object</td>
+<td>Same shape as ciphertext <a href="#origin"><code>origin</code></a>,
+no required sub-fields.</td>
+</tr>
+<tr>
+<td><code>message_ref</code></td>
+<td><strong>yes</strong></td>
+<td><a href="#cross-references">reference</a></td>
+<td>The message this plaintext corresponds to. Must resolve.</td>
+</tr>
+<tr>
+<td><code>plaintext_verbatim</code></td>
+<td><strong>yes</strong></td>
+<td>string</td>
+<td>The recovered plaintext, exactly as recovered.</td>
+</tr>
+<tr>
+<td><code>extensions</code></td>
+<td>no</td>
+<td>object</td>
+<td>See <a href="#extensions"><code>extensions</code></a> above.</td>
+</tr>
+</tbody>
+</table>
+<h3
+id="validatewarnings-non-blocking-findings"><code>validateWarnings()</code>:
+non-blocking findings</h3>
+<p>A second, separate function alongside <code>validate()</code>,
+returning advisory findings that never affect pass/fail — deliberately
+kept apart so every existing caller of <code>validate()</code> (Editor,
+Validator, List, Search, <code>generate-manifest.js</code>, the
+pre-commit hook, the GitHub Action, the Python <code>load()</code>)
+keeps its existing all-or-nothing contract unchanged. It currently
+reports three things, each described where it’s introduced above: a
+<code>gr_stated</code> mismatch against the counted group total (only on
+a <code>"full"</code> transcription — see above),
+<code>legibility: "poor"</code> combined with
+<code>transcription_state: "full"</code>, and a short final group on a
+<code>"cipher"</code>-classified message. A disagreement surfaced this
+way is treated as a finding worth seeing, not a problem worth
+suppressing.</p>
 <h2 id="validation-rules">Validation rules</h2>
 <ul>
 <li><strong><code>[...]</code> inside <code>raw</code></strong> is the
@@ -736,8 +1318,10 @@ this rule applies independently to each part’s own <code>raw</code>,
 against the same ciphertext-level <code>charset</code>/
 <code>ditschar</code>/<code>ignorechars</code>.</li>
 <li><strong>A ciphertext has exactly one of <code>raw</code> or
-<code>parts</code>.</strong> Neither, or both, is a validation
-error.</li>
+<code>parts</code>, unless <code>is_stub: true</code>.</strong> Neither,
+or both, is a validation error — except a stub, which requires
+<em>neither</em>. See <a href="#archival-message-metadata">Archival
+message metadata</a>.</li>
 <li><strong><code>parts</code> must have at least 2 entries.</strong> A
 single-entry <code>parts</code> array is rejected — use <code>raw</code>
 instead; there’s exactly one way to say “one raw block.”</li>
@@ -772,6 +1356,30 @@ syntactically valid UUID.</strong> Requiring it (and rejecting
 duplicates across files) is a separate, stricter rule that applies only
 to corpus files — see <a href="#corpus-identity-cryptml_uuid">Corpus
 identity</a>.</li>
+<li><strong><code>unit_type</code>/<code>unit_type_asserted</code>/<code>transcription_state</code>/<code>legibility</code>,
+and a <code>service</code> record’s <code>service_type</code>,</strong>
+must each be one of their enumerated values.
+<strong><code>codebook_id</code></strong> is required whenever the
+effective <code>unit_type</code> is <code>"codebook"</code>.
+<strong><code>unit_length</code></strong> must be a positive integer;
+<code>serial</code>/<code>gr_stated</code>/<code>pages</code>/<code>refers_serial</code>
+must each be a non-negative integer. See <a
+href="#archival-message-metadata">Archival message metadata</a>.</li>
+<li><strong>A codebook-classified message’s character count must be a
+multiple of <code>unit_length</code></strong> — an error, not a warning
+(see <a href="#archival-message-metadata">Archival message
+metadata</a>); a short final group on a cipher-classified message is a
+warning instead, via <a
+href="#validatewarnings-non-blocking-findings"><code>validateWarnings()</code></a>.</li>
+<li><strong><code>resend_of</code>, <code>related</code>, and a
+plaintext record’s <code>message_ref</code> must resolve</strong>
+(same-document references only) — see <a
+href="#cross-references">Cross-references</a>. A service record’s
+<code>refers_channel</code>/<code>refers_serial</code> are the one
+exception: descriptive only, never required to resolve.</li>
+<li><strong><code>extensions</code>, wherever legal, must be an
+object</strong> — its contents are otherwise entirely unvalidated. See
+<a href="#extensions"><code>extensions</code></a>.</li>
 <li><strong><code>source.type</code></strong> must be one of the
 enumerated values (see below) — not an arbitrary string.</li>
 <li><strong><code>ditschar</code></strong> must be exactly one
@@ -792,8 +1400,8 @@ normalization step.) <code>plaintext_charset</code> is exempt from this
 rule entirely — see <a href="#solution">solution</a>.</li>
 <li><strong>To match any character at all</strong> (e.g. a
 concealment/null cipher, where <code>raw</code> is ordinary prose rather
-than a restricted cipher alphabet), use <code>charset: &quot;[\s\S]&quot;</code>,
-not <code>charset: &quot;[.]&quot;</code>. Inside a character class,
+than a restricted cipher alphabet), use <code>charset: "[\s\S]"</code>,
+not <code>charset: "[.]"</code>. Inside a character class,
 <code>.</code> loses its special “any character” meaning and matches
 only a literal period — <code>[.]</code> rejects every letter, digit,
 and space. <code>[\s\S]</code> (“whitespace or non-whitespace”) is the
@@ -811,7 +1419,8 @@ came to have it — one story per ciphertext, never cascades.
 <code>source</code> is a bibliographic citation of where it’s published
 or documented, and a ciphertext can have more than one (a real intercept
 might be in a book <em>and</em> discussed on a web forum) — hence
-<code>sources</code> is a list, and it cascades (see <a href="#cascade-rules">Cascade rules</a>).</p>
+<code>sources</code> is a list, and it cascades (see <a
+href="#cascade-rules">Cascade rules</a>).</p>
 <h3 id="origin"><code>origin</code></h3>
 <table>
 <colgroup>
@@ -834,6 +1443,13 @@ might be in a book <em>and</em> discussed on a web forum) — hence
 when it was published.</td>
 </tr>
 <tr>
+<td><code>time</code></td>
+<td>string</td>
+<td>Time of day the message/cryptogram was created or transmitted,
+alongside <code>date</code>. Free text, like <code>date</code> — no
+enforced format (e.g. “0800Z”, “14:32” are both fine).</td>
+</tr>
+<tr>
 <td><code>originator</code></td>
 <td>string</td>
 <td>Who composed or sent it — the puzzle’s setter, or a real message’s
@@ -841,10 +1457,18 @@ sender. Not the author of a book it later appeared in; see
 <code>source.author</code> for that.</td>
 </tr>
 <tr>
+<td><code>addressee</code></td>
+<td>string</td>
+<td>Who it was sent to. Sibling of <code>originator</code> — together
+they’re the correspondent pair, significant for traffic-analysis
+partitioning.</td>
+</tr>
+<tr>
 <td><code>method</code></td>
 <td>string</td>
 <td>How this copy was produced or obtained, e.g. “transcribed from
-photo”, “typed from book”.</td>
+photo”, “typed from book”. This is transcription provenance, not the
+cryptosystem — see <code>cipher_system</code>, a separate field.</td>
 </tr>
 <tr>
 <td><code>location</code></td>
@@ -1101,7 +1725,8 @@ correspond to (e.g. a Tridigital cipher’s digit-triples map to
 </table>
 <h2 id="minimal-example">Minimal example</h2>
 <p>Relies entirely on defaults:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;WKRUL BXHVI DQGWK HODZQ FRXOG...&quot;</span> <span class="fu">}</span></span>
@@ -1111,7 +1736,8 @@ correspond to (e.g. a Tridigital cipher’s digit-triples map to
 <p>A whole-file shared source (merges into every ciphertext), a
 document-wide charset default (overridden by one ciphertext that needs a
 different alphabet), free-form ids, and one solved entry.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;MC-I Problem Book, Lesson 2 (excerpt)&quot;</span><span class="fu">,</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span><span class="fu">,</span> <span class="dt">&quot;casesensitive&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;ditschar&quot;</span><span class="fu">:</span> <span class="st">&quot;-&quot;</span><span class="fu">,</span> <span class="dt">&quot;ignorechars&quot;</span><span class="fu">:</span> <span class="st">&quot;[</span><span class="ch">\\</span><span class="st">s]&quot;</span> <span class="fu">},</span></span>
@@ -1146,14 +1772,14 @@ different alphabet), free-form ids, and one solved entry.</p>
 <span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
 <span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Resolved view of <code>L2-P16-a</code>:
-<code>charset = &quot;[A-Z]&quot;</code> / <code>casesensitive = false</code> /
-<code>ditschar = &quot;-&quot;</code> / <code>ignorechars = &quot;[\\s]&quot;</code> (all
-from the document, unchanged), <code>cipher_system = &quot;Playfair&quot;</code>
+<code>charset = "[A-Z]"</code> / <code>casesensitive = false</code> /
+<code>ditschar = "-"</code> / <code>ignorechars = "[\\s]"</code> (all
+from the document, unchanged), <code>cipher_system = "Playfair"</code>
 (its own),
-<code>sources = [ {&quot;type&quot;: &quot;book&quot;, &quot;title&quot;: &quot;Military Cryptanalytics, Part I, Problem Book&quot;, ...} ]</code>
+<code>sources = [ {"type": "book", "title": "Military Cryptanalytics, Part I, Problem Book", ...} ]</code>
 (merged down from the document — it has none of its own).
 <code>L2-P17</code> overrides <code>charset</code> to
-<code>&quot;[1-3]&quot;</code> for its own use, everything else still cascades
+<code>"[1-3]"</code> for its own use, everything else still cascades
 normally.</p>
 <h2 id="example-single-raw-and-parts-ciphertexts-side-by-side">Example:
 single-<code>raw</code> and <code>parts</code> ciphertexts side by
@@ -1165,7 +1791,8 @@ other ciphertext you’ve already seen. <code>MC-I-4-9</code> has no
 <code>hints</code> of its own at all — those all live on its two parts
 instead, because <code>cipher_system</code> is the only thing ‘a’ and
 ‘b’ actually share.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Military Cryptanalytics, Part I, Lesson 4 (excerpt)&quot;</span><span class="fu">,</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span><span class="fu">,</span> <span class="dt">&quot;casesensitive&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;ditschar&quot;</span><span class="fu">:</span> <span class="st">&quot;-&quot;</span><span class="fu">,</span> <span class="dt">&quot;ignorechars&quot;</span><span class="fu">:</span> <span class="st">&quot;[</span><span class="ch">\\</span><span class="st">s]&quot;</span> <span class="fu">},</span></span>
@@ -1202,18 +1829,125 @@ instead, because <code>cipher_system</code> is the only thing ‘a’ and
 <p>Note that <code>origin</code>/<code>hints</code> are entirely
 optional per part — part ‘a’ has both, part ‘b’ has neither, and that’s
 fine; nothing requires parts to be symmetric with each other.</p>
+<h2 id="example-archival-message-metadata">Example: archival message
+metadata</h2>
+<p>A single-file illustration of every new 1.2 shape: a stub, a
+transcribed codebook message with a short-final-group sibling
+(classified <code>"cipher"</code> on purpose, to show the warning rather
+than the codebook error), an <code>extensions</code> key, a service
+record, and a plaintext record linked back to the codebook message.
+<code>channel</code> is declared once in <code>defaults</code>, since
+this file holds one channel’s traffic, rather than repeated on every
+message.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.2&quot;</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_uuid&quot;</span><span class="fu">:</span> <span class="st">&quot;6f1b1a1a-6c2e-4a7a-9b1e-2f6b7c8d9e0a&quot;</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Channel A, 1949&quot;</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;unit_type&quot;</span><span class="fu">:</span> <span class="st">&quot;codebook&quot;</span><span class="fu">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;codebook_id&quot;</span><span class="fu">:</span> <span class="st">&quot;bentley-second-phrase-1945&quot;</span><span class="fu">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;unit_length&quot;</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="st">&quot;A&quot;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;A42/53&quot;</span><span class="fu">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;is_stub&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;isa_file&quot;</span><span class="fu">:</span> <span class="st">&quot;ISA/123&quot;</span><span class="fu">,</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;isa_page&quot;</span><span class="fu">:</span> <span class="st">&quot;45-46&quot;</span><span class="fu">,</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;indicator_raw&quot;</span><span class="fu">:</span> <span class="st">&quot;A42/53&quot;</span><span class="fu">,</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;serial&quot;</span><span class="fu">:</span> <span class="dv">42</span><span class="fu">,</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;gr_stated&quot;</span><span class="fu">:</span> <span class="dv">53</span><span class="fu">,</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;transcription_state&quot;</span><span class="fu">:</span> <span class="st">&quot;none&quot;</span><span class="fu">,</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;legibility&quot;</span><span class="fu">:</span> <span class="st">&quot;clean&quot;</span><span class="fu">,</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;origin&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;date&quot;</span><span class="fu">:</span> <span class="st">&quot;1949-01-27&quot;</span><span class="fu">,</span> <span class="dt">&quot;originator&quot;</span><span class="fu">:</span> <span class="st">&quot;ISR6 NEWYORK&quot;</span><span class="fu">,</span> <span class="dt">&quot;addressee&quot;</span><span class="fu">:</span> <span class="st">&quot;CDE EYTAN&quot;</span> <span class="fu">}</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;A55&quot;</span><span class="fu">,</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;isa_file&quot;</span><span class="fu">:</span> <span class="st">&quot;ISA/123&quot;</span><span class="fu">,</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;isa_page&quot;</span><span class="fu">:</span> <span class="st">&quot;47&quot;</span><span class="fu">,</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;indicator_raw&quot;</span><span class="fu">:</span> <span class="st">&quot;A55&quot;</span><span class="fu">,</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;serial&quot;</span><span class="fu">:</span> <span class="dv">55</span><span class="fu">,</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;transcription_state&quot;</span><span class="fu">:</span> <span class="st">&quot;full&quot;</span><span class="fu">,</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;legibility&quot;</span><span class="fu">:</span> <span class="st">&quot;partial&quot;</span><span class="fu">,</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;unit_type_asserted&quot;</span><span class="fu">:</span> <span class="st">&quot;cipher&quot;</span><span class="fu">,</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;anomaly_notes&quot;</span><span class="fu">:</span> <span class="st">&quot;final group short by one letter -- not a transcription error, see raw&quot;</span><span class="fu">,</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;preamble_raw&quot;</span><span class="fu">:</span> <span class="st">&quot;ISR6 NEWYORK JAN 28</span><span class="ch">\n</span><span class="st">CDE EYTAN MEMISRAEL LAUSANNE&quot;</span><span class="fu">,</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;service_line_raw&quot;</span><span class="fu">:</span> <span class="st">&quot;ACKPLS ISR</span><span class="ch">\n</span><span class="st">RECD ISR6 HE 1420 TU&quot;</span><span class="fu">,</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;VQFTX LMPRS DJKWN HBYO&quot;</span><span class="fu">,</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;origin&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;date&quot;</span><span class="fu">:</span> <span class="st">&quot;1949-01-28&quot;</span><span class="fu">,</span> <span class="dt">&quot;originator&quot;</span><span class="fu">:</span> <span class="st">&quot;ISR6 NEWYORK&quot;</span><span class="fu">,</span> <span class="dt">&quot;addressee&quot;</span><span class="fu">:</span> <span class="st">&quot;CDE EYTAN&quot;</span> <span class="fu">},</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;extensions&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;confidence_score&quot;</span><span class="fu">:</span> <span class="fl">0.6</span><span class="fu">,</span> <span class="dt">&quot;surveyor&quot;</span><span class="fu">:</span> <span class="st">&quot;mr&quot;</span> <span class="fu">}</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;service_records&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;SVC-1949-02-03-a&quot;</span><span class="fu">,</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;isa_file&quot;</span><span class="fu">:</span> <span class="st">&quot;ISA/123&quot;</span><span class="fu">,</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;isa_page&quot;</span><span class="fu">:</span> <span class="st">&quot;48&quot;</span><span class="fu">,</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;origin&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;date&quot;</span><span class="fu">:</span> <span class="st">&quot;1949-02-03&quot;</span><span class="fu">,</span> <span class="dt">&quot;originator&quot;</span><span class="fu">:</span> <span class="st">&quot;ISR6 NEWYORK&quot;</span><span class="fu">,</span> <span class="dt">&quot;addressee&quot;</span><span class="fu">:</span> <span class="st">&quot;CDE EYTAN&quot;</span> <span class="fu">},</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;service_type&quot;</span><span class="fu">:</span> <span class="st">&quot;repeat_request&quot;</span><span class="fu">,</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;refers_channel&quot;</span><span class="fu">:</span> <span class="st">&quot;A&quot;</span><span class="fu">,</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;refers_serial&quot;</span><span class="fu">:</span> <span class="dv">54</span><span class="fu">,</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;text_verbatim&quot;</span><span class="fu">:</span> <span class="st">&quot;YOUR A54 NEVER RECEIVED PLEASE REPEAT&quot;</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;plaintext_records&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;PT-A42-53&quot;</span><span class="fu">,</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;isa_file&quot;</span><span class="fu">:</span> <span class="st">&quot;ISA/200&quot;</span><span class="fu">,</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;isa_page&quot;</span><span class="fu">:</span> <span class="st">&quot;12&quot;</span><span class="fu">,</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;message_ref&quot;</span><span class="fu">:</span> <span class="st">&quot;A42/53&quot;</span><span class="fu">,</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;plaintext_verbatim&quot;</span><span class="fu">:</span> <span class="st">&quot;Meeting confirmed for Tuesday at the usual place.&quot;</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><code>A42/53</code> is a stub inheriting
+<code>unit_type: "codebook"</code> and <code>channel: "A"</code> from
+<code>defaults</code> — fine, since a stub has no <code>raw</code> for
+the group-structure check to run against, and <code>channel</code> still
+cross-checks cleanly against its own <code>indicator_raw</code>.
+<code>A55</code> inherits the same cascaded <code>channel: "A"</code>.
+<code>A55</code> has a 19-character <code>raw</code> and asserts
+<code>"cipher"</code> to opt out of the codebook channel’s arithmetic
+for this one message (a codebook message with 19 characters would
+otherwise be a hard error); <code>validate()</code> passes it cleanly,
+and <code>validateWarnings()</code> reports the short final group
+(remainder 4 against <code>unit_length: 5</code>) rather than erroring.
+<code>A55</code>’s <code>preamble_raw</code> and
+<code>service_line_raw</code> carry the header and trailer lines exactly
+as transcribed;
+<code>origin.originator</code>/<code>origin.addressee</code>/<code>origin.date</code>
+are the parsed-out reading of that same <code>preamble_raw</code> line,
+kept alongside it rather than replacing it. The service record refers to
+<code>A54</code>, a serial that was never catalogued in this file —
+that’s fine, since
+<code>refers_channel</code>/<code>refers_serial</code> never need to
+resolve. The plaintext record resolves <code>message_ref</code> against
+<code>A42/53</code> in the same document.</p>
 <h2 id="invalid-examples">Invalid examples</h2>
-<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;hints&quot;</span> <span class="er">is</span> <span class="er">ciphertext-only,</span> <span class="er">not</span> <span class="er">legal</span> <span class="er">on</span> <span class="er">the</span> <span class="er">document.</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span> <span class="dt">&quot;hints&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span><span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="st">&quot;THE&quot;</span><span class="fu">}</span><span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">...</span><span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;defaults&quot;</span> <span class="er">is</span> <span class="er">not</span> <span class="er">legal</span> <span class="er">on</span> <span class="er">a</span> <span class="er">ciphertext</span> <span class="er">(its</span> <span class="er">scalars</span> <span class="er">are</span> <span class="er">bare</span> <span class="er">fields</span> <span class="er">instead).</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;priority&quot;</span> <span class="er">is</span> <span class="er">not</span> <span class="er">a</span> <span class="er">recognized</span> <span class="er">field</span> <span class="er">anywhere</span> <span class="er">in</span> <span class="er">the</span> <span class="er">schema.</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span> <span class="dt">&quot;priority&quot;</span><span class="fu">:</span> <span class="st">&quot;high&quot;</span><span class="fu">,</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">...</span><span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="er">two</span> <span class="er">ciphertexts</span> <span class="er">share</span> <span class="er">id</span> <span class="st">&quot;1&quot;</span><span class="er">.</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">}</span><span class="ot">,</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">}</span> <span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;charset&quot;</span> <span class="er">has</span> <span class="er">no</span> <span class="er">enclosing</span> <span class="er">brackets.</span> <span class="er">On</span> <span class="er">disk</span> <span class="er">it</span> <span class="er">must</span> <span class="er">be</span> <span class="st">&quot;[1-3]&quot;</span><span class="er">,</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">not</span> <span class="st">&quot;1-3&quot;</span> <span class="er">--</span> <span class="er">the</span> <span class="er">editor</span> <span class="er">may</span> <span class="er">let</span> <span class="er">you</span> <span class="er">type</span> <span class="er">it</span> <span class="er">bare,</span> <span class="er">but</span> <span class="er">never</span> <span class="er">saves</span> <span class="er">it</span> <span class="er">that</span> <span class="er">way.</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;213132&quot;</span><span class="fu">,</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;1-3&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;hints&quot;</span> <span class="er">is</span> <span class="er">ciphertext-only,</span> <span class="er">not</span> <span class="er">legal</span> <span class="er">on</span> <span class="er">the</span> <span class="er">document.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span> <span class="dt">&quot;hints&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span><span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="st">&quot;THE&quot;</span><span class="fu">}</span><span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">...</span><span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;defaults&quot;</span> <span class="er">is</span> <span class="er">not</span> <span class="er">legal</span> <span class="er">on</span> <span class="er">a</span> <span class="er">ciphertext</span> <span class="er">(its</span> <span class="er">scalars</span> <span class="er">are</span> <span class="er">bare</span> <span class="er">fields</span> <span class="er">instead).</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span><span class="fu">,</span> <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;priority&quot;</span> <span class="er">is</span> <span class="er">not</span> <span class="er">a</span> <span class="er">recognized</span> <span class="er">field</span> <span class="er">anywhere</span> <span class="er">in</span> <span class="er">the</span> <span class="er">schema.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span> <span class="dt">&quot;priority&quot;</span><span class="fu">:</span> <span class="st">&quot;high&quot;</span><span class="fu">,</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">...</span><span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="er">two</span> <span class="er">ciphertexts</span> <span class="er">share</span> <span class="er">id</span> <span class="st">&quot;1&quot;</span><span class="er">.</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;ciphertexts&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">}</span><span class="ot">,</span> <span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;...&quot;</span> <span class="fu">}</span> <span class="ot">]</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="st">&quot;charset&quot;</span> <span class="er">has</span> <span class="er">no</span> <span class="er">enclosing</span> <span class="er">brackets.</span> <span class="er">On</span> <span class="er">disk</span> <span class="er">it</span> <span class="er">must</span> <span class="er">be</span> <span class="st">&quot;[1-3]&quot;</span><span class="er">,</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">not</span> <span class="st">&quot;1-3&quot;</span> <span class="er">--</span> <span class="er">the</span> <span class="er">editor</span> <span class="er">may</span> <span class="er">let</span> <span class="er">you</span> <span class="er">type</span> <span class="er">it</span> <span class="er">bare,</span> <span class="er">but</span> <span class="er">never</span> <span class="er">saves</span> <span class="er">it</span> <span class="er">that</span> <span class="er">way.</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;213132&quot;</span><span class="fu">,</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;1-3&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="er">is_stub:</span> <span class="kw">true</span> <span class="er">requires</span> <span class="er">neither</span> <span class="st">&quot;raw&quot;</span> <span class="er">nor</span> <span class="st">&quot;parts&quot;</span> <span class="er">--</span> <span class="er">a</span> <span class="er">stub</span> <span class="er">must</span> <span class="er">have</span> <span class="er">neither.</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;A1&quot;</span><span class="fu">,</span> <span class="dt">&quot;is_stub&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;ABCDE&quot;</span> <span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">ERROR:</span> <span class="er">unit_type</span> <span class="er">is</span> <span class="st">&quot;codebook&quot;</span> <span class="er">but</span> <span class="er">codebook_id</span> <span class="er">is</span> <span class="er">missing.</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;A1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;ABCDEFGHIJ&quot;</span><span class="fu">,</span> <span class="dt">&quot;unit_type&quot;</span><span class="fu">:</span> <span class="st">&quot;codebook&quot;</span><span class="fu">,</span> <span class="dt">&quot;unit_length&quot;</span><span class="fu">:</span> <span class="dv">5</span> <span class="fu">}</span></span></code></pre></div>
 <h2 id="future-work">Future work</h2>
 <ul>
 <li>An XML serialization of the same schema (not yet defined).</li>

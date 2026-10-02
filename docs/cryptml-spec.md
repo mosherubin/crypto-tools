@@ -22,11 +22,17 @@ cryptogram's trailing sentence-punctuation (e.g. a period, if the book
 typesets the cryptogram as the end of a sentence) is the book's, not the
 cipher's — leave it out of `raw` rather than adding it to `ignorechars`.
 
-Version described here: **1.1**.
+Version described here: **1.2**.
 
-**1.1** adds `origin.time` (see [origin](#origin)) alongside the existing `origin.date` —
-purely additive, optional, and non-breaking: files written under 1.0 remain valid as-is,
-with no need to edit or re-version them. **1.0** was the initial release.
+**1.2** adds [archival message metadata](#archival-message-metadata): a `service_records`/
+`plaintext_records` pair of document-level arrays for traffic with no ciphertext of its own, an `is_stub`
+ciphertext flag licensing a message record with neither `raw` nor `parts`, a cascading `unit_type`/
+`codebook_id`/`unit_length` classification for group-structure validation, `origin.addressee`, a reserved
+free-form `extensions` object, and a set of optional archival provenance/indicator/quality fields. A
+separate, non-blocking `validateWarnings()` channel is introduced alongside the existing pass/fail
+`validate()`. All of this is purely additive and optional: files written under 1.0 or 1.1 remain valid
+as-is, with no need to edit or re-version them. **1.1** added `origin.time` (see [origin](#origin))
+alongside the existing `origin.date`. **1.0** was the initial release.
 
 ## Design principles
 
@@ -88,8 +94,8 @@ type is a validation error if it appears on the other.
 
 | Field | Required | Meaning |
 |---|---|---|
-| `cryptml_version` | no, default `"1.1"` | Format version. |
-| `cryptml_uuid` | no | Marks this file as a corpus member — see [Corpus identity](#corpus-identity-cryptml_uuid). Required only for files under `tools/CryptML/input/`, not by the schema itself. |
+| `cryptml_version` | no, default `"1.2"` | Format version. |
+| `cryptml_uuid` | no | Marks this file as a corpus member — see [Corpus identity](#corpus-identity-cryptml_uuid). Required only for files under `tools/CryptML/input/`, not by the schema itself. Also used to qualify a cross-document reference — see [Archival message metadata](#archival-message-metadata). |
 | `title` | no | Name for this document/collection. |
 | `defaults` | no | Cascading scalar settings — see [Cascade rules](#cascade-rules). |
 | `sources` | no | Cascading list — see below. |
@@ -97,14 +103,17 @@ type is a validation error if it appears on the other.
 | `notes` | no | Cascading list. |
 | `chatter` | no | Cascading list. |
 | `ciphertexts` | **yes**, ≥1 entry | Array of [ciphertext nodes](#ciphertext-node). |
+| `service_records` | no | Array of [service records](#service-record) — plaintext traffic with no ciphertext of its own. See [Archival message metadata](#archival-message-metadata). |
+| `plaintext_records` | no | Array of [plaintext records](#plaintext-record) — a recovered plaintext for a known message. See [Archival message metadata](#archival-message-metadata). |
 
 ### Ciphertext node
 
 | Field | Required | Meaning |
 |---|---|---|
 | `id` | conditionally — see below | Reference name, e.g. `"1"`, `"GRP42"`, `"L2-P16-a"`. Unique across the whole document. |
-| `raw` | conditionally — exactly one of `raw`/`parts` required | The ciphertext text, exactly as transcribed. |
-| `parts` | conditionally — exactly one of `raw`/`parts` required | Array of ≥2 [part](#part) objects, for one exercise made of several inseparable raw blocks (e.g. messages "a" and "b" that must be solved jointly). See below. |
+| `raw` | conditionally — exactly one of `raw`/`parts` required, unless `is_stub` | The ciphertext text, exactly as transcribed. |
+| `parts` | conditionally — exactly one of `raw`/`parts` required, unless `is_stub` | Array of ≥2 [part](#part) objects, for one exercise made of several inseparable raw blocks (e.g. messages "a" and "b" that must be solved jointly). See below. |
+| `is_stub` | no, default `false` | When `true`, licenses omitting *both* `raw` and `parts` — a catalogued record with no transcribed ciphertext. Illegal alongside either. See [Archival message metadata](#archival-message-metadata). |
 | `cipher_system` | no, cascades | e.g. `"Vigenère"`, `"Hill"`, `"Quagmire III"`, `"unknown"`. |
 | `charset` | no, cascades | Regex character class (e.g. `[A-Z]`) matching valid cipher symbols. To match any character (e.g. a concealment/null cipher), use `[\s\S]` — see [Validation rules](#validation-rules) — not `[.]`, which matches only a literal period. |
 | `casesensitive` | no, cascades | Whether `charset` matching is case-sensitive. |
@@ -112,13 +121,20 @@ type is a validation error if it appears on the other.
 | `ignorechars` | no, cascades | Regex character class (e.g. `[\s]`) of characters silently dropped (whitespace, group separators). |
 | `remove_from_start` | no, default `0` | Number of non-ignored characters (i.e. not matched by `ignorechars`) to strip from the start of `raw` — typically a message preamble. Only legal alongside `raw`; with `parts`, each part has its own instead (see below). No cascade. |
 | `remove_from_end` | no, default `0` | Number of non-ignored characters to strip from the end of `raw` — typically padding added to reach a group-length multiple. Only legal alongside `raw`; with `parts`, each part has its own instead. No cascade. |
-| `origin` | no | No cascade. Only legal alongside `raw`; with `parts`, each part has its own instead. See [origin](#origin). |
+| `origin` | no | No cascade. Illegal on a ciphertext that uses `parts` (each part has its own instead); legal on both an ordinary `raw` message and a stub — see [Stub entries](#stub-entries-is_stub). See [origin](#origin). |
 | `sources` | no, cascades | This ciphertext's own sources, merged with the document's. |
 | `references` | no, cascades | Merged with the document's. |
 | `notes` | no, cascades | Merged with the document's. |
 | `chatter` | no, cascades | Merged with the document's. |
-| `solution` | no | No cascade (except `solution.plaintext_charset`, see below). Only legal alongside `raw`; with `parts`, each part has its own instead — independent messages sharing key material usually decrypt to different plaintexts. See [solution](#solution). |
-| `hints` | no | No cascade. Only legal alongside `raw`; with `parts`, each part has its own instead — a crib usually applies to one message's content, not the exercise in the abstract. See [hint](#hint). |
+| `solution` | no | No cascade (except `solution.plaintext_charset`, see below). Illegal on a ciphertext that uses `parts` (each part has its own instead — independent messages sharing key material usually decrypt to different plaintexts); legal on both an ordinary `raw` message and a stub. See [solution](#solution). |
+| `hints` | no | No cascade. Illegal on a ciphertext that uses `parts` (each part has its own instead — a crib usually applies to one message's content, not the exercise in the abstract); legal on both an ordinary `raw` message and a stub. See [hint](#hint). |
+| `unit_type` | no, cascades | `"codebook"` \| `"cipher"` \| `"unknown"` — what the group structure *is*, for arithmetic/validation purposes. See [Archival message metadata](#archival-message-metadata). |
+| `unit_type_asserted` | no, no cascade | Overrides the cascaded `unit_type` for rule-selection on this one message — highest precedence. Legal on any message, not just a stub. See [Archival message metadata](#archival-message-metadata). |
+| `codebook_id` | no, cascades | Free-string identifier of the codebook in use. Required whenever the effective `unit_type` is `"codebook"`. |
+| `unit_length` | no, cascades | Positive integer group/code-word width, used by the group-structure check. |
+| `channel` | no, cascades | Parsed channel prefix, e.g. `"A"`, `"NP"` — cascades because a survey typically holds one file per channel. Cross-checked against `indicator_raw` — see [Archival message metadata](#archival-message-metadata). |
+| `isa_file`, `isa_page`, `image_ref`, `indicator_raw`, `serial`, `gr_stated`, `pages`, `transcription_state`, `legibility`, `resend_of`, `related`, `anomaly_notes`, `preamble_raw`, `service_line_raw` | no | Archival provenance/indicator/quality/cross-reference fields — see [Archival message metadata](#archival-message-metadata). |
+| `extensions` | no | Reserved free-form object, entirely unvalidated — see [Archival message metadata](#archival-message-metadata). |
 
 `id` default rule: if `ciphertexts` has exactly one entry, `id` may be
 omitted and defaults to `"1"`. Whenever there's more than one ciphertext in
@@ -169,18 +185,34 @@ Cryptanalytics, Part I, Lesson 4, Problem 9's messages 'a' and 'b') — one
 Exactly two cascade behaviors, both document → ciphertext, one level:
 
 1. **Scalar override** (`defaults`: `cipher_system`, `charset`,
-   `casesensitive`, `ditschar`, `ignorechars`, `plaintext_charset`). A
+   `casesensitive`, `ditschar`, `ignorechars`, `plaintext_charset`,
+   `unit_type`, `codebook_id`, `unit_length`, `channel`). A
    ciphertext's own field, if present, wins; otherwise the document's
    `defaults` value is used; otherwise the built-in default
    (`charset: "[A-Z]"`, `casesensitive: false`, `ditschar: "-"`,
    `ignorechars: "[\\s]"`, `cipher_system: "unknown"`,
-   `plaintext_charset: "[A-Z]"`).
+   `plaintext_charset: "[A-Z]"`). `unit_type`/`codebook_id`/`unit_length`/
+   `channel` have no built-in default — absent at every level simply means
+   "not classified"/"not recorded." `unit_type_asserted` is a related but
+   **non-cascading** field — see
+   [Archival message metadata](#archival-message-metadata). `channel`
+   cascades because a real survey typically holds one file per channel (see
+   [Archival message metadata](#archival-message-metadata)), so repeating the
+   same channel string on every one of several hundred messages would invite
+   drift; the per-message override still exists for a document that mixes
+   channels. The [indicator consistency check](#archival-message-metadata)
+   cross-checks the *effective* (cascaded) `channel` against each message's
+   own `indicator_raw`, not just a locally-set one.
 2. **List merge** (`sources`, `references`, `notes`, `chatter`). A
    ciphertext's effective list is `document.<field> + ciphertext.<field>`,
    document's entries first, then the ciphertext's own.
 
-Everything else — `id`, `raw`, `parts`, `remove_from_start`,
-`remove_from_end`, `origin`, `solution`, `hints` — is ciphertext-only and
+Everything else — `id`, `raw`, `parts`, `is_stub`, `remove_from_start`,
+`remove_from_end`, `origin`, `solution`, `hints`, `unit_type_asserted`,
+`isa_file`, `isa_page`, `image_ref`, `indicator_raw`, `serial`,
+`gr_stated`, `pages`, `transcription_state`, `legibility`, `resend_of`,
+`related`, `anomaly_notes`, `preamble_raw`, `service_line_raw`, `extensions`
+— is ciphertext-only and
 never cascades; it's a validation error for any of these to appear on the
 document. `solution.plaintext_charset` is the one exception inside a
 non-cascading object: it still resolves via the scalar-override chain,
@@ -263,6 +295,209 @@ Two validation tiers apply:
   in that directory must have a `cryptml_uuid`, and no two corpus files may
   share one.
 
+## Archival message metadata
+
+This extension lets CryptML serve as the single authoritative store for an
+archival survey of real traffic — e.g. a diplomatic-cable catalogue — where
+most records are catalogued but never transcribed, plaintext service traffic
+(repeat requests, receipts, chatter) matters as much as ciphertext, and a
+recovered plaintext needs to point back at the message it solves. It was
+designed jointly with a downstream cataloguing project; CryptML validates
+*structure*, and that project's own semantic validator (codebook membership,
+cross-channel consistency) builds on top of it.
+
+Three kinds of record are involved, but only the first needs a flag:
+
+- **A message** — an ordinary [ciphertext node](#ciphertext-node), optionally
+  a **stub** (`is_stub: true`, no `raw`/`parts` — see below).
+- **A service record** — plaintext service traffic with no ciphertext and no
+  required channel of its own (e.g. `"YOUR PN41 NEVER RECEIVED"`, sent in
+  clear). Lives in the document-level `service_records` array, never inside
+  `ciphertexts`. See [`service` record](#service-record).
+- **A plaintext record** — a recovered plaintext corresponding to a known
+  message, the single highest-value record in a codebook survey (it yields
+  the key by subtraction). Lives in `plaintext_records`. See
+  [`plaintext` record](#plaintext-record).
+
+### Stub entries (`is_stub`)
+
+A ciphertext entry with `is_stub: true` must have **neither** `raw` nor
+`parts` — the reverse of the normal rule. It's a validation error for
+`is_stub: true` to coexist with either. Every other ciphertext-level field
+(archival, `origin`, `solution`, `hints`, `sources`, …) behaves exactly as on
+a non-stub entry — including shape-checking: a stub's `origin` (or
+`solution`/`hints`, however unusual those are on a stub) is validated field
+by field exactly as it would be on a transcribed message, even though there's
+no `raw` for the rest of that branch's checks to run against. Most of a
+large survey will typically be stubs: cataloguing a message's indicator,
+preamble, and provenance doesn't require transcribing it.
+
+### Group-structure classification (`unit_type`, `codebook_id`, `unit_length`)
+
+Different channels require different arithmetic — a codebook channel is
+differenced on code *numbers*, a cipher channel on *letters* — so the
+classification doubles as a safety interlock, not just a label.
+
+- **`unit_type`** — `"codebook"` | `"cipher"` | `"unknown"`. Cascades exactly
+  like `cipher_system`/`charset` (document `defaults` → ciphertext, one
+  level).
+- **`codebook_id`** — a free-string codebook identifier. **Required**
+  whenever the effective `unit_type` is `"codebook"`.
+- **`unit_length`** — positive integer group/code-word width.
+- **`unit_type_asserted`** — a *separate*, **non-cascading**, ciphertext-only
+  override. It exists for a stub (which has no groups to classify
+  mechanically) or any message where a hand classification needs to win
+  outright, and takes **highest precedence** over the cascaded `unit_type`
+  for rule-selection purposes on that one message. Keeping it a distinct key
+  from `unit_type` means a hand guess can never masquerade as a
+  machine-computed classification downstream.
+
+Resolution order for which structural rule applies to a given message:
+`ciphertext.unit_type_asserted` → `ciphertext.unit_type` → `defaults.unit_type`
+→ if none of those is set, the group-structure rules below are skipped
+entirely (only the ordinary charset check still applies).
+
+**Group-structure rules**, once an effective `unit_type` is known and the
+message has a `raw` (a stub has no groups to check):
+
+- **`"codebook"`**: the character count must be a multiple of `unit_length`
+  — **a validation error** if not (a transcription error or garble). Skipped
+  if `unit_length` is unknown or if `remove_from_start`/`remove_from_end`
+  can't be applied (see below).
+- **`"cipher"`**: a short final group is legitimate and is never padded,
+  trimmed, or treated as an error — but it's flagged, with its length, as a
+  **warning** (see [`validateWarnings()`](#validatewarnings-non-blocking-findings)
+  below), since how a final group is handled is itself analytically
+  significant.
+
+**Order of operations for the character count**: `remove_from_start`/
+`remove_from_end` are applied first, then the gap marker is stripped, then
+`ignorechars` characters are excluded — the same order a tool would apply to
+recover the message's actual content, and the only order that gives a
+meaningful count. This matters immediately for real data:
+`tools/CryptML/input/RCA-Outgoing.cryptml` embeds each message's indicator
+inside `raw` itself (`"A50/18 GYHTE DISEU …"`) and strips it with
+`remove_from_start: 6` — 96 non-ignored characters before the trim, 90 after.
+Counting before the trim would make a `unit_length: 5` codebook check fail on
+every message in that file; counting after it passes. If the trim amount
+itself can't be applied (it exceeds the available non-ignored characters at
+that end of `raw`), the codebook/cipher checks are silently skipped for that
+message rather than counting against the wrong substring — the same
+fail-safe-by-omission the rest of this extension uses when a cascaded field
+is simply absent.
+
+### Cross-references
+
+A reference is one of:
+
+- a bare `id` — resolved against the *same* document, or
+- `"<cryptml_uuid> :: <id>"` — a qualified reference into *another*
+  document, using the document's own `cryptml_uuid`. Resolution is
+  syntax-only in that case: a single-document `validate()` call has no way
+  to open the other file, so a qualified reference whose `uuid` isn't this
+  document's own is accepted without resolving it.
+
+This is used by `resend_of` and `related` (ciphertext-level) and
+`message_ref` (plaintext record). A reference that fails to parse (empty, or
+nothing after `" :: "`) is a syntax error; a bare/same-document reference
+that doesn't match any `id` in the document is a resolution error.
+`refers_channel`/`refers_serial` on a service record are the one exception:
+they're **descriptive only, never required to resolve** — service traffic
+routinely refers to a message that was never catalogued, and a downstream
+extractor can report that as a "missing serial" statistic rather than a
+CryptML validation error.
+
+### Provenance, indicator, and quality fields
+
+All optional, all on the ciphertext node, never required by CryptML's
+generic validator — a downstream project's own semantic validator is where
+"required for a message record" policy belongs, since `ciphertexts[]` is
+shared with the entire rest of the (non-archival) corpus.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `isa_file` | string | Archive file reference. |
+| `isa_page` | string | Page or range, e.g. `"107-112"`. |
+| `image_ref` | string | Scan filename, so the source image can be re-found. |
+| `indicator_raw` | string | The indicator **verbatim, unnormalised**, e.g. `"A42/53"`, `"NA9"`. Recorded as written — if a channel turns out to use its indicator differently than currently assumed, only the raw form reveals that. |
+| `preamble_raw` | string | The whole header line(s), **verbatim**, exactly as transcribed — e.g. `"ISR6 NEWYORK JAN 27\nCDE PALOFFICE GENEVA"`. `origin.originator`/`origin.addressee`/`origin.date`/`origin.time` are the analyst's *parsed-out* reading of this same line; `preamble_raw` is what's actually on the page, so a parsing mistake or an unusual indicator convention stays recoverable from the raw text rather than silently lost. |
+| `service_line_raw` | string | Trailing service text, **verbatim** — acknowledgements, routing, relay annotations appended after the message body (e.g. `"ACKPLS ISR\nRECD ISR2 HE 1633 TU"`). Distinct from `anomaly_notes` (which records something *wrong* with the transcription) and from a `service_records` entry (which is a separate, standalone plaintext message in its own right, not an annotation trailing this one). |
+| `channel` | string, **cascades** | Parsed channel prefix, e.g. `"A"`, `"NP"` — the one archival field that cascades from `document.defaults`, since a survey typically holds one file per channel (see [Cascade rules](#cascade-rules)). Cross-checked against `indicator_raw` — see below. |
+| `serial` | non-negative integer | Parsed running number. Cross-checked against `indicator_raw`. |
+| `gr_stated` | non-negative integer | Group count as given *in the indicator itself*, if any. Its absence is a significant fact about the channel, distinct from "not yet recorded" — don't default it to anything. On a `transcription_state: "full"` message, a mismatch against the counted group total is a [warning](#validatewarnings-non-blocking-findings), not an error: it may be a garble, a miscount, or evidence the indicator's second number isn't a group count at all. The check is skipped on `"none"`/`"head_tail"`, where the counted total is legitimately partial and would mismatch by design, not by error. |
+| `pages` | non-negative integer | Transmission page count. |
+| `transcription_state` | `"none"` \| `"head_tail"` \| `"full"` | How much of the message has actually been transcribed into `raw`. |
+| `legibility` | `"clean"` \| `"partial"` \| `"poor"` | Legibility of the source. `"poor"` combined with `transcription_state: "full"` is a [warning](#validatewarnings-non-blocking-findings) — a statistic built on an unreliable transcription is worse than no statistic. |
+| `resend_of` | [reference](#cross-references) | The message this one retransmits. |
+| `related` | array of [reference](#cross-references) | Other records bearing on this one. |
+| `anomaly_notes` | string | Anything anomalous, verbatim — overstrikes, struck-through groups, garbles, corrections, marginalia. (Distinct from the existing, list-shaped `notes` field.) |
+
+**Indicator consistency check**: a best-effort pattern,
+`^([A-Za-z]+)(\d+)(?:/(\d+))?$`, parses `indicator_raw`'s common shorthand
+(e.g. `"A42/53"` → channel `"A"`, serial `42`, `gr_stated` `53`). When
+`indicator_raw` matches, the *effective* `channel` (the message's own if set,
+otherwise the cascaded `defaults.channel`) is cross-checked against it, along
+with `serial`/`gr_stated`. When it doesn't match — `indicator_raw` is free
+text by design — the cross-check is silently skipped, not an error.
+
+### `extensions`
+
+A reserved, per-record free-form object (on a ciphertext, a service record,
+or a plaintext record) whose contents are entirely unvalidated — the
+escape hatch for anything project-specific that hasn't earned a place in the
+fixed vocabulary yet. This is deliberately a dedicated key, not a prefix
+convention on ordinary field names: that separation is what lets the
+validator keep distinguishing a genuine *unrecognized field* (almost always
+a typo, and still a hard error) from a deliberate *extension field*. An
+extension key must never become load-bearing for any CryptML-aware tool; if
+one proves generally useful, promote it into the fixed vocabulary instead of
+leaning on it indefinitely.
+
+### `service` record
+
+Lives in the document-level `service_records` array. Unlike a ciphertext
+entry, these required fields *are* strictly enforced by CryptML's generic
+validator, since this is a dedicated, single-purpose array rather than one
+shared with the rest of the corpus.
+
+| Field | Required | Type | Meaning |
+|---|---|---|---|
+| `id` | **yes** | string | Stable key, referenceable from `related`/`resend_of`. Unique across `ciphertexts`, `service_records`, and `plaintext_records` together. |
+| `isa_file`, `isa_page` | **yes** | string | As on a ciphertext. |
+| `origin` | **yes** | object | Same shape as ciphertext [`origin`](#origin). `date` and `originator` are required within it for a service record specifically; `addressee` is not — a margin annotation or file note captured this way may have none, and forcing one would just invite a fabricated value. |
+| `service_type` | **yes** | `"repeat_request"` \| `"receipt"` \| `"plain_message"` \| `"chatter"` \| `"other"` | |
+| `refers_channel` | no | string | Channel named in the text, if any. Descriptive only — see [Cross-references](#cross-references). |
+| `refers_serial` | no | non-negative integer | Serial named in the text, if any. Descriptive only. |
+| `text_verbatim` | **yes** | string | The full text, exactly as written. |
+| `extensions` | no | object | See [`extensions`](#extensions) above. |
+
+### `plaintext` record
+
+Lives in the document-level `plaintext_records` array.
+
+| Field | Required | Type | Meaning |
+|---|---|---|---|
+| `id` | **yes** | string | Stable key. Unique across `ciphertexts`, `service_records`, and `plaintext_records` together. |
+| `isa_file`, `isa_page` | **yes** | string | As on a ciphertext. |
+| `origin` | no | object | Same shape as ciphertext [`origin`](#origin), no required sub-fields. |
+| `message_ref` | **yes** | [reference](#cross-references) | The message this plaintext corresponds to. Must resolve. |
+| `plaintext_verbatim` | **yes** | string | The recovered plaintext, exactly as recovered. |
+| `extensions` | no | object | See [`extensions`](#extensions) above. |
+
+### `validateWarnings()`: non-blocking findings
+
+A second, separate function alongside `validate()`, returning advisory
+findings that never affect pass/fail — deliberately kept apart so every
+existing caller of `validate()` (Editor, Validator, List, Search,
+`generate-manifest.js`, the pre-commit hook, the GitHub Action, the Python
+`load()`) keeps its existing all-or-nothing contract unchanged. It currently
+reports three things, each described where it's introduced above: a
+`gr_stated` mismatch against the counted group total (only on a `"full"`
+transcription — see above), `legibility: "poor"` combined with
+`transcription_state: "full"`, and a short final group on a
+`"cipher"`-classified message. A disagreement surfaced this way is treated
+as a finding worth seeing, not a problem worth suppressing.
+
 ## Validation rules
 
 - **`[...]` inside `raw`** is the reserved gap marker (see
@@ -276,8 +511,9 @@ Two validation tiers apply:
   unaccounted-for characters. With `parts`, this rule applies independently
   to each part's own `raw`, against the same ciphertext-level `charset`/
   `ditschar`/`ignorechars`.
-- **A ciphertext has exactly one of `raw` or `parts`.** Neither, or both,
-  is a validation error.
+- **A ciphertext has exactly one of `raw` or `parts`, unless `is_stub: true`.**
+  Neither, or both, is a validation error — except a stub, which requires
+  *neither*. See [Archival message metadata](#archival-message-metadata).
 - **`parts` must have at least 2 entries.** A single-entry `parts` array is
   rejected — use `raw` instead; there's exactly one way to say "one raw
   block."
@@ -302,6 +538,24 @@ Two validation tiers apply:
   Requiring it (and rejecting duplicates across files) is a separate,
   stricter rule that applies only to corpus files — see
   [Corpus identity](#corpus-identity-cryptml_uuid).
+- **`unit_type`/`unit_type_asserted`/`transcription_state`/`legibility`,
+  and a `service` record's `service_type`,** must each be one of their
+  enumerated values. **`codebook_id`** is required whenever the effective
+  `unit_type` is `"codebook"`. **`unit_length`** must be a positive integer;
+  `serial`/`gr_stated`/`pages`/`refers_serial` must each be a non-negative
+  integer. See [Archival message metadata](#archival-message-metadata).
+- **A codebook-classified message's character count must be a multiple of
+  `unit_length`** — an error, not a warning (see
+  [Archival message metadata](#archival-message-metadata)); a
+  short final group on a cipher-classified message is a warning instead, via
+  [`validateWarnings()`](#validatewarnings-non-blocking-findings).
+- **`resend_of`, `related`, and a plaintext record's `message_ref` must
+  resolve** (same-document references only) — see
+  [Cross-references](#cross-references). A service record's
+  `refers_channel`/`refers_serial` are the one exception: descriptive only,
+  never required to resolve.
+- **`extensions`, wherever legal, must be an object** — its contents are
+  otherwise entirely unvalidated. See [`extensions`](#extensions).
 - **`source.type`** must be one of the enumerated values (see below) — not
   an arbitrary string.
 - **`ditschar`** must be exactly one character.
@@ -344,7 +598,8 @@ and it cascades (see [Cascade rules](#cascade-rules)).
 | `date` | string | When the message/cryptogram itself was created or transmitted — not when it was published. |
 | `time` | string | Time of day the message/cryptogram was created or transmitted, alongside `date`. Free text, like `date` — no enforced format (e.g. "0800Z", "14:32" are both fine). |
 | `originator` | string | Who composed or sent it — the puzzle's setter, or a real message's sender. Not the author of a book it later appeared in; see `source.author` for that. |
-| `method` | string | How this copy was produced or obtained, e.g. "transcribed from photo", "typed from book". |
+| `addressee` | string | Who it was sent to. Sibling of `originator` — together they're the correspondent pair, significant for traffic-analysis partitioning. |
+| `method` | string | How this copy was produced or obtained, e.g. "transcribed from photo", "typed from book". This is transcription provenance, not the cryptosystem — see `cipher_system`, a separate field. |
 | `location` | string | Free text, e.g. where it was found or created. |
 | `remarks` | string | Anything else about the origin. |
 
@@ -540,6 +795,97 @@ Note that `origin`/`hints` are entirely optional per part — part 'a' has
 both, part 'b' has neither, and that's fine; nothing requires parts to be
 symmetric with each other.
 
+## Example: archival message metadata
+
+A single-file illustration of every new 1.2 shape: a stub, a transcribed
+codebook message with a short-final-group sibling (classified `"cipher"` on
+purpose, to show the warning rather than the codebook error), an `extensions`
+key, a service record, and a plaintext record linked back to the codebook
+message. `channel` is declared once in `defaults`, since this file holds one
+channel's traffic, rather than repeated on every message.
+
+```json
+{
+  "cryptml_version": "1.2",
+  "cryptml_uuid": "6f1b1a1a-6c2e-4a7a-9b1e-2f6b7c8d9e0a",
+  "title": "Channel A, 1949",
+  "defaults": {
+    "unit_type": "codebook",
+    "codebook_id": "bentley-second-phrase-1945",
+    "unit_length": 5,
+    "channel": "A"
+  },
+  "ciphertexts": [
+    {
+      "id": "A42/53",
+      "is_stub": true,
+      "isa_file": "ISA/123",
+      "isa_page": "45-46",
+      "indicator_raw": "A42/53",
+      "serial": 42,
+      "gr_stated": 53,
+      "transcription_state": "none",
+      "legibility": "clean",
+      "origin": { "date": "1949-01-27", "originator": "ISR6 NEWYORK", "addressee": "CDE EYTAN" }
+    },
+    {
+      "id": "A55",
+      "isa_file": "ISA/123",
+      "isa_page": "47",
+      "indicator_raw": "A55",
+      "serial": 55,
+      "transcription_state": "full",
+      "legibility": "partial",
+      "unit_type_asserted": "cipher",
+      "anomaly_notes": "final group short by one letter -- not a transcription error, see raw",
+      "preamble_raw": "ISR6 NEWYORK JAN 28\nCDE EYTAN MEMISRAEL LAUSANNE",
+      "service_line_raw": "ACKPLS ISR\nRECD ISR6 HE 1420 TU",
+      "raw": "VQFTX LMPRS DJKWN HBYO",
+      "origin": { "date": "1949-01-28", "originator": "ISR6 NEWYORK", "addressee": "CDE EYTAN" },
+      "extensions": { "confidence_score": 0.6, "surveyor": "mr" }
+    }
+  ],
+  "service_records": [
+    {
+      "id": "SVC-1949-02-03-a",
+      "isa_file": "ISA/123",
+      "isa_page": "48",
+      "origin": { "date": "1949-02-03", "originator": "ISR6 NEWYORK", "addressee": "CDE EYTAN" },
+      "service_type": "repeat_request",
+      "refers_channel": "A",
+      "refers_serial": 54,
+      "text_verbatim": "YOUR A54 NEVER RECEIVED PLEASE REPEAT"
+    }
+  ],
+  "plaintext_records": [
+    {
+      "id": "PT-A42-53",
+      "isa_file": "ISA/200",
+      "isa_page": "12",
+      "message_ref": "A42/53",
+      "plaintext_verbatim": "Meeting confirmed for Tuesday at the usual place."
+    }
+  ]
+}
+```
+
+`A42/53` is a stub inheriting `unit_type: "codebook"` and `channel: "A"` from
+`defaults` — fine, since a stub has no `raw` for the group-structure check to
+run against, and `channel` still cross-checks cleanly against its own
+`indicator_raw`. `A55` inherits the same cascaded `channel: "A"`.
+`A55` has a 19-character `raw` and asserts `"cipher"` to opt out of the
+codebook channel's arithmetic for this one message (a codebook message with
+19 characters would otherwise be a hard error); `validate()` passes it
+cleanly, and `validateWarnings()` reports the short final group (remainder 4
+against `unit_length: 5`) rather than erroring. `A55`'s `preamble_raw` and
+`service_line_raw` carry the header and trailer lines exactly as transcribed;
+`origin.originator`/`origin.addressee`/`origin.date` are the parsed-out
+reading of that same `preamble_raw` line, kept alongside it rather than
+replacing it. The service record refers to `A54`, a serial that was never
+catalogued in this file — that's fine, since `refers_channel`/`refers_serial`
+never need to resolve. The plaintext record resolves `message_ref` against
+`A42/53` in the same document.
+
 ## Invalid examples
 
 ```json
@@ -562,6 +908,14 @@ symmetric with each other.
 // ERROR: "charset" has no enclosing brackets. On disk it must be "[1-3]",
 // not "1-3" -- the editor may let you type it bare, but never saves it that way.
 { "id": "1", "raw": "213132", "charset": "1-3" }
+```
+```json
+// ERROR: is_stub: true requires neither "raw" nor "parts" -- a stub must have neither.
+{ "id": "A1", "is_stub": true, "raw": "ABCDE" }
+```
+```json
+// ERROR: unit_type is "codebook" but codebook_id is missing.
+{ "id": "A1", "raw": "ABCDEFGHIJ", "unit_type": "codebook", "unit_length": 5 }
 ```
 
 ## Future work

@@ -29,6 +29,10 @@
     flex: 1; font-family: var(--mono-font); font-size: 0.9rem; padding: 0.3rem; box-sizing: border-box;
   }
   .field-row textarea { resize: vertical; }
+  .field-control { flex: 1; min-width: 0; }
+  .field-control textarea { width: 100%; }
+  .field-error { font-family: sans-serif; font-size: 0.85rem; color: #b00; min-height: 1.1em; }
+  h4.archival-group { font-family: sans-serif; margin: 1rem 0 0.2rem; }
   .field-row input[type="checkbox"] { margin-top: 0.5rem; }
   #raw { width: 100%; min-height: 6rem; font-family: var(--mono-font); }
   .mono-field { font-family: var(--mono-font); }
@@ -53,6 +57,9 @@
   #export-error { font-family: sans-serif; color: #b00; min-height: 1.2em; margin: 0.5rem 0; }
   .radios { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.8rem 0; }
   .radios label { display: flex; align-items: center; gap: 0.4rem; }
+  #codebook-status { font-family: sans-serif; font-size: 0.85rem; min-height: 1.2em; margin: 0.3rem 0 0.5rem; white-space: pre-wrap; }
+  #codebook-status.success { color: #0a0; }
+  #codebook-status.error { color: #b00; }
 </style>
 </head>
 <body>
@@ -84,6 +91,13 @@
       <label><input type="radio" name="export-trim" value="full"> Export the full raw text, untrimmed</label>
     </div>
     <select id="export-list" multiple size="12"></select>
+
+    <div class="field-row">
+      <label for="codebook-input">Codebook map (optional)</label>
+      <input type="file" id="codebook-input">
+    </div>
+    <div id="codebook-status"></div>
+
     <div id="export-error" class="error"></div>
     <div class="toolbar">
       <button type="button" id="export-cancel">Cancel</button>
@@ -118,6 +132,14 @@
     <details class="subsection">
       <summary>Chatter</summary>
       <div id="document-chatter"></div>
+    </details>
+    <details class="subsection">
+      <summary>Service records (archival: plaintext service traffic, no ciphertext)</summary>
+      <div id="document-service-records"></div>
+    </details>
+    <details class="subsection">
+      <summary>Plaintext records (archival: a recovered plaintext for a known message)</summary>
+      <div id="document-plaintext-records"></div>
     </details>
   </section>
 
@@ -178,7 +200,8 @@ const SAMPLE_DOCUMENT = {
 
 let doc = M.newDocument();
 let activeIndex = 0;
-let fileHandle = null;
+let fileHandle = null; // the file Save writes to; cleared by New / Load sample, which unlink the document
+let lastFolderHandle = null; // where the file pickers open next; deliberately NOT cleared by New / Load sample
 let lastExportHandle = null; // remembers where the last export was saved, for startIn on the next one
 
 function setStatus(text, isError = false) {
@@ -219,7 +242,21 @@ function renderDocumentSection() {
     { key: 'ditschar', label: 'Dits char', type: 'text' },
     { key: 'ignorechars', label: 'Ignore chars (regex character class)', type: 'text' },
     { key: 'plaintext_charset', label: 'Plaintext charset (descriptive only)', type: 'text' },
+    ...M.DEFAULTS_ARCHIVAL_FIELDS,
   ], renderJsonPreview);
+
+  M.renderRepeatable(document.getElementById('document-service-records'), doc.service_records, M.SERVICE_RECORD_FORM_FIELDS, {
+    itemLabel: 'service record',
+    blank: M.blankServiceRecord,
+    nested: [{ key: 'origin', label: 'Origin (date and originator required)', fields: M.ORIGIN_FIELDS }],
+    onChange: renderJsonPreview,
+  });
+  M.renderRepeatable(document.getElementById('document-plaintext-records'), doc.plaintext_records, M.PLAINTEXT_RECORD_FORM_FIELDS, {
+    itemLabel: 'plaintext record',
+    blank: M.blankPlaintextRecord,
+    nested: [{ key: 'origin', label: 'Origin (optional)', fields: M.ORIGIN_FIELDS }],
+    onChange: renderJsonPreview,
+  });
 
   M.renderRepeatable(document.getElementById('document-sources'), doc.sources, M.SOURCE_FIELDS, {
     itemLabel: 'source',
@@ -242,7 +279,7 @@ function renderTabs() {
       type: 'button',
       className: index === activeIndex ? 'active' : '',
       onClick: () => { activeIndex = index; renderTabs(); renderCiphertextPanel(); },
-    }, ct.id || `#${index + 1}`));
+    }, `${ct.id || `#${index + 1}`}${ct.is_stub ? ' (stub)' : ''}`));
   });
   document.getElementById('btn-remove-ciphertext').disabled = doc.ciphertexts.length <= 1;
 }
@@ -328,6 +365,20 @@ function renderPartsSection(ct) {
   return section('Parts', container, true);
 }
 
+// Collapsed unless the ciphertext already carries archival metadata, so the form stays
+// uncluttered for ordinary (non-archival) puzzle ciphertexts.
+function renderArchivalSection(ct) {
+  const body = M.el('div', {});
+  M.ARCHIVAL_FORM_GROUPS.forEach(group => {
+    body.appendChild(M.el('h4', { className: 'archival-group' }, group.title));
+    group.fields.forEach(spec => body.appendChild(M.buildFieldRow(spec, ct, renderJsonPreview)));
+  });
+  const hasArchival = ct.is_stub === true || M.ARCHIVAL_FORM_KEYS.some(key => ct[key] !== undefined);
+  const attrs = { className: 'subsection' };
+  if (hasArchival) attrs.open = 'open';
+  return M.el('details', attrs, [M.el('summary', {}, 'Archival metadata'), body]);
+}
+
 function renderCiphertextPanel() {
   const panel = document.getElementById('ciphertext-panel');
   panel.innerHTML = '';
@@ -346,18 +397,44 @@ function renderCiphertextPanel() {
     { key: 'ignorechars', label: 'Ignore chars (regex character class)', type: 'text' },
   ].forEach(spec => basic.appendChild(M.buildFieldRow(spec, ct, renderJsonPreview)));
 
-  const partsModeCheckbox = M.el('input', { type: 'checkbox' });
-  partsModeCheckbox.checked = !!ct.parts;
-  partsModeCheckbox.addEventListener('change', () => {
-    ct.parts = partsModeCheckbox.checked ? [M.blankPart('a'), M.blankPart('b')] : null;
-    renderCiphertextPanel();
-    renderJsonPreview();
-  });
-  basic.appendChild(M.el('div', { className: 'field-row' }, [
-    M.el('label', {}, 'Multiple parts'), partsModeCheckbox,
-  ]));
+  const isStub = ct.is_stub === true;
+
+  if (!isStub) {
+    const partsModeCheckbox = M.el('input', { type: 'checkbox' });
+    partsModeCheckbox.checked = !!ct.parts;
+    partsModeCheckbox.addEventListener('change', () => {
+      ct.parts = partsModeCheckbox.checked ? [M.blankPart('a'), M.blankPart('b')] : null;
+      renderCiphertextPanel();
+      renderJsonPreview();
+    });
+    basic.appendChild(M.el('div', { className: 'field-row' }, [
+      M.el('label', {}, 'Multiple parts'), partsModeCheckbox,
+    ]));
+  }
 
   if (!ct.parts) {
+    const stubCheckbox = M.el('input', { type: 'checkbox' });
+    stubCheckbox.checked = isStub;
+    stubCheckbox.addEventListener('change', () => {
+      if (stubCheckbox.checked) {
+        if (ct.raw && !confirm('A stub carries no ciphertext, so the text in "Ciphertext" will not be saved. Make this a stub anyway?')) {
+          stubCheckbox.checked = false;
+          return;
+        }
+        ct.is_stub = true;
+      } else {
+        delete ct.is_stub;
+      }
+      renderTabs();
+      renderCiphertextPanel();
+      renderJsonPreview();
+    });
+    basic.appendChild(M.el('div', { className: 'field-row' }, [
+      M.el('label', {}, 'Stub (catalogued, no ciphertext)'), stubCheckbox,
+    ]));
+  }
+
+  if (!ct.parts && !isStub) {
     const rawRow = M.el('div', { className: 'field-row' }, [M.el('label', {}, 'Ciphertext')]);
     const rawTextarea = M.el('textarea', { id: 'raw', rows: 6, onInput: e => { ct.raw = e.target.value; renderJsonPreview(); } });
     rawTextarea.value = ct.raw;
@@ -367,6 +444,7 @@ function renderCiphertextPanel() {
     basic.appendChild(M.buildFieldRow({ key: 'remove_from_end', label: 'Remove from end', type: 'number' }, ct, renderJsonPreview));
   }
   panel.appendChild(section('Basic', basic));
+  panel.appendChild(renderArchivalSection(ct));
 
   if (ct.parts) {
     panel.appendChild(renderPartsSection(ct));
@@ -482,7 +560,7 @@ if (!fsaSupported) {
 
 function pickerOptions(extra) {
   const opts = { types: [{ description: 'CryptML files', accept: { 'application/json': ['.cryptml'] } }], ...extra };
-  if (fileHandle) opts.startIn = fileHandle; // reopen where the last CryptML file in this session was
+  if (lastFolderHandle) opts.startIn = lastFolderHandle; // reopen where the last CryptML file in this session was
   return opts;
 }
 
@@ -494,6 +572,7 @@ document.getElementById('btn-open').addEventListener('click', async () => {
     const data = JSON.parse(await file.text());
     doc = M.parseDocument(data);
     fileHandle = handle;
+    lastFolderHandle = handle;
     activeIndex = 0;
     setStatus(`Loaded ${file.name}`);
     renderAll();
@@ -513,6 +592,7 @@ document.getElementById('btn-save').addEventListener('click', async () => {
   try {
     if (!fileHandle) {
       fileHandle = await window.showSaveFilePicker(pickerOptions({ suggestedName: 'ciphertext.cryptml' }));
+      lastFolderHandle = fileHandle;
     }
     await writeToHandle(fileHandle);
     setStatus(`Saved ${fileHandle.name} at ${new Date().toLocaleString()}`);
@@ -528,6 +608,7 @@ document.getElementById('btn-save-as').addEventListener('click', async () => {
     );
     await writeToHandle(handle);
     fileHandle = handle;
+    lastFolderHandle = handle;
     setStatus(`Saved ${handle.name} at ${new Date().toLocaleString()}`);
   } catch (e) {
     if (e.name !== 'AbortError') setStatus(`Save failed: ${e.message}`, true);
@@ -608,19 +689,112 @@ function buildDateTimeComment(date, time) {
   return parts.length ? `\n# ${parts.join(' ')}` : '';
 }
 
-function buildExportText(filename, entries, honorTrim) {
-  return entries
-    .map(e => {
-      let text = e.raw;
-      if (honorTrim && (e.removeFromStart || e.removeFromEnd)) {
-        const ignoreRe = new RegExp(`^(?:${e.ignorechars})$`, e.casesensitive ? 'u' : 'iu');
-        text = stripBoundary(text, e.removeFromStart, e.removeFromEnd, ignoreRe);
-      }
-      const dtLine = buildDateTimeComment(e.date, e.time);
-      return `# ${filename} :: ${e.label}${dtLine}\n${text.split(GAP_MARKER).join('')}`;
-    })
-    .join('\n\n');
+// Each line is "nnnnn | ccccc" (5-digit code number, 5-character codeword); a
+// number with no codeword after the pipe is a normal, silently-ignored line, not
+// an error. Blank lines and '#' comments are also ignored. Anything else -- a
+// malformed number/codeword, or a duplicate of either -- is a validation error.
+function parseCodebookFile(text) {
+  const codewordToNumber = new Map();
+  const numbersSeen = new Set();
+  const errors = [];
+
+  text.split(/\r?\n/).forEach((rawLine, idx) => {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) return;
+
+    const pipeParts = line.split('|');
+    if (pipeParts.length !== 2) {
+      errors.push(`line ${idx + 1}: expected "nnnnn | ccccc", got ${JSON.stringify(rawLine)}`);
+      return;
+    }
+    const number = pipeParts[0].trim();
+    const codeword = pipeParts[1].trim();
+
+    if (!/^\d{5}$/.test(number)) {
+      errors.push(`line ${idx + 1}: code number must be exactly 5 digits, got ${JSON.stringify(number)}`);
+      return;
+    }
+    if (!codeword) return; // number-only line -- ignore per the format's own convention
+
+    if (codeword.length !== 5) {
+      errors.push(`line ${idx + 1}: codeword must be exactly 5 characters, got ${JSON.stringify(codeword)}`);
+      return;
+    }
+    if (numbersSeen.has(number)) {
+      errors.push(`line ${idx + 1}: duplicate code number ${number}`);
+      return;
+    }
+    const codewordKey = codeword.toUpperCase();
+    if (codewordToNumber.has(codewordKey)) {
+      errors.push(`line ${idx + 1}: duplicate codeword ${codeword}`);
+      return;
+    }
+    numbersSeen.add(number);
+    codewordToNumber.set(codewordKey, number);
+  });
+
+  if (errors.length) throw new Error(`${errors.length} error(s) in codebook map file:\n${errors.join('\n')}`);
+  return codewordToNumber;
 }
+
+// text must already be the clean letter-stream (ignorechars stripped) and a
+// multiple of 5 long -- the caller is responsible for that precondition.
+function codebookTranslate(text, codewordToNumber) {
+  const groups = [];
+  for (let i = 0; i < text.length; i += 5) {
+    groups.push(codewordToNumber.get(text.slice(i, i + 5).toUpperCase()) ?? '-----');
+  }
+  return groups.join(' ');
+}
+
+function buildExportText(filename, entries, honorTrim, codewordToNumber) {
+  const lengthErrors = [];
+  const blocks = entries.map(e => {
+    const ignoreRe = new RegExp(`^(?:${e.ignorechars})$`, e.casesensitive ? 'u' : 'iu');
+    let text = e.raw;
+    if (honorTrim && (e.removeFromStart || e.removeFromEnd)) {
+      text = stripBoundary(text, e.removeFromStart, e.removeFromEnd, ignoreRe);
+    }
+    text = text.split(GAP_MARKER).join('');
+
+    if (codewordToNumber) {
+      const clean = [...text].filter(ch => !ignoreRe.test(ch)).join('');
+      if (clean.length % 5 !== 0) { lengthErrors.push(e.label); return null; }
+      text = codebookTranslate(clean, codewordToNumber);
+    }
+
+    const dtLine = buildDateTimeComment(e.date, e.time);
+    return `# ${filename} :: ${e.label}${dtLine}\n${text}`;
+  });
+
+  if (lengthErrors.length) {
+    throw new Error(`These ciphertext(s) don't have a length that's a multiple of 5, so they can't be codebook-translated: ${lengthErrors.join(', ')}. Remove them from the selection and export again.`);
+  }
+
+  return blocks.join('\n\n');
+}
+
+let codebookMap = null; // codeword (uppercased) -> code number; persists across dialog opens
+
+document.getElementById('codebook-input').addEventListener('change', async () => {
+  const file = document.getElementById('codebook-input').files[0];
+  const statusEl = document.getElementById('codebook-status');
+  if (!file) {
+    codebookMap = null;
+    statusEl.textContent = '';
+    statusEl.className = '';
+    return;
+  }
+  try {
+    codebookMap = parseCodebookFile(await file.text());
+    statusEl.textContent = `Loaded ${codebookMap.size} codebook entr${codebookMap.size === 1 ? 'y' : 'ies'}.`;
+    statusEl.className = 'success';
+  } catch (e) {
+    codebookMap = null;
+    statusEl.textContent = e.message;
+    statusEl.className = 'error';
+  }
+});
 
 document.getElementById('btn-export').addEventListener('click', () => {
   const listEl = document.getElementById('export-list');
@@ -655,7 +829,7 @@ document.getElementById('export-ok').addEventListener('click', async () => {
 
   let text;
   try {
-    text = buildExportText(filename, entries, honorTrim);
+    text = buildExportText(filename, entries, honorTrim, codebookMap);
   } catch (e) {
     document.getElementById('export-error').textContent = e.message;
     return;
@@ -668,7 +842,7 @@ document.getElementById('export-ok').addEventListener('click', async () => {
     // Prefer the last folder actually exported to; before any export this session, the
     // open CryptML file's folder is a reasonable starting guess.
     if (lastExportHandle) saveOpts.startIn = lastExportHandle;
-    else if (fileHandle) saveOpts.startIn = fileHandle;
+    else if (lastFolderHandle) saveOpts.startIn = lastFolderHandle;
 
     const handle = await window.showSaveFilePicker(saveOpts);
     const writable = await handle.createWritable();
