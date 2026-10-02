@@ -43,6 +43,16 @@
   .tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0 0.5rem; }
   .tabs button { border: 1px solid #999; background: #f4f4f4; }
   .tabs button.active { background: #333; color: #fff; }
+  .tabs button.has-errors { border: 2px solid #b00; }
+  .tabs button.has-warnings { border: 2px solid #c80; }
+  #problems-summary.has-errors { color: #b00; }
+  #problems-summary.has-warnings { color: #960; }
+  #problems-summary.clean { color: #0a0; }
+  #problems-list { font-family: sans-serif; font-size: 0.9rem; margin: 0.4rem 0; padding-left: 1.5rem; max-height: 16rem; overflow-y: auto; }
+  #problems-list li { margin: 0.25rem 0; }
+  #problems-list li.error { color: #b00; }
+  #problems-list li.warning { color: #960; }
+  #problems-list li.jumpable { cursor: pointer; text-decoration: underline dotted; }
   details.subsection { margin: 0.8rem 0; }
   details.subsection > summary { font-family: sans-serif; font-weight: bold; cursor: pointer; }
   .field-group h3 { margin-bottom: 0.3rem; }
@@ -81,6 +91,11 @@
     <button id="btn-export">Export...</button>
   </div>
   <div id="status"></div>
+
+  <details class="subsection" id="problems-panel">
+    <summary id="problems-summary">Problems</summary>
+    <ul id="problems-list"></ul>
+  </details>
 
   <dialog id="export-dialog">
     <h2>Export ciphertexts</h2>
@@ -271,15 +286,23 @@ function renderDocumentSection() {
     { itemLabel: 'remark', blank: () => ({ author: '', date: '', text: '' }), onChange: renderJsonPreview });
 }
 
+let problemCounts = []; // per ciphertext index: { errors, warnings }, from the last renderProblems()
+
 function renderTabs() {
   const tabs = document.getElementById('ciphertext-tabs');
   tabs.innerHTML = '';
   doc.ciphertexts.forEach((ct, index) => {
+    const { errors = 0, warnings = 0 } = problemCounts[index] || {};
+    const classes = [];
+    if (index === activeIndex) classes.push('active');
+    if (errors) classes.push('has-errors');
+    else if (warnings) classes.push('has-warnings');
+    const counts = [errors ? `${errors}E` : '', warnings ? `${warnings}W` : ''].filter(Boolean).join(' ');
     tabs.appendChild(M.el('button', {
       type: 'button',
-      className: index === activeIndex ? 'active' : '',
+      className: classes.join(' '),
       onClick: () => { activeIndex = index; renderTabs(); renderCiphertextPanel(); },
-    }, `${ct.id || `#${index + 1}`}${ct.is_stub ? ' (stub)' : ''}`));
+    }, `${ct.id || `#${index + 1}`}${ct.is_stub ? ' (stub)' : ''}${counts ? ` [${counts}]` : ''}`));
   });
   document.getElementById('btn-remove-ciphertext').disabled = doc.ciphertexts.length <= 1;
 }
@@ -499,6 +522,70 @@ function renderCiphertextPanel() {
 
 function renderJsonPreview() {
   document.getElementById('json-preview').textContent = JSON.stringify(M.serializeDocument(doc), null, 2);
+  scheduleProblems();
+}
+
+// Validation runs on the serialized document -- exactly what Save would write -- so what's
+// reported is what a saved file would contain. Debounced because it re-checks every ciphertext.
+let problemsTimer = null;
+function scheduleProblems() {
+  clearTimeout(problemsTimer);
+  problemsTimer = setTimeout(renderProblems, 300);
+}
+
+function problemTarget(message) {
+  const ct = message.match(/^ciphertexts\[(\d+)\]/);
+  if (ct) return { ciphertext: Number(ct[1]) };
+  if (message.startsWith('document.service_records')) return { sectionId: 'document-service-records' };
+  if (message.startsWith('document.plaintext_records')) return { sectionId: 'document-plaintext-records' };
+  return null;
+}
+
+function jumpToProblem(target) {
+  if (target.ciphertext !== undefined) {
+    activeIndex = target.ciphertext;
+    renderTabs();
+    renderCiphertextPanel();
+    document.getElementById('ciphertext-panel').scrollIntoView({ block: 'start' });
+  } else {
+    const section = document.getElementById(target.sectionId);
+    section.closest('details').open = true;
+    section.scrollIntoView({ block: 'start' });
+  }
+}
+
+function renderProblems() {
+  clearTimeout(problemsTimer);
+  const serialized = M.serializeDocument(doc);
+  const errors = M.validate(serialized);
+  const warnings = M.validateWarnings(serialized);
+
+  problemCounts = [];
+  const countFor = (message, kind) => {
+    const target = problemTarget(message);
+    if (!target || target.ciphertext === undefined) return;
+    problemCounts[target.ciphertext] = problemCounts[target.ciphertext] || { errors: 0, warnings: 0 };
+    problemCounts[target.ciphertext][kind]++;
+  };
+  errors.forEach(m => countFor(m, 'errors'));
+  warnings.forEach(m => countFor(m, 'warnings'));
+
+  const summary = document.getElementById('problems-summary');
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  summary.textContent = errors.length || warnings.length
+    ? `Problems: ${plural(errors.length, 'error')}, ${plural(warnings.length, 'warning')}`
+    : 'Problems: none';
+  summary.className = errors.length ? 'has-errors' : warnings.length ? 'has-warnings' : 'clean';
+
+  const list = document.getElementById('problems-list');
+  list.innerHTML = '';
+  [...errors.map(m => ['error', m]), ...warnings.map(m => ['warning', m])].forEach(([kind, message]) => {
+    const target = problemTarget(message);
+    const li = M.el('li', { className: kind + (target ? ' jumpable' : '') }, message);
+    if (target) li.addEventListener('click', () => jumpToProblem(target));
+    list.appendChild(li);
+  });
+  renderTabs();
 }
 
 function renderAll() {
@@ -506,6 +593,7 @@ function renderAll() {
   renderTabs();
   renderCiphertextPanel();
   renderJsonPreview();
+  renderProblems();
 }
 
 document.getElementById('btn-new').addEventListener('click', () => {
