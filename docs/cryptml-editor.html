@@ -164,6 +164,7 @@
     <div class="toolbar">
       <button id="btn-add-ciphertext">+ Add ciphertext</button>
       <button id="btn-remove-ciphertext">Remove this ciphertext</button>
+      <button id="btn-sort-ciphertexts" title="Reorder the ciphertexts by ID (A9 before A10). The new order is written to the file on Save.">Sort by ID</button>
     </div>
     <div id="ciphertext-panel"></div>
   </section>
@@ -305,6 +306,7 @@ function renderTabs() {
     }, `${ct.id || `#${index + 1}`}${ct.is_stub ? ' (stub)' : ''}${counts ? ` [${counts}]` : ''}`));
   });
   document.getElementById('btn-remove-ciphertext').disabled = doc.ciphertexts.length <= 1;
+  document.getElementById('btn-sort-ciphertexts').disabled = doc.ciphertexts.length <= 1;
 }
 
 // `holder` is whatever object owns a `solution` field -- a ciphertext (single-raw) or a part.
@@ -625,6 +627,14 @@ document.getElementById('btn-remove-ciphertext').addEventListener('click', () =>
   if (!confirm(`Remove ciphertext '${doc.ciphertexts[activeIndex].id}'?`)) return;
   doc.ciphertexts.splice(activeIndex, 1);
   activeIndex = Math.max(0, activeIndex - 1);
+  renderAll();
+});
+
+document.getElementById('btn-sort-ciphertexts').addEventListener('click', () => {
+  const current = doc.ciphertexts[activeIndex];
+  M.sortCiphertextsById(doc);
+  activeIndex = doc.ciphertexts.indexOf(current);
+  setStatus('Ciphertexts sorted by ID. Save to write the new order to the file.');
   renderAll();
 });
 

@@ -84,6 +84,29 @@ const CryptMLEditor = (() => {
     };
   }
 
+  // "A9" before "A10": digit runs compare as numbers, everything else as text.
+  function naturalCompare(a, b) {
+    const ax = String(a).match(/\d+|\D+/g) || [];
+    const bx = String(b).match(/\d+|\D+/g) || [];
+    for (let i = 0; i < Math.max(ax.length, bx.length); i++) {
+      const ac = ax[i], bc = bx[i];
+      if (ac === undefined) return -1;
+      if (bc === undefined) return 1;
+      if (/^\d+$/.test(ac) && /^\d+$/.test(bc)) {
+        const diff = Number(ac) - Number(bc);
+        if (diff !== 0) return diff;
+      } else {
+        const cmp = ac.localeCompare(bc);
+        if (cmp !== 0) return cmp;
+      }
+    }
+    return 0;
+  }
+
+  function sortCiphertextsById(doc) {
+    doc.ciphertexts.sort((a, b) => naturalCompare(a.id, b.id));
+  }
+
   function nextCiphertextId(doc) {
     const used = new Set(doc.ciphertexts.map(ct => ct.id));
     let n = 1;
@@ -1177,6 +1200,8 @@ const CryptMLEditor = (() => {
     newCiphertext,
     nextCiphertextId,
     nextPartId,
+    naturalCompare,
+    sortCiphertextsById,
     parseDocument,
     serializeDocument,
     validate,
