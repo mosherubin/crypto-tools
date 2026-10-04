@@ -1275,10 +1275,13 @@ would just invite a fabricated value.</td>
 <tr>
 <td><code>service_type</code></td>
 <td><strong>yes</strong></td>
-<td><code>"repeat_request"</code> | <code>"receipt"</code> |
-<code>"plain_message"</code> | <code>"chatter"</code> |
-<code>"other"</code></td>
-<td></td>
+<td><code>"repeat_request"</code> | <code>"repeat"</code> |
+<code>"receipt"</code> | <code>"plain_message"</code> |
+<code>"chatter"</code> | <code>"other"</code></td>
+<td><code>repeat_request</code> asks for a repeat; <code>repeat</code>
+is the sender re-transmitting part or all of an earlier message verbatim
+(a transmission-level repeat, not a re-encipherment),
+e.g. <code>RE OUR A50/18 CHECKED AND REPEATING …</code>.</td>
 </tr>
 <tr>
 <td><code>refers_channel</code></td>

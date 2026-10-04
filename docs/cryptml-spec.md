@@ -498,7 +498,7 @@ shared with the rest of the corpus.
 | `source_id` | **yes** | string | As on a ciphertext: must match the `id` of a document-level source. |
 | `archive_page` | **yes** | string | As on a ciphertext. |
 | `origin` | **yes** | object | Same shape as ciphertext [`origin`](#origin). `date` and `originator` are required within it for a service record specifically; `addressee` is not — a margin annotation or file note captured this way may have none, and forcing one would just invite a fabricated value. |
-| `service_type` | **yes** | `"repeat_request"` \| `"receipt"` \| `"plain_message"` \| `"chatter"` \| `"other"` | |
+| `service_type` | **yes** | `"repeat_request"` \| `"repeat"` \| `"receipt"` \| `"plain_message"` \| `"chatter"` \| `"other"` | `repeat_request` asks for a repeat; `repeat` is the sender re-transmitting part or all of an earlier message verbatim (a transmission-level repeat, not a re-encipherment), e.g. `RE OUR A50/18 CHECKED AND REPEATING …`. |
 | `refers_channel` | no | string | Channel named in the text, if any. Descriptive only — see [Cross-references](#cross-references). |
 | `refers_serial` | no | non-negative integer | Serial named in the text, if any. Descriptive only. |
 | `text_verbatim` | **yes** | string | The full text, exactly as written. |

@@ -60,7 +60,7 @@ CHATTER_FIELDS = {"author", "date", "text"}
 UNIT_TYPE_VALUES = {"codebook", "cipher", "unknown"}
 TRANSCRIPTION_STATE_VALUES = {"none", "head_tail", "full"}
 LEGIBILITY_VALUES = {"clean", "partial", "poor"}
-SERVICE_TYPE_VALUES = {"repeat_request", "receipt", "plain_message", "chatter", "other"}
+SERVICE_TYPE_VALUES = {"repeat_request", "repeat", "receipt", "plain_message", "chatter", "other"}
 SERVICE_RECORD_FIELDS = {
     "id", "source_id", "archive_page", "origin", "service_type", "refers_channel", "refers_serial",
     "text_verbatim", "extensions",

@@ -401,7 +401,7 @@ const CryptMLEditor = (() => {
   const UNIT_TYPE_VALUES = new Set(['codebook', 'cipher', 'unknown']);
   const TRANSCRIPTION_STATE_VALUES = new Set(['none', 'head_tail', 'full']);
   const LEGIBILITY_VALUES = new Set(['clean', 'partial', 'poor']);
-  const SERVICE_TYPE_VALUES = new Set(['repeat_request', 'receipt', 'plain_message', 'chatter', 'other']);
+  const SERVICE_TYPE_VALUES = new Set(['repeat_request', 'repeat', 'receipt', 'plain_message', 'chatter', 'other']);
   const SERVICE_RECORD_FIELDS = new Set([
     'id', 'source_id', 'archive_page', 'origin', 'service_type', 'refers_channel', 'refers_serial',
     'text_verbatim', 'extensions',
@@ -1120,7 +1120,7 @@ const CryptMLEditor = (() => {
     { key: 'id', label: 'ID', hint: 'Unique across all the records in this file: ciphertexts, service records and plaintext records together.', type: 'text' },
     { key: 'source_id', label: 'Source', hint: 'Which document-level Source this comes from (a source that has an ID).', type: 'text', optional: true },
     { key: 'archive_page', label: 'Archive page(s)', hint: ARCHIVE_PAGE_HINT, type: 'text' },
-    { key: 'service_type', label: 'Service type', hint: 'Kind of service traffic: repeat_request, receipt, plain_message, chatter or other.', type: 'select', options: [...SERVICE_TYPE_VALUES] },
+    { key: 'service_type', label: 'Service type', hint: 'Kind of service traffic: repeat_request (asks for a repeat), repeat (the sender re-sending part or all of an earlier message), receipt, plain_message, chatter or other.', type: 'select', options: [...SERVICE_TYPE_VALUES] },
     { key: 'refers_channel', label: 'Refers to channel', hint: 'Channel named in the text, if any, e.g. PN. Descriptive only; it need not match a message in this file.', type: 'text', optional: true },
     { key: 'refers_serial', label: 'Refers to serial', hint: 'Serial named in the text, if any, e.g. 41. Descriptive only.', type: 'number', min: 0, optional: true },
     { key: 'text_verbatim', label: 'Text (verbatim)', hint: 'The full text exactly as written.', type: 'textarea', rows: 4, monospace: true },
