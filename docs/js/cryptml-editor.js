@@ -986,16 +986,41 @@ const CryptMLEditor = (() => {
 
   // ---------- field specs for repeatable / single-object sections ----------
 
+  // Fields the page used to define inline; shared here so the document Defaults and each
+  // ciphertext show identical wording, and so a test can insist every field has a hint.
+  const DOCUMENT_TITLE_FIELD = { key: 'title', label: 'Title', hint: 'A name for this document or collection.', type: 'text' };
+
+  const CIPHERTEXT_ID_FIELD = { key: 'id', label: 'ID', hint: 'Unique name for this ciphertext within the file, e.g. A42/53. Free text; shown on its tab and used by references from other records.', type: 'text' };
+
+  const PART_ID_FIELD = { key: 'part_id', label: 'Part ID', hint: 'Label for this part, e.g. a or b. Must be unique within this ciphertext.', type: 'text' };
+
+  const CIPHER_SETTING_FIELDS = [
+    { key: 'cipher_system', label: 'Cipher system', hint: 'The kind of cipher, e.g. Vigenere, Hill, Playfair, or unknown. Free text.', type: 'text' },
+    { key: 'charset', label: 'Charset (regex character class)', hint: 'Regex character class of the valid cipher symbols, e.g. [A-Z] or [A-Z0-9]. It must be a single bracketed class. Every character of the ciphertext must match this, the dits char, or the ignore chars.', type: 'text' },
+    { key: 'casesensitive', label: 'Case sensitive', hint: 'Tick if upper and lower case letters are different symbols. Unticked, letters are treated as upper case.', type: 'checkbox' },
+    { key: 'ditschar', label: 'Dits char', hint: 'One character standing for a missing or unrecoverable symbol, e.g. -.', type: 'text' },
+    { key: 'ignorechars', label: 'Ignore chars (regex character class)', hint: 'Regex character class of characters that are silently dropped, such as the spaces between groups: [\s].', type: 'text' },
+  ];
+
+  const PLAINTEXT_CHARSET_FIELD = { key: 'plaintext_charset', label: 'Plaintext charset (descriptive only)', hint: 'Describes the alphabet the cipher units stand for, e.g. [A-Z]. Descriptive only: it is not checked against the plaintext.', type: 'text' };
+
+  const TRIM_FIELDS = [
+    { key: 'remove_from_start', label: 'Remove from start', hint: 'How many non-ignored characters to strip from the start of the ciphertext, e.g. 6 for an indicator such as A50/18 written into the text. Counts letters and digits, not spaces.', type: 'number', min: 0 },
+    { key: 'remove_from_end', label: 'Remove from end', hint: 'How many non-ignored characters to strip from the end of the ciphertext, e.g. padding added to fill the last group.', type: 'number', min: 0 },
+  ];
+
+  const RAW_HINT = 'The ciphertext exactly as transcribed. Write [...] where an unknown amount of text was not transcribed.';
+
   const SOURCE_FIELDS = [
-    { key: 'type', label: 'Type', type: 'select', options: ['book', 'web', 'letter', 'periodical', 'person', 'competition', 'other'] },
-    { key: 'title', label: 'Title', type: 'text' },
+    { key: 'type', label: 'Type', hint: 'What kind of source this is: book, web, letter, periodical, person, competition or other.', type: 'select', options: ['book', 'web', 'letter', 'periodical', 'person', 'competition', 'other'] },
+    { key: 'title', label: 'Title', hint: 'Title of the book, web page, archive file or other item.', type: 'text' },
     { key: 'identifier', label: 'Identifier', hint: 'Shelfmark, accession number, ISBN, DOI, physical ID -- whatever identifies the item in its own collection.', type: 'text' },
-    { key: 'author', label: 'Author', type: 'text' },
-    { key: 'publisher', label: 'Publisher', type: 'text' },
-    { key: 'date', label: 'Date', type: 'text' },
-    { key: 'page', label: 'Page', type: 'text' },
-    { key: 'url', label: 'URL', type: 'text' },
-    { key: 'note', label: 'Note', type: 'text' },
+    { key: 'author', label: 'Author', hint: 'Author of the publication. Not who composed the cryptogram; that is Origin: Originator.', type: 'text' },
+    { key: 'publisher', label: 'Publisher', hint: 'Publisher, if any.', type: 'text' },
+    { key: 'date', label: 'Date', hint: 'Publication or acquisition date of this citation, not when the ciphertext was created. Free text.', type: 'text' },
+    { key: 'page', label: 'Page', hint: 'Page or section of the whole publication that this source refers to. The page of an individual message goes in Archive page(s) on the ciphertext instead.', type: 'text' },
+    { key: 'url', label: 'URL', hint: 'Web address, if the source is on the web.', type: 'text' },
+    { key: 'note', label: 'Note', hint: 'Anything else about this source.', type: 'text' },
   ];
 
   // Only document-level sources can carry an id (so a ciphertext can name one via source_id).
@@ -1005,37 +1030,37 @@ const CryptMLEditor = (() => {
   ];
 
   const HINT_FIELDS = [
-    { key: 'text', label: 'Text', type: 'text' },
-    { key: 'position', label: 'Position', type: 'text' },
-    { key: 'source', label: 'Source', type: 'text' },
-    { key: 'confidence', label: 'Confidence', type: 'text' },
-    { key: 'notes', label: 'Notes', type: 'text' },
+    { key: 'text', label: 'Text', hint: 'The suspected plaintext fragment (a crib), e.g. THE.', type: 'text' },
+    { key: 'position', label: 'Position', hint: 'Where in the ciphertext the fragment is believed to occur, e.g. start, or 120-123.', type: 'text' },
+    { key: 'source', label: 'Source', hint: 'Where the hint came from, e.g. the puzzle statement.', type: 'text' },
+    { key: 'confidence', label: 'Confidence', hint: 'How sure the hint is, e.g. certain, probable, guess.', type: 'text' },
+    { key: 'notes', label: 'Notes', hint: 'Anything else about this hint.', type: 'text' },
   ];
 
   const REFERENCE_FIELDS = [
-    { key: 'citation', label: 'Citation', type: 'text' },
-    { key: 'url', label: 'URL', type: 'text' },
+    { key: 'citation', label: 'Citation', hint: 'A bibliographic citation for related reading.', type: 'text' },
+    { key: 'url', label: 'URL', hint: 'Web address for that reference.', type: 'text' },
   ];
 
   const NOTE_FIELDS = [
-    { key: 'title', label: 'Title', type: 'text' },
-    { key: 'text', label: 'Text', type: 'textarea' },
+    { key: 'title', label: 'Title', hint: 'A short heading for the note.', type: 'text' },
+    { key: 'text', label: 'Text', hint: 'The note itself. Free text.', type: 'textarea' },
   ];
 
   const CHATTER_FIELDS = [
-    { key: 'author', label: 'Author', type: 'text' },
-    { key: 'date', label: 'Date', type: 'text' },
-    { key: 'text', label: 'Text', type: 'textarea' },
+    { key: 'author', label: 'Author', hint: 'Who wrote the remark.', type: 'text' },
+    { key: 'date', label: 'Date', hint: 'When the remark was written. Free text.', type: 'text' },
+    { key: 'text', label: 'Text', hint: 'The remark: a working comment or discussion about this item.', type: 'textarea' },
   ];
 
   const ORIGIN_FIELDS = [
-    { key: 'date', label: 'Date', type: 'text' },
-    { key: 'time', label: 'Time', type: 'text' },
-    { key: 'originator', label: 'Originator', type: 'text' },
-    { key: 'addressee', label: 'Addressee', type: 'text' },
-    { key: 'method', label: 'Method', type: 'text' },
-    { key: 'location', label: 'Location', type: 'text' },
-    { key: 'remarks', label: 'Remarks', type: 'textarea' },
+    { key: 'date', label: 'Date', hint: 'When the message was created or sent, not when it was published. Free text, e.g. 1949-01-27.', type: 'text' },
+    { key: 'time', label: 'Time', hint: 'Time of day it was sent, e.g. 1300 or 14:32. Free text.', type: 'text' },
+    { key: 'originator', label: 'Originator', hint: 'Who composed or sent it, as written, e.g. ISR1 NEWYORK. Not the author of a book it later appeared in.', type: 'text' },
+    { key: 'addressee', label: 'Addressee', hint: 'Who it was sent to, as written, e.g. MEMISRAEL GENEVA.', type: 'text' },
+    { key: 'method', label: 'Method', hint: 'How this copy was produced or obtained, e.g. transcribed from a photo. Not the cipher system.', type: 'text' },
+    { key: 'location', label: 'Location', hint: 'Where the message was found or created, in free text. Leave blank for archival material; use Source and Archive page(s) instead.', type: 'text' },
+    { key: 'remarks', label: 'Remarks', hint: "Anything else about the message's origin.", type: 'textarea' },
   ];
 
   // ---------- archival message metadata (CryptML 1.2) form specs ----------
@@ -1043,6 +1068,7 @@ const CryptMLEditor = (() => {
   // check that, so a form control can never write a field the validator then rejects as unknown.
 
   const INHERIT_HINT = 'Leave blank to inherit this from the document Defaults.';
+  const ARCHIVE_PAGE_HINT = 'Page or range within the source. Free text; it is not checked. Convention: one page 45, a range 45-46, several separated by commas 45, 47-48.';
 
   const DEFAULTS_ARCHIVAL_FIELDS = [
     { key: 'channel', label: 'Channel', hint: 'Channel prefix, e.g. A or NP. Cascades to every ciphertext that does not override it.', type: 'text', optional: true },
@@ -1051,30 +1077,33 @@ const CryptMLEditor = (() => {
     { key: 'unit_length', label: 'Unit length', hint: 'Group / code-word width in characters.', type: 'number', min: 1, optional: true },
   ];
 
+  // The whole document Defaults form.
+  const DEFAULTS_FORM_FIELDS = [...CIPHER_SETTING_FIELDS, PLAINTEXT_CHARSET_FIELD, ...DEFAULTS_ARCHIVAL_FIELDS];
+
   const ARCHIVAL_FORM_GROUPS = [
     { title: 'Source and page', fields: [
       { key: 'source_id', label: 'Source', hint: 'Which document-level Source this comes from (a source that has an ID).', type: 'text', optional: true },
-      { key: 'archive_page', label: 'Archive page(s)', hint: 'Page or range within that source, e.g. 107-112.', type: 'text', optional: true },
+      { key: 'archive_page', label: 'Archive page(s)', hint: ARCHIVE_PAGE_HINT, type: 'text', optional: true },
     ] },
     { title: 'Indicator and preamble (verbatim)', fields: [
-      { key: 'indicator_raw', label: 'Indicator (verbatim)', type: 'text', monospace: true, optional: true },
-      { key: 'channel', label: 'Channel (inherits)', hint: INHERIT_HINT, type: 'text', optional: true },
-      { key: 'serial', label: 'Serial', type: 'number', min: 0, optional: true },
+      { key: 'indicator_raw', label: 'Indicator (verbatim)', hint: 'The indicator exactly as written on the cable, e.g. A42/53 or NA9. Never normalise it.', type: 'text', monospace: true, optional: true },
+      { key: 'channel', label: 'Channel (inherits)', hint: 'Channel prefix, e.g. A or NP. ' + INHERIT_HINT, type: 'text', optional: true },
+      { key: 'serial', label: 'Serial', hint: 'The running number from the indicator (the 42 in A42/53).', type: 'number', min: 0, optional: true },
       { key: 'gr_stated', label: 'Groups stated', hint: 'Group count as written in the indicator itself. Leave blank if the indicator carries none -- that absence is meaningful.', type: 'number', min: 0, optional: true },
-      { key: 'pages', label: 'Transmission pages', type: 'number', min: 0, optional: true },
-      { key: 'preamble_raw', label: 'Preamble (verbatim)', type: 'textarea', rows: 3, monospace: true, optional: true },
-      { key: 'service_line_raw', label: 'Service line (verbatim)', type: 'textarea', rows: 3, monospace: true, optional: true },
+      { key: 'pages', label: 'Transmission pages', hint: 'Number of transmission pages the message occupied.', type: 'number', min: 0, optional: true },
+      { key: 'preamble_raw', label: 'Preamble (verbatim)', hint: 'The whole header line(s) exactly as transcribed, e.g. ISR6 NEWYORK JAN 27 / CDE PALOFFICE GENEVA. The Origin fields hold your parsed reading of it.', type: 'textarea', rows: 3, monospace: true, optional: true },
+      { key: 'service_line_raw', label: 'Service line (verbatim)', hint: 'Trailing service text exactly as transcribed, e.g. ACKPLS ISR / RECD ISR2 HE 1633 TU. Corrections to the transcription go in Anomaly notes instead.', type: 'textarea', rows: 3, monospace: true, optional: true },
     ] },
     { title: 'Quality and state', fields: [
-      { key: 'transcription_state', label: 'Transcription state', type: 'select', options: [...TRANSCRIPTION_STATE_VALUES], optional: true },
-      { key: 'legibility', label: 'Legibility', type: 'select', options: [...LEGIBILITY_VALUES], optional: true },
-      { key: 'anomaly_notes', label: 'Anomaly notes', type: 'textarea', rows: 3, optional: true },
+      { key: 'transcription_state', label: 'Transcription state', hint: 'How much of the message is transcribed: none, head_tail (start and end only) or full.', type: 'select', options: [...TRANSCRIPTION_STATE_VALUES], optional: true },
+      { key: 'legibility', label: 'Legibility', hint: 'How readable the source is: clean, partial or poor.', type: 'select', options: [...LEGIBILITY_VALUES], optional: true },
+      { key: 'anomaly_notes', label: 'Anomaly notes', hint: 'Anything odd about the source, exactly as seen: overstrikes, struck-through groups, garbles, corrections, marginalia.', type: 'textarea', rows: 3, optional: true },
     ] },
     { title: 'Group structure', fields: [
-      { key: 'unit_type', label: 'Unit type (inherits)', hint: INHERIT_HINT, type: 'select', options: [...UNIT_TYPE_VALUES], optional: true },
+      { key: 'unit_type', label: 'Unit type (inherits)', hint: 'What the groups are: codebook, cipher or unknown. ' + INHERIT_HINT, type: 'select', options: [...UNIT_TYPE_VALUES], optional: true },
       { key: 'unit_type_asserted', label: 'Unit type asserted', hint: 'Hand-asserted classification for this one message; outranks the inherited unit type.', type: 'select', options: [...UNIT_TYPE_VALUES], optional: true },
-      { key: 'codebook_id', label: 'Codebook ID (inherits)', hint: INHERIT_HINT, type: 'text', optional: true },
-      { key: 'unit_length', label: 'Unit length (inherits)', hint: INHERIT_HINT, type: 'number', min: 1, optional: true },
+      { key: 'codebook_id', label: 'Codebook ID (inherits)', hint: 'Which codebook is in use. Required when the unit type is codebook. ' + INHERIT_HINT, type: 'text', optional: true },
+      { key: 'unit_length', label: 'Unit length (inherits)', hint: 'Group / code-word width in characters. ' + INHERIT_HINT, type: 'number', min: 1, optional: true },
     ] },
     { title: 'Links to other records', fields: [
       { key: 'resend_of', label: 'Resend of', hint: 'The message this one retransmits: an id in this file, or "<cryptml_uuid> :: <id>" for another file.', type: 'text', optional: true },
@@ -1088,22 +1117,22 @@ const CryptMLEditor = (() => {
   const ARCHIVAL_FORM_KEYS = ARCHIVAL_FORM_GROUPS.flatMap(g => g.fields.map(f => f.key));
 
   const SERVICE_RECORD_FORM_FIELDS = [
-    { key: 'id', label: 'ID', type: 'text' },
+    { key: 'id', label: 'ID', hint: 'Unique name for this record within the file.', type: 'text' },
     { key: 'source_id', label: 'Source', hint: 'Which document-level Source this comes from (a source that has an ID).', type: 'text', optional: true },
-    { key: 'archive_page', label: 'Archive page(s)', type: 'text' },
-    { key: 'service_type', label: 'Service type', type: 'select', options: [...SERVICE_TYPE_VALUES] },
-    { key: 'refers_channel', label: 'Refers to channel', type: 'text', optional: true },
-    { key: 'refers_serial', label: 'Refers to serial', type: 'number', min: 0, optional: true },
-    { key: 'text_verbatim', label: 'Text (verbatim)', type: 'textarea', rows: 4, monospace: true },
+    { key: 'archive_page', label: 'Archive page(s)', hint: ARCHIVE_PAGE_HINT, type: 'text' },
+    { key: 'service_type', label: 'Service type', hint: 'Kind of service traffic: repeat_request, receipt, plain_message, chatter or other.', type: 'select', options: [...SERVICE_TYPE_VALUES] },
+    { key: 'refers_channel', label: 'Refers to channel', hint: 'Channel named in the text, if any, e.g. PN. Descriptive only; it need not match a message in this file.', type: 'text', optional: true },
+    { key: 'refers_serial', label: 'Refers to serial', hint: 'Serial named in the text, if any, e.g. 41. Descriptive only.', type: 'number', min: 0, optional: true },
+    { key: 'text_verbatim', label: 'Text (verbatim)', hint: 'The full text exactly as written.', type: 'textarea', rows: 4, monospace: true },
     { key: 'extensions', label: 'Extensions (JSON)', hint: 'Free-form JSON object, never validated. Nothing may depend on what is in it.', type: 'json', optional: true },
   ];
 
   const PLAINTEXT_RECORD_FORM_FIELDS = [
-    { key: 'id', label: 'ID', type: 'text' },
+    { key: 'id', label: 'ID', hint: 'Unique name for this record within the file.', type: 'text' },
     { key: 'source_id', label: 'Source', hint: 'Which document-level Source this comes from (a source that has an ID).', type: 'text', optional: true },
-    { key: 'archive_page', label: 'Archive page(s)', type: 'text' },
+    { key: 'archive_page', label: 'Archive page(s)', hint: ARCHIVE_PAGE_HINT, type: 'text' },
     { key: 'message_ref', label: 'Message ref', hint: 'The message this plaintext corresponds to: an id in this file, or "<cryptml_uuid> :: <id>".', type: 'text' },
-    { key: 'plaintext_verbatim', label: 'Plaintext (verbatim)', type: 'textarea', rows: 4, monospace: true },
+    { key: 'plaintext_verbatim', label: 'Plaintext (verbatim)', hint: 'The recovered plaintext exactly as recovered.', type: 'textarea', rows: 4, monospace: true },
     { key: 'extensions', label: 'Extensions (JSON)', hint: 'Free-form JSON object, never validated. Nothing may depend on what is in it.', type: 'json', optional: true },
   ];
 
@@ -1132,16 +1161,16 @@ const CryptMLEditor = (() => {
   }
 
   const SOLUTION_FIELDS = [
-    { key: 'plaintext', label: 'Plaintext', type: 'textarea', monospace: true },
-    { key: 'plaintext_charset', label: 'Plaintext charset (descriptive only)', type: 'text' },
-    { key: 'key', label: 'Key', type: 'text' },
+    { key: 'plaintext', label: 'Plaintext', hint: 'The recovered plaintext, written naturally: mixed case and punctuation are fine. It is not checked against any alphabet.', type: 'textarea', monospace: true },
+    PLAINTEXT_CHARSET_FIELD,
+    { key: 'key', label: 'Key', hint: 'The key, if known, e.g. 3-1-2 or a keyword.', type: 'text' },
   ];
 
   const SOLVER_FIELDS = [
-    { key: 'solved_by', label: 'Solved by', type: 'text' },
-    { key: 'solved_date', label: 'Solved date', type: 'text' },
-    { key: 'method', label: 'Method', type: 'textarea' },
-    { key: 'notes', label: 'Notes', type: 'textarea' },
+    { key: 'solved_by', label: 'Solved by', hint: 'Who solved it.', type: 'text' },
+    { key: 'solved_date', label: 'Solved date', hint: 'When it was solved. Free text.', type: 'text' },
+    { key: 'method', label: 'Method', hint: 'How it was solved.', type: 'textarea' },
+    { key: 'notes', label: 'Notes', hint: 'Anything else about this attempt.', type: 'textarea' },
   ];
 
   // ---------- DOM helpers ----------
@@ -1233,6 +1262,7 @@ const CryptMLEditor = (() => {
     }
     if (spec.monospace) input.classList.add('mono-field');
     input.id = `f_${Math.random().toString(36).slice(2)}`;
+    if (spec.hint) input.title = spec.hint;
     const label = el('label', { for: input.id, title: spec.hint }, spec.label);
     const control = errorEl ? el('div', { className: 'field-control' }, [input, errorEl]) : input;
     return el('div', { className: 'field-row' }, [label, control]);
@@ -1292,7 +1322,9 @@ const CryptMLEditor = (() => {
     parseReference,
     SOURCE_FIELDS, DOCUMENT_SOURCE_FIELDS, HINT_FIELDS, REFERENCE_FIELDS, NOTE_FIELDS, CHATTER_FIELDS,
     ORIGIN_FIELDS, SOLUTION_FIELDS, SOLVER_FIELDS,
-    DEFAULTS_ARCHIVAL_FIELDS, ARCHIVAL_FORM_GROUPS, ARCHIVAL_FORM_KEYS,
+    DEFAULTS_ARCHIVAL_FIELDS, DEFAULTS_FORM_FIELDS, ARCHIVAL_FORM_GROUPS, ARCHIVAL_FORM_KEYS,
+    DOCUMENT_TITLE_FIELD, CIPHERTEXT_ID_FIELD, PART_ID_FIELD, CIPHER_SETTING_FIELDS, PLAINTEXT_CHARSET_FIELD,
+    TRIM_FIELDS, RAW_HINT,
     SERVICE_RECORD_FORM_FIELDS, PLAINTEXT_RECORD_FORM_FIELDS,
     el, buildFieldRow, renderObjectSection, renderRepeatable, withSourceChoices,
     blankOrigin, blankSolution, blankSolver, blankPart, blankServiceRecord, blankPlaintextRecord,

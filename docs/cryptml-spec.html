@@ -1085,7 +1085,11 @@ Exactly one: a rare second copy goes in a note.</td>
 <tr>
 <td><code>archive_page</code></td>
 <td>string</td>
-<td>Page or range within that source, e.g. <code>"107-112"</code>.</td>
+<td>Page or range within that source, e.g. <code>"107-112"</code>. Free
+text and never checked, but by convention: a single page
+<code>"45"</code>, a range with a hyphen <code>"45-46"</code>, and
+several pages or ranges separated by commas <code>"45, 47-48"</code>.
+Using one convention lets a tool split the value on commas later.</td>
 </tr>
 <tr>
 <td><code>indicator_raw</code></td>

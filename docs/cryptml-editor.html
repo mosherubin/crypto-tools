@@ -83,12 +83,12 @@
   </div>
 
   <div class="toolbar">
-    <button id="btn-new">New</button>
-    <button id="btn-open">Open...</button>
-    <button id="btn-save">Save</button>
-    <button id="btn-save-as">Save As...</button>
-    <button id="btn-sample">Load Sample</button>
-    <button id="btn-export">Export...</button>
+    <button id="btn-new" title="Start a new, empty document. Unsaved changes are lost.">New</button>
+    <button id="btn-open" title="Open a .cryptml file from disk. Unsaved changes are lost.">Open...</button>
+    <button id="btn-save" title="Save to the open file. Asks for a file name the first time.">Save</button>
+    <button id="btn-save-as" title="Save under a new file name.">Save As...</button>
+    <button id="btn-sample" title="Replace the current document with a small sample document.">Load Sample</button>
+    <button id="btn-export" title="Write selected ciphertexts to one plain text file.">Export...</button>
   </div>
   <div id="status"></div>
 
@@ -102,14 +102,14 @@
     <p>Select one or more ciphertexts to write into a single text file, each preceded by a comment
        naming its source file and ID.</p>
     <div class="radios">
-      <label><input type="radio" name="export-trim" value="trim" checked> Apply 'Remove from start'/'Remove from end' trimming</label>
-      <label><input type="radio" name="export-trim" value="full"> Export the full raw text, untrimmed</label>
+      <label title="Strip the characters counted by Remove from start / Remove from end before exporting."><input type="radio" name="export-trim" value="trim" checked> Apply 'Remove from start'/'Remove from end' trimming</label>
+      <label title="Export the ciphertext exactly as stored, including any indicator or padding."><input type="radio" name="export-trim" value="full"> Export the full raw text, untrimmed</label>
     </div>
-    <select id="export-list" multiple size="12"></select>
+    <select id="export-list" multiple size="12" title="Choose the ciphertexts to export. Ctrl-click or Shift-click selects several."></select>
 
     <div class="field-row">
-      <label for="codebook-input">Codebook map (optional)</label>
-      <input type="file" id="codebook-input">
+      <label for="codebook-input" title="Optional map file with one entry per line: a 5-digit code number, a pipe, then a 5-letter codeword (nnnnn | ccccc). When loaded, each 5-letter codeword is exported as its number.">Codebook map (optional)</label>
+      <input type="file" id="codebook-input" title="Optional map file with one entry per line: a 5-digit code number, a pipe, then a 5-letter codeword (nnnnn | ccccc). When loaded, each 5-letter codeword is exported as its number.">
     </div>
     <div id="codebook-status"></div>
 
@@ -123,9 +123,9 @@
   <section class="block">
     <h2>Document</h2>
     <div class="field-row">
-      <label>Corpus UUID</label>
+      <label title="Marks this file as a member of the published CryptML corpus. Assigned once, deliberately, with Prepare for the corpus; never regenerated.">Corpus UUID</label>
       <span id="uuid-display"></span>
-      <button type="button" id="btn-prepare-corpus">Prepare for the corpus</button>
+      <button type="button" id="btn-prepare-corpus" title="Assign the corpus UUID. Do this once, right before submitting the file to the CryptML database; it can never be changed.">Prepare for the corpus</button>
     </div>
     <div id="document-fields"></div>
     <details class="subsection">
@@ -162,8 +162,8 @@
     <h2>Ciphertexts</h2>
     <div class="tabs" id="ciphertext-tabs"></div>
     <div class="toolbar">
-      <button id="btn-add-ciphertext">+ Add ciphertext</button>
-      <button id="btn-remove-ciphertext">Remove this ciphertext</button>
+      <button id="btn-add-ciphertext" title="Add a new ciphertext to this document.">+ Add ciphertext</button>
+      <button id="btn-remove-ciphertext" title="Remove the ciphertext shown below.">Remove this ciphertext</button>
       <button id="btn-sort-ciphertexts" title="Reorder the ciphertexts by ID (A9 before A10). The new order is written to the file on Save.">Sort by ID</button>
     </div>
     <div id="ciphertext-panel"></div>
@@ -214,6 +214,10 @@ const SAMPLE_DOCUMENT = {
   ],
 };
 
+const MULTIPLE_PARTS_HINT = 'Tick for one exercise made of several inseparable messages (such as a and b) that must be solved together.';
+const STUB_HINT = 'Tick for a catalogued message with no transcribed ciphertext. The ciphertext fields are hidden.';
+const SOLVED_HINT = 'Tick when a solution is known. This reveals the solution fields.';
+
 let doc = M.newDocument();
 let activeIndex = 0;
 let fileHandle = null; // the file Save writes to; cleared by New / Load sample, which unlink the document
@@ -249,17 +253,9 @@ function renderDocumentSection() {
   renderUuidRow();
   const docFieldsEl = document.getElementById('document-fields');
   docFieldsEl.innerHTML = '';
-  docFieldsEl.appendChild(M.buildFieldRow({ key: 'title', label: 'Title', type: 'text' }, doc, renderJsonPreview));
+  docFieldsEl.appendChild(M.buildFieldRow(M.DOCUMENT_TITLE_FIELD, doc, renderJsonPreview));
 
-  M.renderObjectSection(document.getElementById('defaults-fields'), doc.defaults, [
-    { key: 'cipher_system', label: 'Cipher system', type: 'text' },
-    { key: 'charset', label: 'Charset (regex character class)', type: 'text' },
-    { key: 'casesensitive', label: 'Case sensitive', type: 'checkbox' },
-    { key: 'ditschar', label: 'Dits char', type: 'text' },
-    { key: 'ignorechars', label: 'Ignore chars (regex character class)', type: 'text' },
-    { key: 'plaintext_charset', label: 'Plaintext charset (descriptive only)', type: 'text' },
-    ...M.DEFAULTS_ARCHIVAL_FIELDS,
-  ], renderJsonPreview);
+  M.renderObjectSection(document.getElementById('defaults-fields'), doc.defaults, M.DEFAULTS_FORM_FIELDS, renderJsonPreview);
 
   M.renderRepeatable(document.getElementById('document-service-records'), doc.service_records, M.withSourceChoices(M.SERVICE_RECORD_FORM_FIELDS, () => doc), {
     itemLabel: 'service record',
@@ -331,7 +327,8 @@ function renderSolutionSection(holder) {
     renderJsonPreview();
   });
   renderFields();
-  container.appendChild(M.el('div', { className: 'field-row' }, [M.el('label', {}, 'Solved'), solvedCheckbox]));
+  solvedCheckbox.title = SOLVED_HINT;
+  container.appendChild(M.el('div', { className: 'field-row' }, [M.el('label', { title: SOLVED_HINT }, 'Solved'), solvedCheckbox]));
   container.appendChild(fieldsDiv);
   return section('Solution', container, true);
 }
@@ -348,14 +345,13 @@ function renderPart(part, index, ct, refreshParts) {
     }, 'Remove'),
   ]);
   box.appendChild(legend);
-  box.appendChild(M.buildFieldRow({ key: 'part_id', label: 'Part ID', type: 'text' }, part, renderJsonPreview));
-  const rawRow = M.el('div', { className: 'field-row' }, [M.el('label', {}, 'Ciphertext')]);
-  const rawTextarea = M.el('textarea', { className: 'mono-field', rows: 4, onInput: e => { part.raw = e.target.value; renderJsonPreview(); } });
+  box.appendChild(M.buildFieldRow(M.PART_ID_FIELD, part, renderJsonPreview));
+  const rawRow = M.el('div', { className: 'field-row' }, [M.el('label', { title: M.RAW_HINT }, 'Ciphertext')]);
+  const rawTextarea = M.el('textarea', { className: 'mono-field', rows: 4, title: M.RAW_HINT, onInput: e => { part.raw = e.target.value; renderJsonPreview(); } });
   rawTextarea.value = part.raw;
   rawRow.appendChild(rawTextarea);
   box.appendChild(rawRow);
-  box.appendChild(M.buildFieldRow({ key: 'remove_from_start', label: 'Remove from start', type: 'number' }, part, renderJsonPreview));
-  box.appendChild(M.buildFieldRow({ key: 'remove_from_end', label: 'Remove from end', type: 'number' }, part, renderJsonPreview));
+  M.TRIM_FIELDS.forEach(spec => box.appendChild(M.buildFieldRow(spec, part, renderJsonPreview)));
 
   const originDiv = M.el('div', {});
   M.renderObjectSection(originDiv, part.origin, M.ORIGIN_FIELDS, renderJsonPreview);
@@ -413,19 +409,13 @@ function renderCiphertextPanel() {
   const refreshTabs = () => { renderTabs(); renderJsonPreview(); };
 
   const basic = M.el('div', {});
-  basic.appendChild(M.buildFieldRow({ key: 'id', label: 'ID', type: 'text' }, ct, refreshTabs));
-  basic.appendChild(M.buildFieldRow({ key: 'cipher_system', label: 'Cipher system', type: 'text' }, ct, renderJsonPreview));
-  [
-    { key: 'charset', label: 'Charset (regex character class)', type: 'text' },
-    { key: 'casesensitive', label: 'Case sensitive', type: 'checkbox' },
-    { key: 'ditschar', label: 'Dits char', type: 'text' },
-    { key: 'ignorechars', label: 'Ignore chars (regex character class)', type: 'text' },
-  ].forEach(spec => basic.appendChild(M.buildFieldRow(spec, ct, renderJsonPreview)));
+  basic.appendChild(M.buildFieldRow(M.CIPHERTEXT_ID_FIELD, ct, refreshTabs));
+  M.CIPHER_SETTING_FIELDS.forEach(spec => basic.appendChild(M.buildFieldRow(spec, ct, renderJsonPreview)));
 
   const isStub = ct.is_stub === true;
 
   if (!isStub) {
-    const partsModeCheckbox = M.el('input', { type: 'checkbox' });
+    const partsModeCheckbox = M.el('input', { type: 'checkbox', title: MULTIPLE_PARTS_HINT });
     partsModeCheckbox.checked = !!ct.parts;
     partsModeCheckbox.addEventListener('change', () => {
       ct.parts = partsModeCheckbox.checked ? [M.blankPart('a'), M.blankPart('b')] : null;
@@ -433,12 +423,12 @@ function renderCiphertextPanel() {
       renderJsonPreview();
     });
     basic.appendChild(M.el('div', { className: 'field-row' }, [
-      M.el('label', {}, 'Multiple parts'), partsModeCheckbox,
+      M.el('label', { title: MULTIPLE_PARTS_HINT }, 'Multiple parts'), partsModeCheckbox,
     ]));
   }
 
   if (!ct.parts) {
-    const stubCheckbox = M.el('input', { type: 'checkbox' });
+    const stubCheckbox = M.el('input', { type: 'checkbox', title: STUB_HINT });
     stubCheckbox.checked = isStub;
     stubCheckbox.addEventListener('change', () => {
       if (stubCheckbox.checked) {
@@ -455,18 +445,17 @@ function renderCiphertextPanel() {
       renderJsonPreview();
     });
     basic.appendChild(M.el('div', { className: 'field-row' }, [
-      M.el('label', {}, 'Stub (catalogued, no ciphertext)'), stubCheckbox,
+      M.el('label', { title: STUB_HINT }, 'Stub (catalogued, no ciphertext)'), stubCheckbox,
     ]));
   }
 
   if (!ct.parts && !isStub) {
-    const rawRow = M.el('div', { className: 'field-row' }, [M.el('label', {}, 'Ciphertext')]);
-    const rawTextarea = M.el('textarea', { id: 'raw', rows: 6, onInput: e => { ct.raw = e.target.value; renderJsonPreview(); } });
+    const rawRow = M.el('div', { className: 'field-row' }, [M.el('label', { title: M.RAW_HINT }, 'Ciphertext')]);
+    const rawTextarea = M.el('textarea', { id: 'raw', rows: 6, title: M.RAW_HINT, onInput: e => { ct.raw = e.target.value; renderJsonPreview(); } });
     rawTextarea.value = ct.raw;
     rawRow.appendChild(rawTextarea);
     basic.appendChild(rawRow);
-    basic.appendChild(M.buildFieldRow({ key: 'remove_from_start', label: 'Remove from start', type: 'number' }, ct, renderJsonPreview));
-    basic.appendChild(M.buildFieldRow({ key: 'remove_from_end', label: 'Remove from end', type: 'number' }, ct, renderJsonPreview));
+    M.TRIM_FIELDS.forEach(spec => basic.appendChild(M.buildFieldRow(spec, ct, renderJsonPreview)));
   }
   panel.appendChild(section('Basic', basic));
   panel.appendChild(renderArchivalSection(ct));
