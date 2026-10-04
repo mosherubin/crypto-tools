@@ -1116,11 +1116,13 @@ raw text rather than silently lost.</td>
 <td>string</td>
 <td>Trailing service text, <strong>verbatim</strong> — acknowledgements,
 routing, relay annotations appended after the message body
-(e.g. <code>"ACKPLS ISR\nRECD ISR2 HE 1633 TU"</code>). Distinct from
-<code>anomaly_notes</code> (which records something <em>wrong</em> with
-the transcription) and from a <code>service_records</code> entry (which
-is a separate, standalone plaintext message in its own right, not an
-annotation trailing this one).</td>
+(e.g. <code>"ACKPLS ISR\nRECD ISR2 HE 1633 TU"</code>). A correction the
+sender transmitted (e.g. <code>CORRN PLS INSERT AFTER KXX…</code>) is
+service text and belongs here, verbatim. Distinct from
+<code>anomaly_notes</code> (corrections you make to your own reading, or
+marked on the document) and from a <code>service_records</code> entry
+(which is a separate, standalone plaintext message in its own right, not
+an annotation trailing this one).</td>
 </tr>
 <tr>
 <td><code>channel</code></td>
@@ -1186,7 +1188,9 @@ built on an unreliable transcription is worse than no statistic.</td>
 <td><code>anomaly_notes</code></td>
 <td>string</td>
 <td>Anything anomalous, verbatim — overstrikes, struck-through groups,
-garbles, corrections, marginalia. (Distinct from the existing,
+garbles, corrections marked on the document, marginalia. A correction
+the <em>sender transmitted</em> belongs in
+<code>service_line_raw</code>, not here. (Distinct from the existing,
 list-shaped <code>notes</code> field.)</td>
 </tr>
 </tbody>

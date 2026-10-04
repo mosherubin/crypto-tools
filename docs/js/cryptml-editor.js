@@ -990,7 +990,7 @@ const CryptMLEditor = (() => {
   // ciphertext show identical wording, and so a test can insist every field has a hint.
   const DOCUMENT_TITLE_FIELD = { key: 'title', label: 'Title', hint: 'A name for this document or collection.', type: 'text' };
 
-  const CIPHERTEXT_ID_FIELD = { key: 'id', label: 'ID', hint: 'Unique name for this ciphertext within the file, e.g. A42/53. Free text; shown on its tab and used by references from other records.', type: 'text' };
+  const CIPHERTEXT_ID_FIELD = { key: 'id', label: 'ID', hint: 'Unique name for this ciphertext, e.g. A42/53. Must be unique across all the records in this file (ciphertexts, service records and plaintext records together). Free text; shown on its tab and used by references from other records.', type: 'text' };
 
   const PART_ID_FIELD = { key: 'part_id', label: 'Part ID', hint: 'Label for this part, e.g. a or b. Must be unique within this ciphertext.', type: 'text' };
 
@@ -1092,12 +1092,12 @@ const CryptMLEditor = (() => {
       { key: 'gr_stated', label: 'Groups stated', hint: 'Group count as written in the indicator itself. Leave blank if the indicator carries none -- that absence is meaningful.', type: 'number', min: 0, optional: true },
       { key: 'pages', label: 'Transmission pages', hint: 'Number of transmission pages the message occupied.', type: 'number', min: 0, optional: true },
       { key: 'preamble_raw', label: 'Preamble (verbatim)', hint: 'The whole header line(s) exactly as transcribed, e.g. ISR6 NEWYORK JAN 27 / CDE PALOFFICE GENEVA. The Origin fields hold your parsed reading of it.', type: 'textarea', rows: 3, monospace: true, optional: true },
-      { key: 'service_line_raw', label: 'Service line (verbatim)', hint: 'Trailing service text exactly as transcribed, e.g. ACKPLS ISR / RECD ISR2 HE 1633 TU. Corrections to the transcription go in Anomaly notes instead.', type: 'textarea', rows: 3, monospace: true, optional: true },
+      { key: 'service_line_raw', label: 'Service line (verbatim)', hint: 'Trailing service text exactly as transcribed, e.g. ACKPLS ISR / RECD ISR2 HE 1633 TU. A correction the sender transmitted (e.g. CORRN PLS INSERT AFTER ...) is service text and belongs here, verbatim. Corrections you make to your own reading go in Anomaly notes instead.', type: 'textarea', rows: 3, monospace: true, optional: true },
     ] },
     { title: 'Quality and state', fields: [
       { key: 'transcription_state', label: 'Transcription state', hint: 'How much of the message is transcribed: none, head_tail (start and end only) or full.', type: 'select', options: [...TRANSCRIPTION_STATE_VALUES], optional: true },
       { key: 'legibility', label: 'Legibility', hint: 'How readable the source is: clean, partial or poor.', type: 'select', options: [...LEGIBILITY_VALUES], optional: true },
-      { key: 'anomaly_notes', label: 'Anomaly notes', hint: 'Anything odd about the source, exactly as seen: overstrikes, struck-through groups, garbles, corrections, marginalia.', type: 'textarea', rows: 3, optional: true },
+      { key: 'anomaly_notes', label: 'Anomaly notes', hint: 'Anything odd about the source, exactly as seen: overstrikes, struck-through groups, garbles, corrections marked on the document, marginalia. A correction the sender transmitted belongs in Service line instead.', type: 'textarea', rows: 3, optional: true },
     ] },
     { title: 'Group structure', fields: [
       { key: 'unit_type', label: 'Unit type (inherits)', hint: 'What the groups are: codebook, cipher or unknown. ' + INHERIT_HINT, type: 'select', options: [...UNIT_TYPE_VALUES], optional: true },
@@ -1117,7 +1117,7 @@ const CryptMLEditor = (() => {
   const ARCHIVAL_FORM_KEYS = ARCHIVAL_FORM_GROUPS.flatMap(g => g.fields.map(f => f.key));
 
   const SERVICE_RECORD_FORM_FIELDS = [
-    { key: 'id', label: 'ID', hint: 'Unique name for this record within the file.', type: 'text' },
+    { key: 'id', label: 'ID', hint: 'Unique across all the records in this file: ciphertexts, service records and plaintext records together.', type: 'text' },
     { key: 'source_id', label: 'Source', hint: 'Which document-level Source this comes from (a source that has an ID).', type: 'text', optional: true },
     { key: 'archive_page', label: 'Archive page(s)', hint: ARCHIVE_PAGE_HINT, type: 'text' },
     { key: 'service_type', label: 'Service type', hint: 'Kind of service traffic: repeat_request, receipt, plain_message, chatter or other.', type: 'select', options: [...SERVICE_TYPE_VALUES] },
@@ -1128,7 +1128,7 @@ const CryptMLEditor = (() => {
   ];
 
   const PLAINTEXT_RECORD_FORM_FIELDS = [
-    { key: 'id', label: 'ID', hint: 'Unique name for this record within the file.', type: 'text' },
+    { key: 'id', label: 'ID', hint: 'Unique across all the records in this file: ciphertexts, service records and plaintext records together.', type: 'text' },
     { key: 'source_id', label: 'Source', hint: 'Which document-level Source this comes from (a source that has an ID).', type: 'text', optional: true },
     { key: 'archive_page', label: 'Archive page(s)', hint: ARCHIVE_PAGE_HINT, type: 'text' },
     { key: 'message_ref', label: 'Message ref', hint: 'The message this plaintext corresponds to: an id in this file, or "<cryptml_uuid> :: <id>".', type: 'text' },
