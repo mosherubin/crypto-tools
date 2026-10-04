@@ -156,7 +156,7 @@ const CryptMLEditor = (() => {
   // 'channel' cascades the same way 'unit_type' does (see the "common" object in parseDocument)
   // and so is deliberately excluded here, same as 'unit_type'/'codebook_id'/'unit_length'.
   const ARCHIVAL_PASSTHROUGH_FIELDS = [
-    'is_stub', 'isa_file', 'isa_page', 'image_ref', 'indicator_raw', 'serial', 'gr_stated',
+    'is_stub', 'source_id', 'archive_page', 'indicator_raw', 'serial', 'gr_stated',
     'pages', 'transcription_state', 'legibility', 'resend_of', 'related', 'anomaly_notes',
     'preamble_raw', 'service_line_raw',
     'unit_type_asserted', 'extensions',
@@ -379,7 +379,7 @@ const CryptMLEditor = (() => {
     'remove_from_start', 'remove_from_end', 'origin', 'sources', 'references', 'notes', 'chatter',
     'solution', 'hints',
     // Archival message metadata (CryptML 1.2) -- see "Archival message metadata" in the spec.
-    'is_stub', 'isa_file', 'isa_page', 'image_ref', 'indicator_raw', 'channel', 'serial', 'gr_stated',
+    'is_stub', 'source_id', 'archive_page', 'indicator_raw', 'channel', 'serial', 'gr_stated',
     'pages', 'transcription_state', 'legibility', 'resend_of', 'related', 'anomaly_notes',
     'preamble_raw', 'service_line_raw',
     'unit_type', 'unit_type_asserted', 'codebook_id', 'unit_length', 'extensions',
@@ -387,7 +387,7 @@ const CryptMLEditor = (() => {
   const PART_FIELDS = new Set(['part_id', 'raw', 'remove_from_start', 'remove_from_end', 'origin', 'solution', 'hints']);
   const PART_ONLY_WHEN_SPLIT = ['remove_from_start', 'remove_from_end', 'origin', 'solution', 'hints'];
   const ORIGIN_FIELD_SET = new Set(['date', 'time', 'originator', 'addressee', 'method', 'location', 'remarks']);
-  const SOURCE_FIELD_SET = new Set(['type', 'title', 'author', 'publisher', 'date', 'page', 'url', 'note']);
+  const SOURCE_FIELD_SET = new Set(['id', 'type', 'title', 'identifier', 'author', 'publisher', 'date', 'page', 'url', 'note']);
   const SOURCE_TYPES = new Set(['book', 'web', 'letter', 'periodical', 'person', 'competition', 'other']);
   const SOLUTION_FIELD_SET = new Set(['plaintext', 'plaintext_charset', 'key', 'solvers']);
   const SOLVER_FIELD_SET = new Set(['solved_by', 'solved_date', 'method', 'notes']);
@@ -403,11 +403,11 @@ const CryptMLEditor = (() => {
   const LEGIBILITY_VALUES = new Set(['clean', 'partial', 'poor']);
   const SERVICE_TYPE_VALUES = new Set(['repeat_request', 'receipt', 'plain_message', 'chatter', 'other']);
   const SERVICE_RECORD_FIELDS = new Set([
-    'id', 'isa_file', 'isa_page', 'origin', 'service_type', 'refers_channel', 'refers_serial',
+    'id', 'source_id', 'archive_page', 'origin', 'service_type', 'refers_channel', 'refers_serial',
     'text_verbatim', 'extensions',
   ]);
   const PLAINTEXT_RECORD_FIELDS = new Set([
-    'id', 'isa_file', 'isa_page', 'origin', 'message_ref', 'plaintext_verbatim', 'extensions',
+    'id', 'source_id', 'archive_page', 'origin', 'message_ref', 'plaintext_verbatim', 'extensions',
   ]);
   // Indicator shorthand, e.g. "A42/53" -> channel "A", serial 42, gr_stated 53; "NP33" -> channel
   // "NP", serial 33, no gr_stated. Best-effort only -- indicator_raw is free text by design, so a
@@ -475,13 +475,44 @@ const CryptMLEditor = (() => {
     (hints || []).forEach((h, i) => checkFields(h, HINT_FIELD_SET, `${where}[${i}]`, errors));
   }
 
-  function checkSourceList(sources, where, errors) {
+  // allowId: only document-level sources may carry an `id` -- a ciphertext's own source could
+  // never be referenced by anything, so an id there is a mistake, not a feature.
+  function checkSourceList(sources, where, errors, { allowId = false } = {}) {
     (sources || []).forEach((s, i) => {
       checkFields(s, SOURCE_FIELD_SET, `${where}[${i}]`, errors);
       if (isPlainObject(s) && 'type' in s && !SOURCE_TYPES.has(s.type)) {
         errors.push(`${where}[${i}].type = ${JSON.stringify(s.type)} not in [${[...SOURCE_TYPES].join(', ')}]`);
       }
+      if (isPlainObject(s) && 'id' in s) {
+        if (!allowId) {
+          errors.push(`${where}[${i}]: 'id' is only meaningful on document-level sources -- nothing can reference a ciphertext's own source`);
+        } else if (typeof s.id !== 'string' || !s.id) {
+          errors.push(`${where}[${i}].id must be a non-empty string, got ${JSON.stringify(s.id)}`);
+        }
+      }
     });
+  }
+
+  function collectSourceIds(sources, where, errors) {
+    const ids = new Set();
+    (sources || []).forEach((s, i) => {
+      if (!isPlainObject(s) || typeof s.id !== 'string' || !s.id) return;
+      if (ids.has(s.id)) errors.push(`${where}[${i}]: duplicate source id '${s.id}'`);
+      else ids.add(s.id);
+    });
+    return ids;
+  }
+
+  function checkSourceIdField(value, where, errors, sourceIds, required) {
+    if (value === undefined) {
+      if (required) errors.push(`${where}: missing required 'source_id'`);
+      return;
+    }
+    if (typeof value !== 'string' || !value) {
+      errors.push(`${where}.source_id must be a non-empty string, got ${JSON.stringify(value)}`);
+    } else if (!sourceIds.has(value)) {
+      errors.push(`${where}.source_id ${JSON.stringify(value)} does not match the id of any document-level source`);
+    }
   }
 
   function checkNoteList(notes, where, errors) {
@@ -567,7 +598,7 @@ const CryptMLEditor = (() => {
   // archival fields on ciphertexts[] (which must stay optional, since that array also holds every
   // ordinary non-archival entry), everything in these two arrays only ever means one thing, so
   // their own declared-required fields are enforced directly.
-  function checkServiceRecords(records, where, errors, idsSeen, pendingReferences) {
+  function checkServiceRecords(records, where, errors, idsSeen, pendingReferences, sourceIds) {
     if (records === undefined) return;
     if (!Array.isArray(records)) { errors.push(`${where}: expected an array, got ${typeof records}`); return; }
     records.forEach((rec, idx) => {
@@ -583,8 +614,8 @@ const CryptMLEditor = (() => {
         idsSeen.add(rec.id);
       }
 
-      if (typeof rec.isa_file !== 'string' || !rec.isa_file) errors.push(`${recWhere}: missing required 'isa_file'`);
-      if (typeof rec.isa_page !== 'string' || !rec.isa_page) errors.push(`${recWhere}: missing required 'isa_page'`);
+      checkSourceIdField(rec.source_id, recWhere, errors, sourceIds, true);
+      if (typeof rec.archive_page !== 'string' || !rec.archive_page) errors.push(`${recWhere}: missing required 'archive_page'`);
       // 'addressee' is deliberately not required here: a margin annotation or file note
       // captured as a service record may have no addressee at all, and forcing one would
       // just invite a fabricated value.
@@ -612,7 +643,7 @@ const CryptMLEditor = (() => {
     });
   }
 
-  function checkPlaintextRecords(records, where, errors, idsSeen, pendingReferences) {
+  function checkPlaintextRecords(records, where, errors, idsSeen, pendingReferences, sourceIds) {
     if (records === undefined) return;
     if (!Array.isArray(records)) { errors.push(`${where}: expected an array, got ${typeof records}`); return; }
     records.forEach((rec, idx) => {
@@ -628,8 +659,8 @@ const CryptMLEditor = (() => {
         idsSeen.add(rec.id);
       }
 
-      if (typeof rec.isa_file !== 'string' || !rec.isa_file) errors.push(`${recWhere}: missing required 'isa_file'`);
-      if (typeof rec.isa_page !== 'string' || !rec.isa_page) errors.push(`${recWhere}: missing required 'isa_page'`);
+      checkSourceIdField(rec.source_id, recWhere, errors, sourceIds, true);
+      if (typeof rec.archive_page !== 'string' || !rec.archive_page) errors.push(`${recWhere}: missing required 'archive_page'`);
       checkOrigin(rec.origin, `${recWhere}.origin`, errors);
 
       if (typeof rec.plaintext_verbatim !== 'string' || !rec.plaintext_verbatim) {
@@ -675,7 +706,8 @@ const CryptMLEditor = (() => {
       errors.push(`defaults.unit_length must be a positive integer, got ${JSON.stringify(defaults.unit_length)}`);
     }
 
-    checkSourceList(data.sources, 'document.sources', errors);
+    checkSourceList(data.sources, 'document.sources', errors, { allowId: true });
+    const sourceIds = collectSourceIds(data.sources, 'document.sources', errors);
     checkNoteList(data.notes, 'document.notes', errors);
     checkChatterList(data.chatter, 'document.chatter', errors);
 
@@ -740,6 +772,7 @@ const CryptMLEditor = (() => {
       if ('extensions' in ct && !isPlainObject(ct.extensions)) {
         errors.push(`${where}.extensions must be an object, got ${typeof ct.extensions}`);
       }
+      checkSourceIdField(ct.source_id, where, errors, sourceIds, false);
 
       // indicator_raw is free text by design; only cross-check channel/serial/gr_stated against
       // it when it actually fits the common "<channel><serial>[/<gr_stated>]" shape -- a channel
@@ -869,8 +902,8 @@ const CryptMLEditor = (() => {
       checkChatterList(ct.chatter, `${where}.chatter`, errors);
     });
 
-    checkServiceRecords(data.service_records, 'document.service_records', errors, idsSeen, pendingReferences);
-    checkPlaintextRecords(data.plaintext_records, 'document.plaintext_records', errors, idsSeen, pendingReferences);
+    checkServiceRecords(data.service_records, 'document.service_records', errors, idsSeen, pendingReferences, sourceIds);
+    checkPlaintextRecords(data.plaintext_records, 'document.plaintext_records', errors, idsSeen, pendingReferences, sourceIds);
 
     // resend_of/related/message_ref resolve only within this same document -- a cross-document
     // reference (a different cryptml_uuid) can't be checked without the rest of the corpus, so
@@ -894,6 +927,18 @@ const CryptMLEditor = (() => {
     if (!isPlainObject(data) || !Array.isArray(data.ciphertexts)) return warnings;
     const defaultsRaw = isPlainObject(data.defaults) ? data.defaults : {};
     const defaults = { ...DEFAULT_SETTINGS, ...defaultsRaw };
+    const hasIdentifiedSources = Array.isArray(data.sources)
+      && data.sources.some(src => isPlainObject(src) && typeof src.id === 'string' && src.id);
+
+    // A service record should be filed under the channel it names; a cable naming several
+    // channels (or none) legitimately has to go somewhere, so this is only a warning.
+    if (defaults.channel !== undefined && Array.isArray(data.service_records)) {
+      data.service_records.forEach((rec, idx) => {
+        if (isPlainObject(rec) && typeof rec.refers_channel === 'string' && rec.refers_channel !== defaults.channel) {
+          warnings.push(`document.service_records[${idx}] (id=${'id' in rec ? rec.id : '?'}): refers to channel ${JSON.stringify(rec.refers_channel)} but this file's channel is ${JSON.stringify(defaults.channel)} -- filed under a different channel than the one it names`);
+        }
+      });
+    }
 
     data.ciphertexts.forEach((ct, idx) => {
       if (!isPlainObject(ct)) return;
@@ -901,6 +946,10 @@ const CryptMLEditor = (() => {
 
       if (ct.legibility === 'poor' && ct.transcription_state === 'full') {
         warnings.push(`${where}: legibility is 'poor' but transcription_state is 'full' -- a statistic built on this transcription may be unreliable`);
+      }
+
+      if (hasIdentifiedSources && ct.source_id === undefined) {
+        warnings.push(`${where}: no source_id, although this document defines identified sources -- was it filed under its source?`);
       }
 
       if (ct.is_stub === true || typeof ct.raw !== 'string') return; // nothing to count groups on
@@ -940,12 +989,19 @@ const CryptMLEditor = (() => {
   const SOURCE_FIELDS = [
     { key: 'type', label: 'Type', type: 'select', options: ['book', 'web', 'letter', 'periodical', 'person', 'competition', 'other'] },
     { key: 'title', label: 'Title', type: 'text' },
+    { key: 'identifier', label: 'Identifier', hint: 'Shelfmark, accession number, ISBN, DOI, physical ID -- whatever identifies the item in its own collection.', type: 'text' },
     { key: 'author', label: 'Author', type: 'text' },
     { key: 'publisher', label: 'Publisher', type: 'text' },
     { key: 'date', label: 'Date', type: 'text' },
     { key: 'page', label: 'Page', type: 'text' },
     { key: 'url', label: 'URL', type: 'text' },
     { key: 'note', label: 'Note', type: 'text' },
+  ];
+
+  // Only document-level sources can carry an id (so a ciphertext can name one via source_id).
+  const DOCUMENT_SOURCE_FIELDS = [
+    { key: 'id', label: 'ID', hint: 'Optional. A source with an ID applies only to ciphertexts that name it in their Source field; a source without one applies to every ciphertext.', type: 'text' },
+    ...SOURCE_FIELDS,
   ];
 
   const HINT_FIELDS = [
@@ -996,10 +1052,9 @@ const CryptMLEditor = (() => {
   ];
 
   const ARCHIVAL_FORM_GROUPS = [
-    { title: 'Provenance', fields: [
-      { key: 'isa_file', label: 'Archive file', type: 'text', optional: true },
-      { key: 'isa_page', label: 'Archive page(s)', type: 'text', optional: true },
-      { key: 'image_ref', label: 'Image / scan file', type: 'text', optional: true },
+    { title: 'Source and page', fields: [
+      { key: 'source_id', label: 'Source', hint: 'Which document-level Source this comes from (a source that has an ID).', type: 'text', optional: true },
+      { key: 'archive_page', label: 'Archive page(s)', hint: 'Page or range within that source, e.g. 107-112.', type: 'text', optional: true },
     ] },
     { title: 'Indicator and preamble (verbatim)', fields: [
       { key: 'indicator_raw', label: 'Indicator (verbatim)', type: 'text', monospace: true, optional: true },
@@ -1034,8 +1089,8 @@ const CryptMLEditor = (() => {
 
   const SERVICE_RECORD_FORM_FIELDS = [
     { key: 'id', label: 'ID', type: 'text' },
-    { key: 'isa_file', label: 'Archive file', type: 'text' },
-    { key: 'isa_page', label: 'Archive page(s)', type: 'text' },
+    { key: 'source_id', label: 'Source', hint: 'Which document-level Source this comes from (a source that has an ID).', type: 'text', optional: true },
+    { key: 'archive_page', label: 'Archive page(s)', type: 'text' },
     { key: 'service_type', label: 'Service type', type: 'select', options: [...SERVICE_TYPE_VALUES] },
     { key: 'refers_channel', label: 'Refers to channel', type: 'text', optional: true },
     { key: 'refers_serial', label: 'Refers to serial', type: 'number', min: 0, optional: true },
@@ -1045,19 +1100,35 @@ const CryptMLEditor = (() => {
 
   const PLAINTEXT_RECORD_FORM_FIELDS = [
     { key: 'id', label: 'ID', type: 'text' },
-    { key: 'isa_file', label: 'Archive file', type: 'text' },
-    { key: 'isa_page', label: 'Archive page(s)', type: 'text' },
+    { key: 'source_id', label: 'Source', hint: 'Which document-level Source this comes from (a source that has an ID).', type: 'text', optional: true },
+    { key: 'archive_page', label: 'Archive page(s)', type: 'text' },
     { key: 'message_ref', label: 'Message ref', hint: 'The message this plaintext corresponds to: an id in this file, or "<cryptml_uuid> :: <id>".', type: 'text' },
     { key: 'plaintext_verbatim', label: 'Plaintext (verbatim)', type: 'textarea', rows: 4, monospace: true },
     { key: 'extensions', label: 'Extensions (JSON)', hint: 'Free-form JSON object, never validated. Nothing may depend on what is in it.', type: 'json', optional: true },
   ];
 
+  // Turns the plain-text `source_id` spec into a dropdown of the document's identified sources.
+  // The option list is a function, re-read whenever the dropdown gets focus, so a source added
+  // or renamed since the form was drawn still shows up.
+  function withSourceChoices(specs, getDoc) {
+    const identified = () => (getDoc().sources || []).filter(src => src && src.id);
+    return specs.map(spec => spec.key !== 'source_id' ? spec : {
+      ...spec,
+      type: 'select',
+      options: () => identified().map(src => src.id),
+      optionLabel: id => {
+        const src = identified().find(x => x.id === id);
+        return src && src.title ? `${id} -- ${src.title}` : id;
+      },
+    });
+  }
+
   function blankServiceRecord() {
-    return { id: '', isa_file: '', isa_page: '', origin: blankOrigin(), service_type: 'other', text_verbatim: '' };
+    return { id: '', archive_page: '', origin: blankOrigin(), service_type: 'other', text_verbatim: '' };
   }
 
   function blankPlaintextRecord() {
-    return { id: '', isa_file: '', isa_page: '', origin: blankOrigin(), message_ref: '', plaintext_verbatim: '' };
+    return { id: '', archive_page: '', origin: blankOrigin(), message_ref: '', plaintext_verbatim: '' };
   }
 
   const SOLUTION_FIELDS = [
@@ -1106,9 +1177,20 @@ const CryptMLEditor = (() => {
       input = el('textarea', { rows: spec.rows || 2, onInput: e => setOrClear(e.target.value === '', e.target.value) });
       input.value = value ?? '';
     } else if (spec.type === 'select') {
-      const options = spec.optional ? ['', ...spec.options] : spec.options;
-      input = el('select', { onChange: e => setOrClear(e.target.value === '', e.target.value) },
-        options.map(opt => el('option', { value: opt, selected: opt === (value ?? '') ? 'selected' : undefined }, opt === '' ? '(not set)' : opt)));
+      const optionLabel = opt => opt === '' ? '(not set)' : (spec.optionLabel ? spec.optionLabel(opt) : opt);
+      input = el('select', { onChange: e => setOrClear(e.target.value === '', e.target.value) });
+      const fillOptions = () => {
+        const current = obj[spec.key];
+        const base = typeof spec.options === 'function' ? spec.options() : spec.options;
+        const options = [...(spec.optional ? [''] : []), ...base];
+        // a stored value that is no longer a valid choice stays visible rather than silently vanishing
+        if (current !== undefined && current !== '' && !options.includes(current)) options.push(current);
+        input.innerHTML = '';
+        options.forEach(opt => input.appendChild(
+          el('option', { value: opt, selected: opt === (current ?? '') ? 'selected' : undefined }, optionLabel(opt))));
+      };
+      fillOptions();
+      if (typeof spec.options === 'function') input.addEventListener('focus', fillOptions);
     } else if (spec.type === 'checkbox') {
       input = el('input', { type: 'checkbox', onChange: e => setOrClear(!e.target.checked, e.target.checked) });
       input.checked = !!value;
@@ -1208,11 +1290,11 @@ const CryptMLEditor = (() => {
     validateWarnings,
     isValidUuid,
     parseReference,
-    SOURCE_FIELDS, HINT_FIELDS, REFERENCE_FIELDS, NOTE_FIELDS, CHATTER_FIELDS,
+    SOURCE_FIELDS, DOCUMENT_SOURCE_FIELDS, HINT_FIELDS, REFERENCE_FIELDS, NOTE_FIELDS, CHATTER_FIELDS,
     ORIGIN_FIELDS, SOLUTION_FIELDS, SOLVER_FIELDS,
     DEFAULTS_ARCHIVAL_FIELDS, ARCHIVAL_FORM_GROUPS, ARCHIVAL_FORM_KEYS,
     SERVICE_RECORD_FORM_FIELDS, PLAINTEXT_RECORD_FORM_FIELDS,
-    el, buildFieldRow, renderObjectSection, renderRepeatable,
+    el, buildFieldRow, renderObjectSection, renderRepeatable, withSourceChoices,
     blankOrigin, blankSolution, blankSolver, blankPart, blankServiceRecord, blankPlaintextRecord,
     serializeSolution,
   };

@@ -28,8 +28,9 @@ Version described here: **1.2**.
 `plaintext_records` pair of document-level arrays for traffic with no ciphertext of its own, an `is_stub`
 ciphertext flag licensing a message record with neither `raw` nor `parts`, a cascading `unit_type`/
 `codebook_id`/`unit_length` classification for group-structure validation, `origin.addressee`, a reserved
-free-form `extensions` object, and a set of optional archival provenance/indicator/quality fields. A
-separate, non-blocking `validateWarnings()` channel is introduced alongside the existing pass/fail
+free-form `extensions` object, optional `id` and `identifier` on a source with a `source_id` field that lets
+a ciphertext or record name exactly one of them, and a set of optional archival provenance/indicator/quality
+fields. A separate, non-blocking `validateWarnings()` channel is introduced alongside the existing pass/fail
 `validate()`. All of this is purely additive and optional: files written under 1.0 or 1.1 remain valid
 as-is, with no need to edit or re-version them. **1.1** added `origin.time` (see [origin](#origin))
 alongside the existing `origin.date`. **1.0** was the initial release.
@@ -133,7 +134,7 @@ type is a validation error if it appears on the other.
 | `codebook_id` | no, cascades | Free-string identifier of the codebook in use. Required whenever the effective `unit_type` is `"codebook"`. |
 | `unit_length` | no, cascades | Positive integer group/code-word width, used by the group-structure check. |
 | `channel` | no, cascades | Parsed channel prefix, e.g. `"A"`, `"NP"` — cascades because a survey typically holds one file per channel. Cross-checked against `indicator_raw` — see [Archival message metadata](#archival-message-metadata). |
-| `isa_file`, `isa_page`, `image_ref`, `indicator_raw`, `serial`, `gr_stated`, `pages`, `transcription_state`, `legibility`, `resend_of`, `related`, `anomaly_notes`, `preamble_raw`, `service_line_raw` | no | Archival provenance/indicator/quality/cross-reference fields — see [Archival message metadata](#archival-message-metadata). |
+| `source_id`, `archive_page`, `indicator_raw`, `serial`, `gr_stated`, `pages`, `transcription_state`, `legibility`, `resend_of`, `related`, `anomaly_notes`, `preamble_raw`, `service_line_raw` | no | Archival provenance/indicator/quality/cross-reference fields — see [Archival message metadata](#archival-message-metadata). `source_id` names one document-level [source](#source-item-of-a-sources-list) that has an `id`. |
 | `extensions` | no | Reserved free-form object, entirely unvalidated — see [Archival message metadata](#archival-message-metadata). |
 
 `id` default rule: if `ciphertexts` has exactly one entry, `id` may be
@@ -205,11 +206,16 @@ Exactly two cascade behaviors, both document → ciphertext, one level:
    own `indicator_raw`, not just a locally-set one.
 2. **List merge** (`sources`, `references`, `notes`, `chatter`). A
    ciphertext's effective list is `document.<field> + ciphertext.<field>`,
-   document's entries first, then the ciphertext's own.
+   document's entries first, then the ciphertext's own. **One exception:**
+   a document-level source that has an `id` is *not* merged into every
+   ciphertext. It applies only to a ciphertext (or record) whose `source_id`
+   names it. A ciphertext's effective sources are therefore, in this order,
+   the document sources *without* an `id`, then the one source named by its
+   `source_id` (if any), then its own `sources`.
 
 Everything else — `id`, `raw`, `parts`, `is_stub`, `remove_from_start`,
 `remove_from_end`, `origin`, `solution`, `hints`, `unit_type_asserted`,
-`isa_file`, `isa_page`, `image_ref`, `indicator_raw`, `serial`,
+`source_id`, `archive_page`, `indicator_raw`, `serial`,
 `gr_stated`, `pages`, `transcription_state`, `legibility`, `resend_of`,
 `related`, `anomaly_notes`, `preamble_raw`, `service_line_raw`, `extensions`
 — is ciphertext-only and
@@ -407,6 +413,31 @@ routinely refers to a message that was never catalogued, and a downstream
 extractor can report that as a "missing serial" statistic rather than a
 CryptML validation error.
 
+### Recording where a ciphertext came from
+
+Three things look alike but answer different questions:
+
+| Where | Question it answers |
+|---|---|
+| A document-level **source** (with an `id`) | Which published or archived item is this from? One entry per item — for example one per archive file — carrying its title, URL and `identifier`. |
+| `source_id` and `archive_page` on the ciphertext | Which of those sources, and where in it? The per-message pointer. |
+| **`origin`** | How did the message itself come to exist: when it was sent, by whom, to whom, and how this copy was made. |
+
+Working rule: record each archive file once as a source with an `id`; give
+every message a `source_id` and an `archive_page`; leave `origin.location`
+blank for archival material (it suits puzzles, such as a magazine issue). A
+document-level source *without* an `id` still applies to every ciphertext,
+so it is the place for a citation that covers the whole file.
+
+**Service records live in the channel file they name.** A service record is
+filed under the channel in `refers_channel`, in that file's own
+`service_records` array. There is no separate service file: a file with no
+ciphertexts is not valid. A cable naming several channels, or none, goes in
+whichever file the cataloguer chooses, and a tool that wants all service
+traffic together reads the `service_records` of every channel file and keys
+each record by file and `id`. `validateWarnings()` flags a service record
+whose `refers_channel` differs from the file's `channel`.
+
 ### Provenance, indicator, and quality fields
 
 All optional, all on the ciphertext node, never required by CryptML's
@@ -416,9 +447,8 @@ shared with the entire rest of the (non-archival) corpus.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `isa_file` | string | Archive file reference. |
-| `isa_page` | string | Page or range, e.g. `"107-112"`. |
-| `image_ref` | string | Scan filename, so the source image can be re-found. |
+| `source_id` | string | The `id` of the one document-level [source](#source-item-of-a-sources-list) this message comes from, e.g. `"ISA-107"`. Must match a source in this document. Exactly one: a rare second copy goes in a note. |
+| `archive_page` | string | Page or range within that source, e.g. `"107-112"`. |
 | `indicator_raw` | string | The indicator **verbatim, unnormalised**, e.g. `"A42/53"`, `"NA9"`. Recorded as written — if a channel turns out to use its indicator differently than currently assumed, only the raw form reveals that. |
 | `preamble_raw` | string | The whole header line(s), **verbatim**, exactly as transcribed — e.g. `"ISR6 NEWYORK JAN 27\nCDE PALOFFICE GENEVA"`. `origin.originator`/`origin.addressee`/`origin.date`/`origin.time` are the analyst's *parsed-out* reading of this same line; `preamble_raw` is what's actually on the page, so a parsing mistake or an unusual indicator convention stays recoverable from the raw text rather than silently lost. |
 | `service_line_raw` | string | Trailing service text, **verbatim** — acknowledgements, routing, relay annotations appended after the message body (e.g. `"ACKPLS ISR\nRECD ISR2 HE 1633 TU"`). Distinct from `anomaly_notes` (which records something *wrong* with the transcription) and from a `service_records` entry (which is a separate, standalone plaintext message in its own right, not an annotation trailing this one). |
@@ -463,7 +493,8 @@ shared with the rest of the corpus.
 | Field | Required | Type | Meaning |
 |---|---|---|---|
 | `id` | **yes** | string | Stable key, referenceable from `related`/`resend_of`. Unique across `ciphertexts`, `service_records`, and `plaintext_records` together. |
-| `isa_file`, `isa_page` | **yes** | string | As on a ciphertext. |
+| `source_id` | **yes** | string | As on a ciphertext: must match the `id` of a document-level source. |
+| `archive_page` | **yes** | string | As on a ciphertext. |
 | `origin` | **yes** | object | Same shape as ciphertext [`origin`](#origin). `date` and `originator` are required within it for a service record specifically; `addressee` is not — a margin annotation or file note captured this way may have none, and forcing one would just invite a fabricated value. |
 | `service_type` | **yes** | `"repeat_request"` \| `"receipt"` \| `"plain_message"` \| `"chatter"` \| `"other"` | |
 | `refers_channel` | no | string | Channel named in the text, if any. Descriptive only — see [Cross-references](#cross-references). |
@@ -478,7 +509,8 @@ Lives in the document-level `plaintext_records` array.
 | Field | Required | Type | Meaning |
 |---|---|---|---|
 | `id` | **yes** | string | Stable key. Unique across `ciphertexts`, `service_records`, and `plaintext_records` together. |
-| `isa_file`, `isa_page` | **yes** | string | As on a ciphertext. |
+| `source_id` | **yes** | string | As on a ciphertext: must match the `id` of a document-level source. |
+| `archive_page` | **yes** | string | As on a ciphertext. |
 | `origin` | no | object | Same shape as ciphertext [`origin`](#origin), no required sub-fields. |
 | `message_ref` | **yes** | [reference](#cross-references) | The message this plaintext corresponds to. Must resolve. |
 | `plaintext_verbatim` | **yes** | string | The recovered plaintext, exactly as recovered. |
@@ -491,7 +523,9 @@ findings that never affect pass/fail — deliberately kept apart so every
 existing caller of `validate()` (Editor, Validator, List, Search,
 `generate-manifest.js`, the pre-commit hook, the GitHub Action, the Python
 `load()`) keeps its existing all-or-nothing contract unchanged. It currently
-reports three things, each described where it's introduced above: a
+reports five things, each described where it's introduced above: a ciphertext
+with no `source_id` although the document defines identified sources, a
+service record whose `refers_channel` differs from the file's `channel`, a
 `gr_stated` mismatch against the counted group total (only on a `"full"`
 transcription — see above), `legibility: "poor"` combined with
 `transcription_state: "full"`, and a short final group on a
@@ -554,6 +588,11 @@ as a finding worth seeing, not a problem worth suppressing.
   [Cross-references](#cross-references). A service record's
   `refers_channel`/`refers_serial` are the one exception: descriptive only,
   never required to resolve.
+- **Source ids are unique, and `source_id` must resolve.** A `source_id` on a
+  ciphertext, service record or plaintext record must be a non-empty string
+  matching the `id` of a document-level source (service and plaintext records
+  require one). An `id` on a ciphertext's own source is an error. See
+  [Recording where a ciphertext came from](#recording-where-a-ciphertext-came-from).
 - **`extensions`, wherever legal, must be an object** — its contents are
   otherwise entirely unvalidated. See [`extensions`](#extensions).
 - **`source.type`** must be one of the enumerated values (see below) — not
@@ -607,8 +646,10 @@ and it cascades (see [Cascade rules](#cascade-rules)).
 
 | Field | Type | Meaning |
 |---|---|---|
+| `id` | string | Optional, and only legal on a *document-level* source (an `id` on a ciphertext's own source is an error — nothing could reference it). Unique among the document's sources. A source with an `id` applies only to ciphertexts and records that name it in `source_id`; a source without one applies to every ciphertext, as always. |
 | `type` | one of `book`, `web`, `letter`, `periodical`, `person`, `competition`, `other` | |
 | `title` | string | Title of the book/page/periodical/etc. |
+| `identifier` | string | Whatever identifies the item within its own collection: a shelfmark, accession number, physical ID, ISBN, DOI or call number. |
 | `author` | string | Author of the publication — not who composed the cryptogram itself; see `origin.originator` for that. |
 | `publisher` | string | Publisher, if applicable. |
 | `date` | string | Publication or acquisition date of this citation — not when the ciphertext itself was created. |
@@ -815,12 +856,17 @@ channel's traffic, rather than repeated on every message.
     "unit_length": 5,
     "channel": "A"
   },
+  "sources": [
+    { "id": "ISA-123", "type": "web", "title": "RCA, Outgoing, January 1949", "identifier": "FILE-79/13",
+      "url": "https://example.org/archive/123" },
+    { "id": "ISA-200", "type": "web", "title": "RCA, Incoming, February 1949", "identifier": "FILE-79/14" }
+  ],
   "ciphertexts": [
     {
       "id": "A42/53",
       "is_stub": true,
-      "isa_file": "ISA/123",
-      "isa_page": "45-46",
+      "source_id": "ISA-123",
+      "archive_page": "45-46",
       "indicator_raw": "A42/53",
       "serial": 42,
       "gr_stated": 53,
@@ -830,8 +876,8 @@ channel's traffic, rather than repeated on every message.
     },
     {
       "id": "A55",
-      "isa_file": "ISA/123",
-      "isa_page": "47",
+      "source_id": "ISA-123",
+      "archive_page": "47",
       "indicator_raw": "A55",
       "serial": 55,
       "transcription_state": "full",
@@ -848,8 +894,8 @@ channel's traffic, rather than repeated on every message.
   "service_records": [
     {
       "id": "SVC-1949-02-03-a",
-      "isa_file": "ISA/123",
-      "isa_page": "48",
+      "source_id": "ISA-123",
+      "archive_page": "48",
       "origin": { "date": "1949-02-03", "originator": "ISR6 NEWYORK", "addressee": "CDE EYTAN" },
       "service_type": "repeat_request",
       "refers_channel": "A",
@@ -860,8 +906,8 @@ channel's traffic, rather than repeated on every message.
   "plaintext_records": [
     {
       "id": "PT-A42-53",
-      "isa_file": "ISA/200",
-      "isa_page": "12",
+      "source_id": "ISA-200",
+      "archive_page": "12",
       "message_ref": "A42/53",
       "plaintext_verbatim": "Meeting confirmed for Tuesday at the usual place."
     }
@@ -884,7 +930,10 @@ reading of that same `preamble_raw` line, kept alongside it rather than
 replacing it. The service record refers to `A54`, a serial that was never
 catalogued in this file — that's fine, since `refers_channel`/`refers_serial`
 never need to resolve. The plaintext record resolves `message_ref` against
-`A42/53` in the same document.
+`A42/53` in the same document. Each message and record names its source with
+`source_id` and gives its page in `archive_page`; the two sources carry the
+file's title, URL and `identifier` once. The service record cites channel `A`
+and sits in this channel-`A` file, so it raises no filing warning.
 
 ## Invalid examples
 
@@ -908,6 +957,10 @@ never need to resolve. The plaintext record resolves `message_ref` against
 // ERROR: "charset" has no enclosing brackets. On disk it must be "[1-3]",
 // not "1-3" -- the editor may let you type it bare, but never saves it that way.
 { "id": "1", "raw": "213132", "charset": "1-3" }
+```
+```json
+// ERROR: source_id names no source in this document's sources list.
+{ "sources": [ { "id": "ISA-123", "type": "web" } ], "ciphertexts": [ { "id": "A1", "raw": "...", "source_id": "ISA-999" } ] }
 ```
 ```json
 // ERROR: is_stub: true requires neither "raw" nor "parts" -- a stub must have neither.

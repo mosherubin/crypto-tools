@@ -261,20 +261,20 @@ function renderDocumentSection() {
     ...M.DEFAULTS_ARCHIVAL_FIELDS,
   ], renderJsonPreview);
 
-  M.renderRepeatable(document.getElementById('document-service-records'), doc.service_records, M.SERVICE_RECORD_FORM_FIELDS, {
+  M.renderRepeatable(document.getElementById('document-service-records'), doc.service_records, M.withSourceChoices(M.SERVICE_RECORD_FORM_FIELDS, () => doc), {
     itemLabel: 'service record',
     blank: M.blankServiceRecord,
     nested: [{ key: 'origin', label: 'Origin (date and originator required)', fields: M.ORIGIN_FIELDS }],
     onChange: renderJsonPreview,
   });
-  M.renderRepeatable(document.getElementById('document-plaintext-records'), doc.plaintext_records, M.PLAINTEXT_RECORD_FORM_FIELDS, {
+  M.renderRepeatable(document.getElementById('document-plaintext-records'), doc.plaintext_records, M.withSourceChoices(M.PLAINTEXT_RECORD_FORM_FIELDS, () => doc), {
     itemLabel: 'plaintext record',
     blank: M.blankPlaintextRecord,
     nested: [{ key: 'origin', label: 'Origin (optional)', fields: M.ORIGIN_FIELDS }],
     onChange: renderJsonPreview,
   });
 
-  M.renderRepeatable(document.getElementById('document-sources'), doc.sources, M.SOURCE_FIELDS, {
+  M.renderRepeatable(document.getElementById('document-sources'), doc.sources, M.DOCUMENT_SOURCE_FIELDS, {
     itemLabel: 'source',
     blank: () => ({ type: 'book', title: '', author: '', publisher: '', date: '', page: '', url: '', note: '' }),
     onChange: renderJsonPreview,
@@ -396,7 +396,7 @@ function renderArchivalSection(ct) {
   const body = M.el('div', {});
   M.ARCHIVAL_FORM_GROUPS.forEach(group => {
     body.appendChild(M.el('h4', { className: 'archival-group' }, group.title));
-    group.fields.forEach(spec => body.appendChild(M.buildFieldRow(spec, ct, renderJsonPreview)));
+    M.withSourceChoices(group.fields, () => doc).forEach(spec => body.appendChild(M.buildFieldRow(spec, ct, renderJsonPreview)));
   });
   const hasArchival = ct.is_stub === true || M.ARCHIVAL_FORM_KEYS.some(key => ct[key] !== undefined);
   const attrs = { className: 'subsection' };

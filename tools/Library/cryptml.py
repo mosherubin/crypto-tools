@@ -39,7 +39,7 @@ CIPHERTEXT_FIELDS = {
     "remove_from_start", "remove_from_end", "origin", "sources", "references", "notes", "chatter",
     "solution", "hints",
     # Archival message metadata (CryptML 1.2) -- see "Archival message metadata" in the spec.
-    "is_stub", "isa_file", "isa_page", "image_ref", "indicator_raw", "channel", "serial", "gr_stated",
+    "is_stub", "source_id", "archive_page", "indicator_raw", "channel", "serial", "gr_stated",
     "pages", "transcription_state", "legibility", "resend_of", "related", "anomaly_notes",
     "preamble_raw", "service_line_raw",
     "unit_type", "unit_type_asserted", "codebook_id", "unit_length", "extensions",
@@ -48,7 +48,7 @@ PART_FIELDS = {"part_id", "raw", "remove_from_start", "remove_from_end", "origin
 # Ciphertext-level fields that move onto each part instead, once "parts" is used
 PART_ONLY_WHEN_SPLIT = {"remove_from_start", "remove_from_end", "origin", "solution", "hints"}
 ORIGIN_FIELDS = {"date", "time", "originator", "addressee", "method", "location", "remarks"}
-SOURCE_FIELDS = {"type", "title", "author", "publisher", "date", "page", "url", "note"}
+SOURCE_FIELDS = {"id", "type", "title", "identifier", "author", "publisher", "date", "page", "url", "note"}
 SOURCE_TYPES = {"book", "web", "letter", "periodical", "person", "competition", "other"}
 SOLUTION_FIELDS = {"plaintext", "plaintext_charset", "key", "solvers"}
 SOLVER_FIELDS = {"solved_by", "solved_date", "method", "notes"}
@@ -62,10 +62,10 @@ TRANSCRIPTION_STATE_VALUES = {"none", "head_tail", "full"}
 LEGIBILITY_VALUES = {"clean", "partial", "poor"}
 SERVICE_TYPE_VALUES = {"repeat_request", "receipt", "plain_message", "chatter", "other"}
 SERVICE_RECORD_FIELDS = {
-    "id", "isa_file", "isa_page", "origin", "service_type", "refers_channel", "refers_serial",
+    "id", "source_id", "archive_page", "origin", "service_type", "refers_channel", "refers_serial",
     "text_verbatim", "extensions",
 }
-PLAINTEXT_RECORD_FIELDS = {"id", "isa_file", "isa_page", "origin", "message_ref", "plaintext_verbatim", "extensions"}
+PLAINTEXT_RECORD_FIELDS = {"id", "source_id", "archive_page", "origin", "message_ref", "plaintext_verbatim", "extensions"}
 INDICATOR_RE = re.compile(r'^([A-Za-z]+)(\d+)(?:/(\d+))?$')
 
 GAP_MARKER = "[...]"
@@ -103,9 +103,8 @@ class CiphertextEntry:
     chatter: list = field(default_factory=list)
     # Archival message metadata (CryptML 1.2)
     is_stub: bool = False
-    isa_file: str | None = None
-    isa_page: str | None = None
-    image_ref: str | None = None
+    source_id: str | None = None
+    archive_page: str | None = None
     indicator_raw: str | None = None
     channel: str | None = None
     serial: int | None = None
@@ -128,8 +127,8 @@ class CiphertextEntry:
 @dataclass
 class ServiceRecord:
     id: str
-    isa_file: str = ""
-    isa_page: str = ""
+    source_id: str = ""
+    archive_page: str = ""
     origin: dict = field(default_factory=dict)
     service_type: str = ""
     refers_channel: str | None = None
@@ -141,8 +140,8 @@ class ServiceRecord:
 @dataclass
 class PlaintextRecord:
     id: str
-    isa_file: str = ""
-    isa_page: str = ""
+    source_id: str = ""
+    archive_page: str = ""
     origin: dict = field(default_factory=dict)
     message_ref: str = ""
     plaintext_verbatim: str = ""
@@ -307,11 +306,43 @@ def _check_hints(hints, where: str, errors: list) -> None:
         _check_fields(h, HINT_FIELDS, f"{where}[{i}]", errors)
 
 
-def _check_source_list(sources, where: str, errors: list) -> None:
+def _check_source_list(sources, where: str, errors: list, allow_id: bool = False) -> None:
+    # allow_id: only document-level sources may carry an `id` -- a ciphertext's own source
+    # could never be referenced by anything, so an id there is a mistake, not a feature.
     for i, s in enumerate(sources):
         _check_fields(s, SOURCE_FIELDS, f"{where}[{i}]", errors)
         if isinstance(s, dict) and 'type' in s and s['type'] not in SOURCE_TYPES:
             errors.append(f"{where}[{i}].type = {s['type']!r} not in {sorted(SOURCE_TYPES)}")
+        if isinstance(s, dict) and 'id' in s:
+            if not allow_id:
+                errors.append(f"{where}[{i}]: 'id' is only meaningful on document-level sources -- "
+                              f"nothing can reference a ciphertext's own source")
+            elif not isinstance(s['id'], str) or not s['id']:
+                errors.append(f"{where}[{i}].id must be a non-empty string, got {s['id']!r}")
+
+
+def _collect_source_ids(sources, where: str, errors: list) -> set:
+    ids = set()
+    for i, s in enumerate(sources):
+        if not isinstance(s, dict) or not isinstance(s.get('id'), str) or not s['id']:
+            continue
+        if s['id'] in ids:
+            errors.append(f"{where}[{i}]: duplicate source id '{s['id']}'")
+        else:
+            ids.add(s['id'])
+    return ids
+
+
+def _check_source_id_field(rec: dict, where: str, errors: list, source_ids: set, required: bool) -> None:
+    if 'source_id' not in rec:
+        if required:
+            errors.append(f"{where}: missing required 'source_id'")
+        return
+    value = rec['source_id']
+    if not isinstance(value, str) or not value:
+        errors.append(f"{where}.source_id must be a non-empty string, got {value!r}")
+    elif value not in source_ids:
+        errors.append(f"{where}.source_id {value!r} does not match the id of any document-level source")
 
 
 def _check_note_list(notes, where: str, errors: list) -> None:
@@ -337,7 +368,8 @@ def _check_raw_chars(raw: str, charset_re, ignore_re, ditschar: str, where: str,
         errors.append(f"{where}: characters not matched by charset/ditschar/ignorechars: {bad_chars!r}")
 
 
-def _check_service_records(records, where: str, errors: list, ids_seen: set, pending_references: list) -> None:
+def _check_service_records(records, where: str, errors: list, ids_seen: set, pending_references: list,
+                           source_ids: set) -> None:
     if records is None:
         return
     if not isinstance(records, list):
@@ -357,7 +389,8 @@ def _check_service_records(records, where: str, errors: list, ids_seen: set, pen
                 errors.append(f"{rwhere}: duplicate id '{rid}'")
             ids_seen.add(rid)
 
-        for key in ('isa_file', 'isa_page', 'service_type', 'text_verbatim'):
+        _check_source_id_field(rec, rwhere, errors, source_ids, required=True)
+        for key in ('archive_page', 'service_type', 'text_verbatim'):
             if not rec.get(key):
                 errors.append(f"{rwhere}.{key}: required")
         if 'service_type' in rec and rec['service_type'] not in SERVICE_TYPE_VALUES:
@@ -379,7 +412,8 @@ def _check_service_records(records, where: str, errors: list, ids_seen: set, pen
         # (service traffic routinely references messages that were never catalogued).
 
 
-def _check_plaintext_records(records, where: str, errors: list, ids_seen: set, pending_references: list) -> None:
+def _check_plaintext_records(records, where: str, errors: list, ids_seen: set, pending_references: list,
+                             source_ids: set) -> None:
     if records is None:
         return
     if not isinstance(records, list):
@@ -399,7 +433,8 @@ def _check_plaintext_records(records, where: str, errors: list, ids_seen: set, p
                 errors.append(f"{rwhere}: duplicate id '{rid}'")
             ids_seen.add(rid)
 
-        for key in ('isa_file', 'isa_page', 'plaintext_verbatim'):
+        _check_source_id_field(rec, rwhere, errors, source_ids, required=True)
+        for key in ('archive_page', 'plaintext_verbatim'):
             if not rec.get(key):
                 errors.append(f"{rwhere}.{key}: required")
 
@@ -445,7 +480,8 @@ def validate(data: dict) -> list:
     if defaults.get('unit_length') is not None and not _is_positive_int(defaults['unit_length']):
         errors.append(f"defaults.unit_length must be a positive integer, got {defaults['unit_length']!r}")
 
-    _check_source_list(data.get('sources', []), "document.sources", errors)
+    _check_source_list(data.get('sources', []), "document.sources", errors, allow_id=True)
+    source_ids = _collect_source_ids(data.get('sources', []), "document.sources", errors)
     _check_note_list(data.get('notes', []), "document.notes", errors)
     _check_chatter_list(data.get('chatter', []), "document.chatter", errors)
 
@@ -501,6 +537,7 @@ def validate(data: dict) -> list:
         extensions = ct.get('extensions')
         if extensions is not None and not isinstance(extensions, dict):
             errors.append(f"{where}.extensions must be an object, got {type(extensions).__name__}")
+        _check_source_id_field(ct, where, errors, source_ids, required=False)
 
         indicator_raw = ct.get('indicator_raw')
         if isinstance(indicator_raw, str):
@@ -615,8 +652,10 @@ def validate(data: dict) -> list:
         _check_note_list(ct.get('notes', []), f"{where}.notes", errors)
         _check_chatter_list(ct.get('chatter', []), f"{where}.chatter", errors)
 
-    _check_service_records(data.get('service_records'), 'document.service_records', errors, ids_seen, pending_references)
-    _check_plaintext_records(data.get('plaintext_records'), 'document.plaintext_records', errors, ids_seen, pending_references)
+    _check_service_records(data.get('service_records'), 'document.service_records', errors, ids_seen,
+                           pending_references, source_ids)
+    _check_plaintext_records(data.get('plaintext_records'), 'document.plaintext_records', errors, ids_seen,
+                             pending_references, source_ids)
 
     for pref in pending_references:
         parsed = pref['parsed']
@@ -638,6 +677,20 @@ def validate_warnings(data: dict) -> list:
 
     defaults_raw = data.get('defaults', {})
     defaults = {**DEFAULT_SETTINGS, **(defaults_raw if isinstance(defaults_raw, dict) else {})}
+    sources = data.get('sources')
+    has_identified_sources = isinstance(sources, list) and any(
+        isinstance(src, dict) and isinstance(src.get('id'), str) and src['id'] for src in sources)
+
+    # A service record should be filed under the channel it names; a cable naming several
+    # channels (or none) legitimately has to go somewhere, so this is only a warning.
+    service_records = data.get('service_records')
+    if defaults.get('channel') is not None and isinstance(service_records, list):
+        for idx, rec in enumerate(service_records):
+            if isinstance(rec, dict) and isinstance(rec.get('refers_channel'), str) \
+                    and rec['refers_channel'] != defaults['channel']:
+                warnings.append(f"document.service_records[{idx}] (id={rec.get('id', '?')}): refers to channel "
+                                f"{rec['refers_channel']!r} but this file's channel is {defaults['channel']!r} -- "
+                                f"filed under a different channel than the one it names")
 
     for idx, ct in enumerate(data['ciphertexts']):
         if not isinstance(ct, dict):
@@ -647,6 +700,10 @@ def validate_warnings(data: dict) -> list:
         if ct.get('legibility') == 'poor' and ct.get('transcription_state') == 'full':
             warnings.append(f"{where}: legibility is 'poor' but transcription_state is 'full' -- "
                             f"a statistic built on this transcription may be unreliable")
+
+        if has_identified_sources and 'source_id' not in ct:
+            warnings.append(f"{where}: no source_id, although this document defines identified sources -- "
+                            f"was it filed under its source?")
 
         if ct.get('is_stub') is True or not isinstance(ct.get('raw'), str):
             continue
@@ -731,9 +788,8 @@ def _load_ciphertext(ct: dict, defaults: dict, sole_ciphertext: bool) -> Ciphert
         notes=ct.get('notes', []),
         chatter=ct.get('chatter', []),
         is_stub=ct.get('is_stub', False),
-        isa_file=ct.get('isa_file'),
-        isa_page=ct.get('isa_page'),
-        image_ref=ct.get('image_ref'),
+        source_id=ct.get('source_id'),
+        archive_page=ct.get('archive_page'),
         indicator_raw=ct.get('indicator_raw'),
         serial=ct.get('serial'),
         gr_stated=ct.get('gr_stated'),
@@ -772,8 +828,8 @@ def _load_ciphertext(ct: dict, defaults: dict, sole_ciphertext: bool) -> Ciphert
 def _load_service_record(rec: dict) -> ServiceRecord:
     return ServiceRecord(
         id=rec['id'],
-        isa_file=rec.get('isa_file', ''),
-        isa_page=rec.get('isa_page', ''),
+        source_id=rec.get('source_id', ''),
+        archive_page=rec.get('archive_page', ''),
         origin=rec.get('origin', {}),
         service_type=rec.get('service_type', ''),
         refers_channel=rec.get('refers_channel'),
@@ -786,8 +842,8 @@ def _load_service_record(rec: dict) -> ServiceRecord:
 def _load_plaintext_record(rec: dict) -> PlaintextRecord:
     return PlaintextRecord(
         id=rec['id'],
-        isa_file=rec.get('isa_file', ''),
-        isa_page=rec.get('isa_page', ''),
+        source_id=rec.get('source_id', ''),
+        archive_page=rec.get('archive_page', ''),
         origin=rec.get('origin', {}),
         message_ref=rec.get('message_ref', ''),
         plaintext_verbatim=rec.get('plaintext_verbatim', ''),
@@ -874,7 +930,7 @@ def _serialize_part(part: Part, defaults: dict) -> dict:
 # 'channel' cascades the same way 'unit_type' does (see _INHERITED_FIELDS) and so is
 # deliberately excluded here, same as 'unit_type'/'codebook_id'/'unit_length'.
 _ARCHIVAL_FIELDS = (
-    'is_stub', 'isa_file', 'isa_page', 'image_ref', 'indicator_raw', 'serial', 'gr_stated',
+    'is_stub', 'source_id', 'archive_page', 'indicator_raw', 'serial', 'gr_stated',
     'pages', 'transcription_state', 'legibility', 'resend_of', 'related', 'anomaly_notes',
     'preamble_raw', 'service_line_raw',
     'unit_type_asserted', 'extensions',
@@ -936,7 +992,7 @@ def _serialize_ciphertext(ct: CiphertextEntry, defaults: dict) -> dict:
 
 
 def _serialize_service_record(rec: ServiceRecord) -> dict:
-    out = {'id': rec.id, 'isa_file': rec.isa_file, 'isa_page': rec.isa_page}
+    out = {'id': rec.id, 'source_id': rec.source_id, 'archive_page': rec.archive_page}
     origin = _strip_empty(rec.origin) if rec.origin else {}
     if origin:
         out['origin'] = origin
@@ -952,7 +1008,7 @@ def _serialize_service_record(rec: ServiceRecord) -> dict:
 
 
 def _serialize_plaintext_record(rec: PlaintextRecord) -> dict:
-    out = {'id': rec.id, 'isa_file': rec.isa_file, 'isa_page': rec.isa_page}
+    out = {'id': rec.id, 'source_id': rec.source_id, 'archive_page': rec.archive_page}
     origin = _strip_empty(rec.origin) if rec.origin else {}
     if origin:
         out['origin'] = origin
