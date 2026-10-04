@@ -283,11 +283,15 @@ optional archival provenance/indicator/quality fields. A separate,
 non-blocking <code>validateWarnings()</code> channel is introduced
 alongside the existing pass/fail <code>validate()</code>. All of this is
 purely additive and optional: files written under 1.0 or 1.1 remain
-valid as-is, with no need to edit or re-version them.
-<strong>1.1</strong> added <code>origin.time</code> (see <a
-href="#origin">origin</a>) alongside the existing
-<code>origin.date</code>. <strong>1.0</strong> was the initial
-release.</p>
+valid as-is, with no need to edit or re-version them. The archival field
+set was revised on 4 October 2026, before any data used it:
+<code>isa_file</code> and <code>image_ref</code> were removed,
+<code>isa_page</code> became <code>archive_page</code>, and
+<code>source_id</code> and source
+<code>id</code>/<code>identifier</code> were added. <strong>1.1</strong>
+added <code>origin.time</code> (see <a href="#origin">origin</a>)
+alongside the existing <code>origin.date</code>. <strong>1.0</strong>
+was the initial release.</p>
 <h2 id="design-principles">Design principles</h2>
 <ul>
 <li><strong>Defaults are robust.</strong> A file containing nothing but

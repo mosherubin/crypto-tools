@@ -32,7 +32,9 @@ free-form `extensions` object, optional `id` and `identifier` on a source with a
 a ciphertext or record name exactly one of them, and a set of optional archival provenance/indicator/quality
 fields. A separate, non-blocking `validateWarnings()` channel is introduced alongside the existing pass/fail
 `validate()`. All of this is purely additive and optional: files written under 1.0 or 1.1 remain valid
-as-is, with no need to edit or re-version them. **1.1** added `origin.time` (see [origin](#origin))
+as-is, with no need to edit or re-version them. The archival field set was revised on 4 October 2026,
+before any data used it: `isa_file` and `image_ref` were removed, `isa_page` became `archive_page`, and
+`source_id` and source `id`/`identifier` were added. **1.1** added `origin.time` (see [origin](#origin))
 alongside the existing `origin.date`. **1.0** was the initial release.
 
 ## Design principles
