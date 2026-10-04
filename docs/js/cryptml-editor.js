@@ -55,6 +55,11 @@ const CryptMLEditor = (() => {
       casesensitive: defaults.casesensitive,
       ditschar: defaults.ditschar,
       ignorechars: defaults.ignorechars,
+      // like parseDocument, a ciphertext shows the values it inherits, so a new one and a loaded one look alike
+      unit_type: defaults.unit_type,
+      codebook_id: defaults.codebook_id,
+      unit_length: defaults.unit_length,
+      channel: defaults.channel,
       remove_from_start: 0,
       remove_from_end: 0,
       origin: blankOrigin(),
