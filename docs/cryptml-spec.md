@@ -517,8 +517,8 @@ shared with the entire rest of the (non-archival) corpus.
 | `serial` | non-negative integer | Parsed running number. Cross-checked against `indicator_raw`. |
 | `gr_stated` | non-negative integer | Group count as given *in the indicator itself*, if any. Its absence is a significant fact about the channel, distinct from "not yet recorded" — don't default it to anything. On a `transcription_state: "full"` message, a mismatch against the counted group total is a [warning](#validatewarnings-non-blocking-findings), not an error: it may be a garble, a miscount, or evidence the indicator's second number isn't a group count at all. The check is skipped on `"none"`/`"head_tail"`, where the counted total is legitimately partial and would mismatch by design, not by error. |
 | `pages` | non-negative integer | Transmission page count. |
-| `transcription_state` | `"none"` \| `"head_tail"` \| `"full"` | How much of the message has actually been transcribed into `raw`. |
-| `legibility` | `"clean"` \| `"partial"` \| `"poor"` | Legibility of the source. `"poor"` combined with `transcription_state: "full"` is a [warning](#validatewarnings-non-blocking-findings) — a statistic built on an unreliable transcription is worse than no statistic. |
+| `transcription_state` | `"none"` \| `"head_tail"` \| `"full"` | How much of the message has actually been transcribed into `raw`. It is the only field that says whether a record is a stub or a full transcription, so an archival record without it is [warned](#validatewarnings-non-blocking-findings); so is `"full"` on a record with no text, and `"none"` on one with text. |
+| `legibility` | `"clean"` \| `"partial"` \| `"poor"` | Legibility of the source; an archival record without it is [warned](#validatewarnings-non-blocking-findings). `"poor"` combined with `transcription_state: "full"` is a [warning](#validatewarnings-non-blocking-findings) — a statistic built on an unreliable transcription is worse than no statistic. |
 | `resend_of` | [reference](#cross-references) | The message this one retransmits. |
 | `related` | array of [reference](#cross-references) | Other records bearing on this one. |
 | `anomaly_notes` | string | Anything anomalous, verbatim — overstrikes, struck-through groups, garbles, corrections marked on the document, marginalia. A correction the *sender transmitted* belongs in `service_line_raw`, not here. This is also where an amendment to `raw` is recorded: what the copy says, what was substituted, and on what evidence (see [What `raw` holds](#what-raw-holds)). (Distinct from the existing, list-shaped `notes` field.) |
@@ -584,14 +584,31 @@ findings that never affect pass/fail — deliberately kept apart so every
 existing caller of `validate()` (Editor, Validator, List, Search,
 `generate-manifest.js`, the pre-commit hook, the GitHub Action, the Python
 `load()`) keeps its existing all-or-nothing contract unchanged. It currently
-reports five things, each described where it's introduced above: a ciphertext
-with no `source_id` although the document defines identified sources, a
-service record whose `refers_channel` differs from the file's `channel`, a
-`gr_stated` mismatch against the counted group total (only on a `"full"`
-transcription — see above), `legibility: "poor"` combined with
-`transcription_state: "full"`, and a short final group on a
-`"cipher"`-classified message. A disagreement surfaced this way is treated
-as a finding worth seeing, not a problem worth suppressing.
+reports these, most described where they are introduced above:
+
+- a ciphertext with no `source_id`, although the document defines identified sources;
+- a service record whose `refers_channel` differs from the file's `channel`;
+- a `gr_stated` mismatch against the counted group total (only on a `"full"` transcription);
+- `legibility: "poor"` combined with `transcription_state: "full"`;
+- a short final group on a `"cipher"`-classified message;
+- an archival record with no `transcription_state`, and one with no `legibility`;
+- `transcription_state: "full"` on a record that has no ciphertext text, and `transcription_state: "none"` on a record that has some.
+
+An **archival record**, for the missing-field warnings, is a ciphertext that
+carries any archival field of its own (`is_stub`, `source_id`,
+`archive_page`, `indicator_raw`, `serial`, `gr_stated`, `pages`,
+`preamble_raw`, `service_line_raw`, `resend_of`, `related`, `anomaly_notes`,
+`unit_type_asserted`, `transcription_state` or `legibility`). An ordinary
+puzzle ciphertext carries none of them and is never warned. Both fields are
+only warnings, never errors, so existing files stay valid and a record may be
+incomplete while it is being entered. "Has ciphertext text" means `raw` (or
+any part's `raw`) is not empty once the gap marker, `ignorechars` and
+`remove_from_start`/`remove_from_end` are set aside. `"head_tail"` is never
+judged against the text. A stub that also carries `raw` or `parts` is already
+a `validate()` *error*, so it needs no separate warning.
+
+A disagreement surfaced this way is treated as a finding worth seeing, not a
+problem worth suppressing.
 
 ## Validation rules
 

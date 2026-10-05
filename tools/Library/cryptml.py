@@ -246,6 +246,31 @@ def _trim_boundary(raw: str, remove_from_start: int, remove_from_end: int, ignor
     return raw[start:end] if start <= end else None
 
 
+# A ciphertext is treated as an archival record, rather than an ordinary puzzle, once it carries
+# any of these of its own. Only archival records are warned about a missing transcription_state
+# or legibility -- warning every puzzle in the public corpus would drown the warnings that matter.
+_ARCHIVAL_RECORD_MARKERS = (
+    'is_stub', 'source_id', 'archive_page', 'indicator_raw', 'serial', 'gr_stated', 'pages',
+    'preamble_raw', 'service_line_raw', 'resend_of', 'related', 'anomaly_notes', 'unit_type_asserted',
+    'transcription_state', 'legibility',
+)
+
+
+def _has_transcribed_text(ct: dict, ignore_re) -> bool:
+    """True if the record carries any ciphertext text: raw, or any part's raw, once the gap
+    marker, ignorechars and remove_from_start/remove_from_end are set aside."""
+    texts = []
+    if isinstance(ct.get('raw'), str):
+        trimmed = _trim_boundary(ct['raw'], ct.get('remove_from_start', 0), ct.get('remove_from_end', 0), ignore_re)
+        texts.append(ct['raw'] if trimmed is None else trimmed)
+    elif isinstance(ct.get('parts'), list):
+        for part in ct['parts']:
+            if isinstance(part, dict) and isinstance(part.get('raw'), str):
+                trimmed = _trim_boundary(part['raw'], part.get('remove_from_start', 0), part.get('remove_from_end', 0), ignore_re)
+                texts.append(part['raw'] if trimmed is None else trimmed)
+    return any(_clean_length(text, ignore_re) > 0 for text in texts)
+
+
 def _is_single_bracketed_class(pattern: str) -> bool:
     if not (isinstance(pattern, str) and pattern.startswith('[') and pattern.endswith(']')):
         return False
@@ -667,10 +692,9 @@ def validate(data: dict) -> list:
 
 
 def validate_warnings(data: dict) -> list:
-    """Advisory findings that never affect validate()'s pass/fail contract: a
-    gr_stated mismatch, a poor-legibility-but-fully-transcribed message, or a
-    short final group on a cipher channel. See "Archival message metadata" in
-    the spec."""
+    """Advisory findings that never affect validate()'s pass/fail contract. See
+    "validateWarnings()" under "Archival message metadata" in the spec for the
+    full list."""
     warnings = []
     if not isinstance(data, dict) or not isinstance(data.get('ciphertexts'), list):
         return warnings
@@ -705,8 +729,12 @@ def validate_warnings(data: dict) -> list:
             warnings.append(f"{where}: no source_id, although this document defines identified sources -- "
                             f"was it filed under its source?")
 
-        if ct.get('is_stub') is True or not isinstance(ct.get('raw'), str):
-            continue
+        if any(key in ct for key in _ARCHIVAL_RECORD_MARKERS):
+            if 'transcription_state' not in ct:
+                warnings.append(f"{where}: no transcription_state -- it is the only field that says whether this "
+                                f"record is a stub or a full or partial transcription")
+            if 'legibility' not in ct:
+                warnings.append(f"{where}: no legibility -- it is the only record of how reliable the source copy is")
 
         ignorechars = ct.get('ignorechars', defaults['ignorechars'])
         casesensitive = ct.get('casesensitive', defaults['casesensitive'])
@@ -714,6 +742,17 @@ def validate_warnings(data: dict) -> list:
         try:
             ignore_re = re.compile(ignorechars, flags)
         except re.error:
+            ignore_re = None
+
+        if ignore_re is not None and ct.get('transcription_state') in ('full', 'none'):
+            has_text = _has_transcribed_text(ct, ignore_re)
+            if ct['transcription_state'] == 'full' and not has_text:
+                warnings.append(f"{where}: transcription_state is 'full' but the record has no ciphertext text")
+            if ct['transcription_state'] == 'none' and has_text:
+                warnings.append(f"{where}: transcription_state is 'none' but the record carries ciphertext text -- "
+                                f"is it a full or partial transcription?")
+
+        if ct.get('is_stub') is True or not isinstance(ct.get('raw'), str) or ignore_re is None:
             continue
 
         effective_unit_type = ct.get('unit_type_asserted', ct.get('unit_type', defaults.get('unit_type')))

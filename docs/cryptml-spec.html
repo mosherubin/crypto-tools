@@ -1257,13 +1257,19 @@ legitimately partial and would mismatch by design, not by error.</td>
 <td><code>"none"</code> | <code>"head_tail"</code> |
 <code>"full"</code></td>
 <td>How much of the message has actually been transcribed into
-<code>raw</code>.</td>
+<code>raw</code>. It is the only field that says whether a record is a
+stub or a full transcription, so an archival record without it is <a
+href="#validatewarnings-non-blocking-findings">warned</a>; so is
+<code>"full"</code> on a record with no text, and <code>"none"</code> on
+one with text.</td>
 </tr>
 <tr>
 <td><code>legibility</code></td>
 <td><code>"clean"</code> | <code>"partial"</code> |
 <code>"poor"</code></td>
-<td>Legibility of the source. <code>"poor"</code> combined with
+<td>Legibility of the source; an archival record without it is <a
+href="#validatewarnings-non-blocking-findings">warned</a>.
+<code>"poor"</code> combined with
 <code>transcription_state: "full"</code> is a <a
 href="#validatewarnings-non-blocking-findings">warning</a> — a statistic
 built on an unreliable transcription is worse than no statistic.</td>
@@ -1482,16 +1488,45 @@ kept apart so every existing caller of <code>validate()</code> (Editor,
 Validator, List, Search, <code>generate-manifest.js</code>, the
 pre-commit hook, the GitHub Action, the Python <code>load()</code>)
 keeps its existing all-or-nothing contract unchanged. It currently
-reports five things, each described where it’s introduced above: a
-ciphertext with no <code>source_id</code> although the document defines
-identified sources, a service record whose <code>refers_channel</code>
-differs from the file’s <code>channel</code>, a <code>gr_stated</code>
-mismatch against the counted group total (only on a <code>"full"</code>
-transcription — see above), <code>legibility: "poor"</code> combined
-with <code>transcription_state: "full"</code>, and a short final group
-on a <code>"cipher"</code>-classified message. A disagreement surfaced
-this way is treated as a finding worth seeing, not a problem worth
-suppressing.</p>
+reports these, most described where they are introduced above:</p>
+<ul>
+<li>a ciphertext with no <code>source_id</code>, although the document
+defines identified sources;</li>
+<li>a service record whose <code>refers_channel</code> differs from the
+file’s <code>channel</code>;</li>
+<li>a <code>gr_stated</code> mismatch against the counted group total
+(only on a <code>"full"</code> transcription);</li>
+<li><code>legibility: "poor"</code> combined with
+<code>transcription_state: "full"</code>;</li>
+<li>a short final group on a <code>"cipher"</code>-classified
+message;</li>
+<li>an archival record with no <code>transcription_state</code>, and one
+with no <code>legibility</code>;</li>
+<li><code>transcription_state: "full"</code> on a record that has no
+ciphertext text, and <code>transcription_state: "none"</code> on a
+record that has some.</li>
+</ul>
+<p>An <strong>archival record</strong>, for the missing-field warnings,
+is a ciphertext that carries any archival field of its own
+(<code>is_stub</code>, <code>source_id</code>,
+<code>archive_page</code>, <code>indicator_raw</code>,
+<code>serial</code>, <code>gr_stated</code>, <code>pages</code>,
+<code>preamble_raw</code>, <code>service_line_raw</code>,
+<code>resend_of</code>, <code>related</code>,
+<code>anomaly_notes</code>, <code>unit_type_asserted</code>,
+<code>transcription_state</code> or <code>legibility</code>). An
+ordinary puzzle ciphertext carries none of them and is never warned.
+Both fields are only warnings, never errors, so existing files stay
+valid and a record may be incomplete while it is being entered. “Has
+ciphertext text” means <code>raw</code> (or any part’s <code>raw</code>)
+is not empty once the gap marker, <code>ignorechars</code> and
+<code>remove_from_start</code>/<code>remove_from_end</code> are set
+aside. <code>"head_tail"</code> is never judged against the text. A stub
+that also carries <code>raw</code> or <code>parts</code> is already a
+<code>validate()</code> <em>error</em>, so it needs no separate
+warning.</p>
+<p>A disagreement surfaced this way is treated as a finding worth
+seeing, not a problem worth suppressing.</p>
 <h2 id="validation-rules">Validation rules</h2>
 <ul>
 <li><strong><code>[...]</code> inside <code>raw</code></strong> is the

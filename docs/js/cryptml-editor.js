@@ -586,6 +586,30 @@ const CryptMLEditor = (() => {
     return start <= end ? raw.slice(start, end) : null;
   }
 
+  // A ciphertext is treated as an archival record, rather than an ordinary puzzle, once it carries
+  // any of these of its own. Only archival records are warned about a missing transcription_state
+  // or legibility -- warning every puzzle in the public corpus would drown the warnings that matter.
+  const ARCHIVAL_RECORD_MARKERS = [
+    'is_stub', 'source_id', 'archive_page', 'indicator_raw', 'serial', 'gr_stated', 'pages',
+    'preamble_raw', 'service_line_raw', 'resend_of', 'related', 'anomaly_notes', 'unit_type_asserted',
+    'transcription_state', 'legibility',
+  ];
+
+  // True if the record carries any ciphertext text: raw, or any part's raw, once the gap marker,
+  // ignorechars and remove_from_start/remove_from_end are set aside.
+  function hasTranscribedText(ct, ignoreRe) {
+    const texts = [];
+    if (typeof ct.raw === 'string') {
+      texts.push(trimBoundary(ct.raw, ct.remove_from_start ?? 0, ct.remove_from_end ?? 0, ignoreRe) ?? ct.raw);
+    } else if (Array.isArray(ct.parts)) {
+      for (const part of ct.parts) {
+        if (!isPlainObject(part) || typeof part.raw !== 'string') continue;
+        texts.push(trimBoundary(part.raw, part.remove_from_start ?? 0, part.remove_from_end ?? 0, ignoreRe) ?? part.raw);
+      }
+    }
+    return texts.some(text => cleanLength(text, ignoreRe) > 0);
+  }
+
   function checkReferenceField(ref, where, errors) {
     if (typeof ref !== 'string' || !ref.trim()) {
       errors.push(`${where}: expected a non-empty reference string, got ${JSON.stringify(ref)}`);
@@ -957,12 +981,31 @@ const CryptMLEditor = (() => {
         warnings.push(`${where}: no source_id, although this document defines identified sources -- was it filed under its source?`);
       }
 
-      if (ct.is_stub === true || typeof ct.raw !== 'string') return; // nothing to count groups on
+      if (ARCHIVAL_RECORD_MARKERS.some(key => ct[key] !== undefined)) {
+        if (ct.transcription_state === undefined) {
+          warnings.push(`${where}: no transcription_state -- it is the only field that says whether this record is a stub or a full or partial transcription`);
+        }
+        if (ct.legibility === undefined) {
+          warnings.push(`${where}: no legibility -- it is the only record of how reliable the source copy is`);
+        }
+      }
 
-      const ignorechars = ct.ignorechars ?? defaults.ignorechars;
-      const casesensitive = ct.casesensitive ?? defaults.casesensitive;
-      let ignoreRe;
-      try { ignoreRe = fullMatchRegex(ignorechars, !casesensitive); } catch { return; }
+      let ignoreRe = null;
+      try {
+        ignoreRe = fullMatchRegex(ct.ignorechars ?? defaults.ignorechars, !(ct.casesensitive ?? defaults.casesensitive));
+      } catch { /* an invalid pattern is for validate() to report */ }
+
+      if (ignoreRe && (ct.transcription_state === 'full' || ct.transcription_state === 'none')) {
+        const hasText = hasTranscribedText(ct, ignoreRe);
+        if (ct.transcription_state === 'full' && !hasText) {
+          warnings.push(`${where}: transcription_state is 'full' but the record has no ciphertext text`);
+        }
+        if (ct.transcription_state === 'none' && hasText) {
+          warnings.push(`${where}: transcription_state is 'none' but the record carries ciphertext text -- is it a full or partial transcription?`);
+        }
+      }
+
+      if (ct.is_stub === true || typeof ct.raw !== 'string' || !ignoreRe) return; // nothing to count groups on
 
       const effectiveUnitType = ct.unit_type_asserted ?? ct.unit_type ?? defaults.unit_type;
       const effectiveUnitLength = ct.unit_length ?? defaults.unit_length;
@@ -1100,8 +1143,8 @@ const CryptMLEditor = (() => {
       { key: 'service_line_raw', label: 'Service line (verbatim)', hint: 'Trailing service text exactly as transcribed, e.g. ACKPLS ISR / RECD ISR2 HE 1633 TU. A correction the sender transmitted (e.g. CORRN PLS INSERT AFTER ...) is service text and belongs here, verbatim. Corrections you make to your own reading go in Anomaly notes instead.', type: 'textarea', rows: 3, monospace: true, optional: true },
     ] },
     { title: 'Quality and state', fields: [
-      { key: 'transcription_state', label: 'Transcription state', hint: 'How much of the message is transcribed: none, head_tail (start and end only) or full.', type: 'select', options: [...TRANSCRIPTION_STATE_VALUES], optional: true },
-      { key: 'legibility', label: 'Legibility', hint: 'How readable the source is: clean, partial or poor.', type: 'select', options: [...LEGIBILITY_VALUES], optional: true },
+      { key: 'transcription_state', label: 'Transcription state', hint: 'How much of the message is transcribed: none, head_tail (start and end only) or full. Warned if missing on an archival record, and if it contradicts the text (full with none, or none with text).', type: 'select', options: [...TRANSCRIPTION_STATE_VALUES], optional: true },
+      { key: 'legibility', label: 'Legibility', hint: 'How readable the source is: clean, partial or poor. Warned if missing on an archival record.', type: 'select', options: [...LEGIBILITY_VALUES], optional: true },
       { key: 'anomaly_notes', label: 'Anomaly notes', hint: 'Anything odd about the source, exactly as seen: overstrikes, struck-through groups, garbles, corrections marked on the document, marginalia. A correction the sender transmitted belongs in Service line instead. Also record here any amendment you made to the ciphertext: what the copy says, what you substituted, and on what evidence.', type: 'textarea', rows: 3, optional: true },
     ] },
     { title: 'Group structure', fields: [
