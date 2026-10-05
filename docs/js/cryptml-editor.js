@@ -595,6 +595,21 @@ const CryptMLEditor = (() => {
     'transcription_state', 'legibility',
   ];
 
+  // origin.date is free text, so only a plain four-digit year is judged. The window is wide on purpose:
+  // it catches a mistyped century (1049 for 1949), not a merely unexpected year.
+  const PLAUSIBLE_YEAR_MIN = 1400;
+  const PLAUSIBLE_YEAR_MAX = 2100;
+
+  function warnIfImplausibleYear(origin, where, warnings) {
+    if (!isPlainObject(origin) || typeof origin.date !== 'string') return;
+    const match = origin.date.match(/(?<!\d)(\d{4})(?!\d)/);
+    if (!match) return;
+    const year = Number(match[1]);
+    if (year < PLAUSIBLE_YEAR_MIN || year > PLAUSIBLE_YEAR_MAX) {
+      warnings.push(`${where}.origin.date ${JSON.stringify(origin.date)}: the year ${year} is outside ${PLAUSIBLE_YEAR_MIN}-${PLAUSIBLE_YEAR_MAX} -- a typo?`);
+    }
+  }
+
   // True if the record carries any ciphertext text: raw, or any part's raw, once the gap marker,
   // ignorechars and remove_from_start/remove_from_end are set aside.
   function hasTranscribedText(ct, ignoreRe) {
@@ -959,6 +974,14 @@ const CryptMLEditor = (() => {
     const hasIdentifiedSources = Array.isArray(data.sources)
       && data.sources.some(src => isPlainObject(src) && typeof src.id === 'string' && src.id);
 
+    // A document that defines an identified source, holds service or plaintext records, or declares a
+    // channel is a survey file, so every ciphertext in it is held to the archival expectations even if
+    // it carries no archival field of its own yet (the record typed from scratch is the one that needs the nudge).
+    const documentIsArchival = hasIdentifiedSources
+      || (Array.isArray(data.service_records) && data.service_records.length > 0)
+      || (Array.isArray(data.plaintext_records) && data.plaintext_records.length > 0)
+      || defaultsRaw.channel !== undefined;
+
     // A service record should be filed under the channel it names; a cable naming several
     // channels (or none) legitimately has to go somewhere, so this is only a warning.
     if (defaults.channel !== undefined && Array.isArray(data.service_records)) {
@@ -968,6 +991,13 @@ const CryptMLEditor = (() => {
         }
       });
     }
+
+    (Array.isArray(data.service_records) ? data.service_records : []).forEach((rec, idx) => {
+      if (isPlainObject(rec)) warnIfImplausibleYear(rec.origin, `document.service_records[${idx}] (id=${'id' in rec ? rec.id : '?'})`, warnings);
+    });
+    (Array.isArray(data.plaintext_records) ? data.plaintext_records : []).forEach((rec, idx) => {
+      if (isPlainObject(rec)) warnIfImplausibleYear(rec.origin, `document.plaintext_records[${idx}] (id=${'id' in rec ? rec.id : '?'})`, warnings);
+    });
 
     data.ciphertexts.forEach((ct, idx) => {
       if (!isPlainObject(ct)) return;
@@ -981,7 +1011,12 @@ const CryptMLEditor = (() => {
         warnings.push(`${where}: no source_id, although this document defines identified sources -- was it filed under its source?`);
       }
 
-      if (ARCHIVAL_RECORD_MARKERS.some(key => ct[key] !== undefined)) {
+      warnIfImplausibleYear(ct.origin, where, warnings);
+      if (Array.isArray(ct.parts)) {
+        ct.parts.forEach((part, partIdx) => { if (isPlainObject(part)) warnIfImplausibleYear(part.origin, `${where}.parts[${partIdx}]`, warnings); });
+      }
+
+      if (documentIsArchival || ARCHIVAL_RECORD_MARKERS.some(key => ct[key] !== undefined)) {
         if (ct.transcription_state === undefined) {
           warnings.push(`${where}: no transcription_state -- it is the only field that says whether this record is a stub or a full or partial transcription`);
         }
@@ -1102,7 +1137,7 @@ const CryptMLEditor = (() => {
   ];
 
   const ORIGIN_FIELDS = [
-    { key: 'date', label: 'Date', hint: 'When the message was created or sent, not when it was published. Free text, e.g. 1949-01-27.', type: 'text' },
+    { key: 'date', label: 'Date', hint: 'When the message was created or sent, not when it was published. Free text, e.g. 1949-01-27. A year outside 1400-2100 is warned about as a likely typo.', type: 'text' },
     { key: 'time', label: 'Time', hint: 'Time of day it was sent, e.g. 1300 or 14:32. Free text.', type: 'text' },
     { key: 'originator', label: 'Originator', hint: 'Who composed or sent it, as written, e.g. ISR1 NEWYORK. Not the author of a book it later appeared in.', type: 'text' },
     { key: 'addressee', label: 'Addressee', hint: 'Who it was sent to, as written, e.g. MEMISRAEL GENEVA.', type: 'text' },

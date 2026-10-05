@@ -592,20 +592,35 @@ reports these, most described where they are introduced above:
 - `legibility: "poor"` combined with `transcription_state: "full"`;
 - a short final group on a `"cipher"`-classified message;
 - an archival record with no `transcription_state`, and one with no `legibility`;
-- `transcription_state: "full"` on a record that has no ciphertext text, and `transcription_state: "none"` on a record that has some.
+- `transcription_state: "full"` on a record that has no ciphertext text, and `transcription_state: "none"` on a record that has some;
+- an `origin.date` whose year is outside 1400–2100 (on a ciphertext, a part, or a service or plaintext record).
 
-An **archival record**, for the missing-field warnings, is a ciphertext that
-carries any archival field of its own (`is_stub`, `source_id`,
+An **archival record**, for the missing-field warnings, is a ciphertext in an
+*archival document*, or one that carries any archival field of its own (`is_stub`, `source_id`,
 `archive_page`, `indicator_raw`, `serial`, `gr_stated`, `pages`,
 `preamble_raw`, `service_line_raw`, `resend_of`, `related`, `anomaly_notes`,
-`unit_type_asserted`, `transcription_state` or `legibility`). An ordinary
-puzzle ciphertext carries none of them and is never warned. Both fields are
+`unit_type_asserted`, `transcription_state` or `legibility`). A document is
+archival when it defines a source with an `id`, holds any service or
+plaintext record, or declares `defaults.channel`; then *every* ciphertext in
+it is held to the expectation, so a record typed from scratch with nothing
+but `id`, `raw` and `origin` is warned too. No declaration is needed: the file
+already says what it is. `unit_type`, `codebook_id` and `unit_length` do not
+make a document archival, since codebook puzzles use them as well. An
+ordinary puzzle in an ordinary document carries none of these and is never
+warned. Both fields are
 only warnings, never errors, so existing files stay valid and a record may be
 incomplete while it is being entered. "Has ciphertext text" means `raw` (or
 any part's `raw`) is not empty once the gap marker, `ignorechars` and
 `remove_from_start`/`remove_from_end` are set aside. `"head_tail"` is never
 judged against the text. A stub that also carries `raw` or `parts` is already
 a `validate()` *error*, so it needs no separate warning.
+
+The year check reads the first plain four-digit number in the free-text
+`origin.date`, so `"1049-03-21"` and `"21 March 1049"` are both caught and a
+date with no four-digit year is skipped. The window is wide on purpose: it
+catches a mistyped century (`1049` for `1949`), which is valid ISO 8601 and so
+passes every other check, not a year that is merely unexpected for the file.
+A date wrong inside the window, such as `1849` for `1949`, is not caught.
 
 A disagreement surfaced this way is treated as a finding worth seeing, not a
 problem worth suppressing.

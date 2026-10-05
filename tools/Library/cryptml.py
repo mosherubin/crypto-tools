@@ -256,6 +256,25 @@ _ARCHIVAL_RECORD_MARKERS = (
 )
 
 
+# origin.date is free text, so only a plain four-digit year is judged. The window is wide on purpose:
+# it catches a mistyped century (1049 for 1949), not a merely unexpected year.
+_PLAUSIBLE_YEAR_MIN = 1400
+_PLAUSIBLE_YEAR_MAX = 2100
+_YEAR_RE = re.compile(r'(?<!\d)(\d{4})(?!\d)')
+
+
+def _warn_if_implausible_year(origin, where: str, warnings: list) -> None:
+    if not isinstance(origin, dict) or not isinstance(origin.get('date'), str):
+        return
+    match = _YEAR_RE.search(origin['date'])
+    if match is None:
+        return
+    year = int(match.group(1))
+    if year < _PLAUSIBLE_YEAR_MIN or year > _PLAUSIBLE_YEAR_MAX:
+        warnings.append(f"{where}.origin.date {origin['date']!r}: the year {year} is outside "
+                        f"{_PLAUSIBLE_YEAR_MIN}-{_PLAUSIBLE_YEAR_MAX} -- a typo?")
+
+
 def _has_transcribed_text(ct: dict, ignore_re) -> bool:
     """True if the record carries any ciphertext text: raw, or any part's raw, once the gap
     marker, ignorechars and remove_from_start/remove_from_end are set aside."""
@@ -705,9 +724,27 @@ def validate_warnings(data: dict) -> list:
     has_identified_sources = isinstance(sources, list) and any(
         isinstance(src, dict) and isinstance(src.get('id'), str) and src['id'] for src in sources)
 
+    plaintext_records = data.get('plaintext_records')
+    service_records = data.get('service_records')
+
+    # A document that defines an identified source, holds service or plaintext records, or declares a
+    # channel is a survey file, so every ciphertext in it is held to the archival expectations even if
+    # it carries no archival field of its own yet (the record typed from scratch is the one that needs the nudge).
+    document_is_archival = (
+        has_identified_sources
+        or (isinstance(service_records, list) and len(service_records) > 0)
+        or (isinstance(plaintext_records, list) and len(plaintext_records) > 0)
+        or (isinstance(defaults_raw, dict) and 'channel' in defaults_raw)
+    )
+
+    for kind, records in (('service_records', service_records), ('plaintext_records', plaintext_records)):
+        if isinstance(records, list):
+            for idx, rec in enumerate(records):
+                if isinstance(rec, dict):
+                    _warn_if_implausible_year(rec.get('origin'), f"document.{kind}[{idx}] (id={rec.get('id', '?')})", warnings)
+
     # A service record should be filed under the channel it names; a cable naming several
     # channels (or none) legitimately has to go somewhere, so this is only a warning.
-    service_records = data.get('service_records')
     if defaults.get('channel') is not None and isinstance(service_records, list):
         for idx, rec in enumerate(service_records):
             if isinstance(rec, dict) and isinstance(rec.get('refers_channel'), str) \
@@ -729,7 +766,13 @@ def validate_warnings(data: dict) -> list:
             warnings.append(f"{where}: no source_id, although this document defines identified sources -- "
                             f"was it filed under its source?")
 
-        if any(key in ct for key in _ARCHIVAL_RECORD_MARKERS):
+        _warn_if_implausible_year(ct.get('origin'), where, warnings)
+        if isinstance(ct.get('parts'), list):
+            for part_idx, part in enumerate(ct['parts']):
+                if isinstance(part, dict):
+                    _warn_if_implausible_year(part.get('origin'), f"{where}.parts[{part_idx}]", warnings)
+
+        if document_is_archival or any(key in ct for key in _ARCHIVAL_RECORD_MARKERS):
             if 'transcription_state' not in ct:
                 warnings.append(f"{where}: no transcription_state -- it is the only field that says whether this "
                                 f"record is a stub or a full or partial transcription")

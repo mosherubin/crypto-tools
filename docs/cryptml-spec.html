@@ -1504,27 +1504,47 @@ message;</li>
 with no <code>legibility</code>;</li>
 <li><code>transcription_state: "full"</code> on a record that has no
 ciphertext text, and <code>transcription_state: "none"</code> on a
-record that has some.</li>
+record that has some;</li>
+<li>an <code>origin.date</code> whose year is outside 1400–2100 (on a
+ciphertext, a part, or a service or plaintext record).</li>
 </ul>
 <p>An <strong>archival record</strong>, for the missing-field warnings,
-is a ciphertext that carries any archival field of its own
-(<code>is_stub</code>, <code>source_id</code>,
-<code>archive_page</code>, <code>indicator_raw</code>,
-<code>serial</code>, <code>gr_stated</code>, <code>pages</code>,
-<code>preamble_raw</code>, <code>service_line_raw</code>,
-<code>resend_of</code>, <code>related</code>,
-<code>anomaly_notes</code>, <code>unit_type_asserted</code>,
-<code>transcription_state</code> or <code>legibility</code>). An
-ordinary puzzle ciphertext carries none of them and is never warned.
-Both fields are only warnings, never errors, so existing files stay
-valid and a record may be incomplete while it is being entered. “Has
-ciphertext text” means <code>raw</code> (or any part’s <code>raw</code>)
-is not empty once the gap marker, <code>ignorechars</code> and
+is a ciphertext in an <em>archival document</em>, or one that carries
+any archival field of its own (<code>is_stub</code>,
+<code>source_id</code>, <code>archive_page</code>,
+<code>indicator_raw</code>, <code>serial</code>, <code>gr_stated</code>,
+<code>pages</code>, <code>preamble_raw</code>,
+<code>service_line_raw</code>, <code>resend_of</code>,
+<code>related</code>, <code>anomaly_notes</code>,
+<code>unit_type_asserted</code>, <code>transcription_state</code> or
+<code>legibility</code>). A document is archival when it defines a
+source with an <code>id</code>, holds any service or plaintext record,
+or declares <code>defaults.channel</code>; then <em>every</em>
+ciphertext in it is held to the expectation, so a record typed from
+scratch with nothing but <code>id</code>, <code>raw</code> and
+<code>origin</code> is warned too. No declaration is needed: the file
+already says what it is. <code>unit_type</code>,
+<code>codebook_id</code> and <code>unit_length</code> do not make a
+document archival, since codebook puzzles use them as well. An ordinary
+puzzle in an ordinary document carries none of these and is never
+warned. Both fields are only warnings, never errors, so existing files
+stay valid and a record may be incomplete while it is being entered.
+“Has ciphertext text” means <code>raw</code> (or any part’s
+<code>raw</code>) is not empty once the gap marker,
+<code>ignorechars</code> and
 <code>remove_from_start</code>/<code>remove_from_end</code> are set
 aside. <code>"head_tail"</code> is never judged against the text. A stub
 that also carries <code>raw</code> or <code>parts</code> is already a
 <code>validate()</code> <em>error</em>, so it needs no separate
 warning.</p>
+<p>The year check reads the first plain four-digit number in the
+free-text <code>origin.date</code>, so <code>"1049-03-21"</code> and
+<code>"21 March 1049"</code> are both caught and a date with no
+four-digit year is skipped. The window is wide on purpose: it catches a
+mistyped century (<code>1049</code> for <code>1949</code>), which is
+valid ISO 8601 and so passes every other check, not a year that is
+merely unexpected for the file. A date wrong inside the window, such as
+<code>1849</code> for <code>1949</code>, is not caught.</p>
 <p>A disagreement surfaced this way is treated as a finding worth
 seeing, not a problem worth suppressing.</p>
 <h2 id="validation-rules">Validation rules</h2>
