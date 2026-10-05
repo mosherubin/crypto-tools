@@ -1014,7 +1014,7 @@ const CryptMLEditor = (() => {
     { key: 'remove_from_end', label: 'Remove from end', hint: 'How many non-ignored characters to strip from the end of the ciphertext, e.g. padding added to fill the last group.', type: 'number', min: 0 },
   ];
 
-  const RAW_HINT = 'The ciphertext exactly as transcribed. Write [...] where an unknown amount of text was not transcribed.';
+  const RAW_HINT = 'The ciphertext as the cryptosystem produced it: the best available reconstruction, not a diplomatic copy of one damaged page. Amend a reading only on outside evidence, never on conjecture, and record every amendment in Anomaly notes. Write [...] where an unknown amount of text was not transcribed.';
 
   const SOURCE_FIELDS = [
     { key: 'type', label: 'Type', hint: 'What kind of source this is: book, web, letter, periodical, person, competition or other.', type: 'select', options: ['book', 'web', 'letter', 'periodical', 'person', 'competition', 'other'] },
@@ -1102,7 +1102,7 @@ const CryptMLEditor = (() => {
     { title: 'Quality and state', fields: [
       { key: 'transcription_state', label: 'Transcription state', hint: 'How much of the message is transcribed: none, head_tail (start and end only) or full.', type: 'select', options: [...TRANSCRIPTION_STATE_VALUES], optional: true },
       { key: 'legibility', label: 'Legibility', hint: 'How readable the source is: clean, partial or poor.', type: 'select', options: [...LEGIBILITY_VALUES], optional: true },
-      { key: 'anomaly_notes', label: 'Anomaly notes', hint: 'Anything odd about the source, exactly as seen: overstrikes, struck-through groups, garbles, corrections marked on the document, marginalia. A correction the sender transmitted belongs in Service line instead.', type: 'textarea', rows: 3, optional: true },
+      { key: 'anomaly_notes', label: 'Anomaly notes', hint: 'Anything odd about the source, exactly as seen: overstrikes, struck-through groups, garbles, corrections marked on the document, marginalia. A correction the sender transmitted belongs in Service line instead. Also record here any amendment you made to the ciphertext: what the copy says, what you substituted, and on what evidence.', type: 'textarea', rows: 3, optional: true },
     ] },
     { title: 'Group structure', fields: [
       { key: 'unit_type', label: 'Unit type (inherits)', hint: 'What the groups are: codebook, cipher or unknown. ' + INHERIT_HINT, type: 'select', options: [...UNIT_TYPE_VALUES], optional: true },

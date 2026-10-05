@@ -21,6 +21,9 @@ The same judgment applies when transcribing from a printed book: a
 cryptogram's trailing sentence-punctuation (e.g. a period, if the book
 typesets the cryptogram as the end of a sentence) is the book's, not the
 cipher's — leave it out of `raw` rather than adding it to `ignorechars`.
+"Clean" means well-formed, not untouched: `raw` holds the ciphertext as the
+cryptosystem produced it, and a corrected reading of a damaged copy is
+recorded in `anomaly_notes` — see [What `raw` holds](#what-raw-holds).
 
 Version described here: **1.2**.
 
@@ -114,7 +117,7 @@ type is a validation error if it appears on the other.
 | Field | Required | Meaning |
 |---|---|---|
 | `id` | conditionally — see below | Reference name, e.g. `"1"`, `"GRP42"`, `"L2-P16-a"`. Unique across the whole document. |
-| `raw` | conditionally — exactly one of `raw`/`parts` required, unless `is_stub` | The ciphertext text, exactly as transcribed. |
+| `raw` | conditionally — exactly one of `raw`/`parts` required, unless `is_stub` | The ciphertext as the cryptosystem produced it: the best available reconstruction of the original, not a diplomatic transcription of one copy. Where outside evidence establishes the true reading of a damaged copy, `raw` carries the corrected reading and `anomaly_notes` records the amendment. See [What `raw` holds](#what-raw-holds). |
 | `parts` | conditionally — exactly one of `raw`/`parts` required, unless `is_stub` | Array of ≥2 [part](#part) objects, for one exercise made of several inseparable raw blocks (e.g. messages "a" and "b" that must be solved jointly). See below. |
 | `is_stub` | no, default `false` | When `true`, licenses omitting *both* `raw` and `parts` — a catalogued record with no transcribed ciphertext. Illegal alongside either. See [Archival message metadata](#archival-message-metadata). |
 | `cipher_system` | no, cascades | e.g. `"Vigenère"`, `"Hill"`, `"Quagmire III"`, `"unknown"`. |
@@ -227,6 +230,62 @@ non-cascading object: it still resolves via the scalar-override chain,
 because a plaintext alphabet is conceptually the same kind of setting as
 `charset`, just for the solution. Unlike `charset`, though, it's
 **descriptive, not enforced** — see [solution](#solution) for why.
+
+## What `raw` holds
+
+`raw` holds the ciphertext **as the cryptosystem produced it**: the best
+available reconstruction of the original, not a diplomatic transcription of
+one particular copy. For nearly every ciphertext those are the same thing. A
+textbook cryptogram's printed text *is* the best reconstruction, so nothing
+changes for files of puzzles. They diverge only for a damaged or defective
+copy where there is outside evidence of the true reading. There `raw`
+carries the corrected reading, and [`anomaly_notes`](#provenance-indicator-and-quality-fields)
+records what the copy says, what was substituted, and on what evidence.
+Every downstream step treats `raw` as authoritative, so a group known to be
+corrupt and left in place would carry the damage silently into everything
+computed from it.
+
+This is not a licence to tidy ciphertext. Three guardrails:
+
+- **Never correct on conjecture.** A reading may be amended only when the
+  evidence leaves the analyst no choice. A group that merely looks
+  implausible, or that has several plausible alternatives, stays as
+  transcribed.
+- **`ditschar` and the [gap marker](#gap-marker) are unchanged.** An
+  unrecoverable symbol is still the `ditschar`; an untranscribed stretch is
+  still `[...]`. Neither is a reconstruction.
+- **Every amendment is recorded.** If a ciphertext has no `anomaly_notes`,
+  its `raw` is a straight transcription. That keeps the default honest.
+
+The kinds of evidence differ in strength, and the note should say which one
+applies:
+
+| Evidence | What it permits |
+|---|---|
+| A **second witness**: the sender's own correction or repeat, a duplicate copy, a relay copy. The strongest. | Amend `raw`, and record the amendment. |
+| A **re-reading of the source**: the transcription was simply wrong. | Not an amendment. Fix `raw`; no note is needed. |
+| A **reconstruction forced by the system's own constraints**, such as a group that is not a code word and has exactly one single-letter neighbour in the codebook. | Allowed only when it is the one forced answer. Amend `raw`, and say in the note that this is inference, not testimony. |
+| **Analyst conjecture.** | Not permitted. |
+
+The test is whether the analyst had a choice. A second witness leaves none.
+A non-code-word with exactly one single-letter neighbour leaves none. A
+plausible alternative among several is a choice, and is therefore barred.
+
+**A reconstruction is forced only among single-character errors.** A
+multi-character error can land on another valid entry, where no unique
+neighbour exists and nothing flags the group at all. Silence from this test
+is therefore not evidence that a group is sound: it means only that no
+single-character error is detectable. A clean membership check does not show
+that a message is correct, and only a second witness can expose an error of
+the other kind.
+
+Nothing enforces this. Whether an amendment rests on outside evidence is a
+judgement a validator cannot make, so this is a rule for cataloguers, not a
+check. For example, cable A49/30's archived page lacks a group that the
+sender's own correction supplies (`CORRN PLS INSERT AFTER … INSERT YFXPO`):
+`raw` carries the corrected text, the correction itself is kept verbatim in
+`service_line_raw`, and `anomaly_notes` records that `raw` was amended and
+why.
 
 ## Gap marker
 
@@ -462,7 +521,7 @@ shared with the entire rest of the (non-archival) corpus.
 | `legibility` | `"clean"` \| `"partial"` \| `"poor"` | Legibility of the source. `"poor"` combined with `transcription_state: "full"` is a [warning](#validatewarnings-non-blocking-findings) — a statistic built on an unreliable transcription is worse than no statistic. |
 | `resend_of` | [reference](#cross-references) | The message this one retransmits. |
 | `related` | array of [reference](#cross-references) | Other records bearing on this one. |
-| `anomaly_notes` | string | Anything anomalous, verbatim — overstrikes, struck-through groups, garbles, corrections marked on the document, marginalia. A correction the *sender transmitted* belongs in `service_line_raw`, not here. (Distinct from the existing, list-shaped `notes` field.) |
+| `anomaly_notes` | string | Anything anomalous, verbatim — overstrikes, struck-through groups, garbles, corrections marked on the document, marginalia. A correction the *sender transmitted* belongs in `service_line_raw`, not here. This is also where an amendment to `raw` is recorded: what the copy says, what was substituted, and on what evidence (see [What `raw` holds](#what-raw-holds)). (Distinct from the existing, list-shaped `notes` field.) |
 
 **Indicator consistency check**: a best-effort pattern,
 `^([A-Za-z]+)(\d+)(?:/(\d+))?$`, parses `indicator_raw`'s common shorthand

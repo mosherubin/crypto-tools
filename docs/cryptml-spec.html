@@ -265,7 +265,11 @@ judgment applies when transcribing from a printed book: a cryptogram’s
 trailing sentence-punctuation (e.g. a period, if the book typesets the
 cryptogram as the end of a sentence) is the book’s, not the cipher’s —
 leave it out of <code>raw</code> rather than adding it to
-<code>ignorechars</code>.</p>
+<code>ignorechars</code>. “Clean” means well-formed, not untouched:
+<code>raw</code> holds the ciphertext as the cryptosystem produced it,
+and a corrected reading of a damaged copy is recorded in
+<code>anomaly_notes</code> — see <a href="#what-raw-holds">What
+<code>raw</code> holds</a>.</p>
 <p>Version described here: <strong>1.2</strong>.</p>
 <p><strong>1.2</strong> adds <a
 href="#archival-message-metadata">archival message metadata</a>: a
@@ -464,7 +468,12 @@ href="#archival-message-metadata">Archival message metadata</a>.</td>
 <td><code>raw</code></td>
 <td>conditionally — exactly one of <code>raw</code>/<code>parts</code>
 required, unless <code>is_stub</code></td>
-<td>The ciphertext text, exactly as transcribed.</td>
+<td>The ciphertext as the cryptosystem produced it: the best available
+reconstruction of the original, not a diplomatic transcription of one
+copy. Where outside evidence establishes the true reading of a damaged
+copy, <code>raw</code> carries the corrected reading and
+<code>anomaly_notes</code> records the amendment. See <a
+href="#what-raw-holds">What <code>raw</code> holds</a>.</td>
 </tr>
 <tr>
 <td><code>parts</code></td>
@@ -791,6 +800,91 @@ conceptually the same kind of setting as <code>charset</code>, just for
 the solution. Unlike <code>charset</code>, though, it’s
 <strong>descriptive, not enforced</strong> — see <a
 href="#solution">solution</a> for why.</p>
+<h2 id="what-raw-holds">What <code>raw</code> holds</h2>
+<p><code>raw</code> holds the ciphertext <strong>as the cryptosystem
+produced it</strong>: the best available reconstruction of the original,
+not a diplomatic transcription of one particular copy. For nearly every
+ciphertext those are the same thing. A textbook cryptogram’s printed
+text <em>is</em> the best reconstruction, so nothing changes for files
+of puzzles. They diverge only for a damaged or defective copy where
+there is outside evidence of the true reading. There <code>raw</code>
+carries the corrected reading, and <a
+href="#provenance-indicator-and-quality-fields"><code>anomaly_notes</code></a>
+records what the copy says, what was substituted, and on what evidence.
+Every downstream step treats <code>raw</code> as authoritative, so a
+group known to be corrupt and left in place would carry the damage
+silently into everything computed from it.</p>
+<p>This is not a licence to tidy ciphertext. Three guardrails:</p>
+<ul>
+<li><strong>Never correct on conjecture.</strong> A reading may be
+amended only when the evidence leaves the analyst no choice. A group
+that merely looks implausible, or that has several plausible
+alternatives, stays as transcribed.</li>
+<li><strong><code>ditschar</code> and the <a href="#gap-marker">gap
+marker</a> are unchanged.</strong> An unrecoverable symbol is still the
+<code>ditschar</code>; an untranscribed stretch is still
+<code>[...]</code>. Neither is a reconstruction.</li>
+<li><strong>Every amendment is recorded.</strong> If a ciphertext has no
+<code>anomaly_notes</code>, its <code>raw</code> is a straight
+transcription. That keeps the default honest.</li>
+</ul>
+<p>The kinds of evidence differ in strength, and the note should say
+which one applies:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Evidence</th>
+<th>What it permits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A <strong>second witness</strong>: the sender’s own correction or
+repeat, a duplicate copy, a relay copy. The strongest.</td>
+<td>Amend <code>raw</code>, and record the amendment.</td>
+</tr>
+<tr>
+<td>A <strong>re-reading of the source</strong>: the transcription was
+simply wrong.</td>
+<td>Not an amendment. Fix <code>raw</code>; no note is needed.</td>
+</tr>
+<tr>
+<td>A <strong>reconstruction forced by the system’s own
+constraints</strong>, such as a group that is not a code word and has
+exactly one single-letter neighbour in the codebook.</td>
+<td>Allowed only when it is the one forced answer. Amend
+<code>raw</code>, and say in the note that this is inference, not
+testimony.</td>
+</tr>
+<tr>
+<td><strong>Analyst conjecture.</strong></td>
+<td>Not permitted.</td>
+</tr>
+</tbody>
+</table>
+<p>The test is whether the analyst had a choice. A second witness leaves
+none. A non-code-word with exactly one single-letter neighbour leaves
+none. A plausible alternative among several is a choice, and is
+therefore barred.</p>
+<p><strong>A reconstruction is forced only among single-character
+errors.</strong> A multi-character error can land on another valid
+entry, where no unique neighbour exists and nothing flags the group at
+all. Silence from this test is therefore not evidence that a group is
+sound: it means only that no single-character error is detectable. A
+clean membership check does not show that a message is correct, and only
+a second witness can expose an error of the other kind.</p>
+<p>Nothing enforces this. Whether an amendment rests on outside evidence
+is a judgement a validator cannot make, so this is a rule for
+cataloguers, not a check. For example, cable A49/30’s archived page
+lacks a group that the sender’s own correction supplies
+(<code>CORRN PLS INSERT AFTER … INSERT YFXPO</code>): <code>raw</code>
+carries the corrected text, the correction itself is kept verbatim in
+<code>service_line_raw</code>, and <code>anomaly_notes</code> records
+that <code>raw</code> was amended and why.</p>
 <h2 id="gap-marker">Gap marker</h2>
 <p><code>raw</code> (or a <code>part</code>’s own <code>raw</code>, if
 the ciphertext uses <code>parts</code>) may contain the literal reserved
@@ -1190,8 +1284,11 @@ built on an unreliable transcription is worse than no statistic.</td>
 <td>Anything anomalous, verbatim — overstrikes, struck-through groups,
 garbles, corrections marked on the document, marginalia. A correction
 the <em>sender transmitted</em> belongs in
-<code>service_line_raw</code>, not here. (Distinct from the existing,
-list-shaped <code>notes</code> field.)</td>
+<code>service_line_raw</code>, not here. This is also where an amendment
+to <code>raw</code> is recorded: what the copy says, what was
+substituted, and on what evidence (see <a href="#what-raw-holds">What
+<code>raw</code> holds</a>). (Distinct from the existing, list-shaped
+<code>notes</code> field.)</td>
 </tr>
 </tbody>
 </table>
