@@ -11,6 +11,10 @@ generalization of the offset-scan used by STETHOSCOPE's List of Repeats test
 
 from dataclasses import dataclass
 
+# Marks a dit: a position whose symbol exists but is unknown. It keeps its slot, so every
+# later position is unchanged, but it never matches anything -- not even another dit.
+DIT = "\u00B7"
+
 
 @dataclass
 class Repetition:
@@ -28,6 +32,10 @@ class RepetitionCount:
     count: int
 
 
+def _matches(symbol_a: str, symbol_b: str) -> bool:
+    return symbol_a == symbol_b and symbol_a != DIT
+
+
 def _scan_alignment(letters_a: str, letters_b: str, offset: int, min_length: int) -> list:
     """offset = position_b - position_a, held fixed across this alignment sweep."""
     len_a, len_b = len(letters_a), len(letters_b)
@@ -36,10 +44,10 @@ def _scan_alignment(letters_a: str, letters_b: str, offset: int, min_length: int
 
     found = []
     while position_a < len_a and position_b < len_b:
-        if letters_a[position_a] == letters_b[position_b]:
+        if _matches(letters_a[position_a], letters_b[position_b]):
             length = 1
             while (position_a + length < len_a and position_b + length < len_b
-                   and letters_a[position_a + length] == letters_b[position_b + length]):
+                   and _matches(letters_a[position_a + length], letters_b[position_b + length])):
                 length += 1
             if length >= min_length:
                 found.append((position_a, position_b, length))
@@ -74,7 +82,9 @@ def locate_repetitions(ciphertexts: list, min_length: int) -> list:
     Locate every repeated sequence of length >= min_length shared between each pair
     of ciphertexts, including a ciphertext against itself.
 
-    ciphertexts: list of cleaned ciphertext strings (letters only)
+    ciphertexts: list of cleaned ciphertext strings (letters only, with DIT marking any
+    unknown symbol). Positions are true positions, dits included, and a repeated text
+    never contains a dit.
     Returns a list of Repetition, each tagged with the indices (into `ciphertexts`)
     of the two messages it was found between.
     """
