@@ -211,6 +211,13 @@
   </div>
 </div>
 
+<div class="row" data-tooltip="Optional. One character that marks a position where a symbol exists but is unknown (a dit), such as . or -. Leave it empty for none, which is the default. It applies to ciphertexts you type or paste. An imported ciphertext uses the dit it was exported with, or none if its export names none. A dit keeps its position, so the groups of five stay aligned, but it is left out of every letter comparison.">
+  <span class="lbl">Dits character:</span>
+  <div class="ctrl">
+    <input type="text" id="page_ditschar" maxlength="1" style="width:3em; font-family:monospace;" placeholder="none">
+  </div>
+</div>
+
 <div class="row">
   <span class="lbl"></span>
   <div class="ctrl">
@@ -242,6 +249,7 @@
 
 <div id="output-section">
   <div id="report-meta"></div>
+  <div id="dit-note" style="display:none; margin:4px 0; font-size:0.9em;"></div>
   <div id="ciphertext-display"></div>
   <div id="output-container"></div>
   <button id="diff-btn" onclick="generateDifferenceTables()" data-tooltip="For every group column, build a minuend table (that column minus every other, non-borrowing) and a subtrahend table (every other column minus that one). Surfaces shared discriminants/indicators and ascending sequences that are hard to spot by eye.">Generate Difference Tables</button>
@@ -256,7 +264,29 @@
 'use strict';
 
 var expandAlphabet = CiphertextUtils.expandAlphabet;
-var cleanCiphertext = CiphertextUtils.cleanCiphertext;
+var parseCiphertext = CiphertextUtils.parseCiphertext;
+var symbolsToString = CiphertextUtils.symbolsToString;
+
+// Internal marker for a dit (a position whose symbol exists but is unknown) once a ciphertext has
+// been read into a string. It sits where the symbol would, so groups of five stay aligned, and it
+// is left out of every letter comparison. Whatever dit character a ciphertext was written with,
+// every one becomes this.
+var DIT = '\u00B7';
+
+// The dit character that applies to a box: an imported block's own declaration (none, if its
+// export named none), otherwise the page's setting. Hand-editing an imported box drops its
+// declaration, like the rest of its imported metadata, and it follows the page setting again.
+function ditscharFor(box) {
+    if (box.dataset.ditsource === 'import') return box.dataset.ditschar || '';
+    var typed = document.getElementById('page_ditschar').value;
+    return typed.length === 1 ? typed : '';
+}
+
+// A ciphertext read into a string with each dit as DIT, plus how many dits it held.
+function readCiphertext(text, charsetCfg, ditschar) {
+    var parsed = parseCiphertext(text, charsetCfg.pattern, charsetCfg.caseSensitive, ditschar);
+    return { text: symbolsToString(parsed.symbols, DIT), ditCount: parsed.ditCount };
+}
 
 // ── ciphertext box management ────────────────────────────────────────────────
 
@@ -264,7 +294,7 @@ var _ctNextUid = 0;
 
 function ctBlockHtml(uid) {
     return (
-        '<div class="row ct-row" data-uid="' + uid + '" data-tooltip="Enter or paste one ciphertext here. Spaces, punctuation, and dashes (dits) are handled automatically; only characters matching the selected character set are extracted for analysis.">' +
+        '<div class="row ct-row" data-uid="' + uid + '" data-tooltip="Enter or paste one ciphertext here. Spaces are ignored. A dit (a position whose symbol is unknown) is written with the Dits character set below. Any other character outside the selected character set is an error.">' +
         '<span class="lbl ct-label"></span>' +
         '<div class="ctrl">' +
         '<textarea class="ciphertext-box" placeholder="Paste ciphertext here..."></textarea>' +
@@ -292,6 +322,8 @@ function addCiphertextBox() {
         delete this.dataset.time;
         delete this.dataset.originator;
         delete this.dataset.addressee;
+        delete this.dataset.ditschar;
+        delete this.dataset.ditsource;
         renumberCiphertextBoxes();
     });
     renumberCiphertextBoxes();
@@ -306,8 +338,10 @@ function removeCiphertextBox(uid) {
 function renumberCiphertextBoxes() {
     var rows = document.querySelectorAll('.ct-row');
     for (var i = 0; i < rows.length; i++) {
-        var label = rows[i].querySelector('.ciphertext-box').dataset.label;
-        var text = 'Ciphertext ' + (i + 1) + (label ? ' (' + label + ')' : '') + ':';
+        var box = rows[i].querySelector('.ciphertext-box');
+        var label = box.dataset.label;
+        var dit = box.dataset.ditsource === 'import' ? box.dataset.ditschar : '';
+        var text = 'Ciphertext ' + (i + 1) + (label ? ' (' + label + ')' : '') + (dit ? ' [dit ' + dit + ']' : '') + ':';
         rows[i].querySelector('.ct-label').textContent = text;
         rows[i].querySelector('.ct-remove-btn').style.display = (i === 0) ? 'none' : '';
     }
@@ -319,6 +353,7 @@ var _DATE_FIELD_RE = /Date:\s*"([^"]*)"/;
 var _TIME_FIELD_RE = /Time:\s*"([^"]*)"/;
 var _ORIGINATOR_FIELD_RE = /Originator:\s*(.+)/;
 var _ADDRESSEE_FIELD_RE = /Addressee:\s*(.+)/;
+var _DITSCHAR_FIELD_RE = /Ditschar:\s*"(.)"/;
 
 function parseCryptMLExport(text) {
     // Ciphertexts are separated by blank and/or comment ('#...') lines; a
@@ -336,12 +371,14 @@ function parseCryptMLExport(text) {
     var pendingTime = null;
     var pendingOriginator = null;
     var pendingAddressee = null;
+    var pendingDitschar = null;
 
     function flush() {
         if (current.length > 0) {
             blocks.push({
                 label: pendingLabel, date: pendingDate, time: pendingTime,
                 originator: pendingOriginator, addressee: pendingAddressee,
+                ditschar: pendingDitschar,
                 text: current.join('\n')
             });
             current = [];
@@ -357,11 +394,13 @@ function parseCryptMLExport(text) {
             var timeMatch = comment.match(_TIME_FIELD_RE);
             var originatorMatch = comment.match(_ORIGINATOR_FIELD_RE);
             var addresseeMatch = comment.match(_ADDRESSEE_FIELD_RE);
+            var ditscharMatch = comment.match(_DITSCHAR_FIELD_RE);
+            if (ditscharMatch) pendingDitschar = ditscharMatch[1];
             if (dateMatch) pendingDate = dateMatch[1];
             if (timeMatch) pendingTime = timeMatch[1];
             if (originatorMatch) pendingOriginator = originatorMatch[1].trim();
             if (addresseeMatch) pendingAddressee = addresseeMatch[1].trim();
-            if (!dateMatch && !timeMatch && !originatorMatch && !addresseeMatch) pendingLabel = comment;
+            if (!dateMatch && !timeMatch && !originatorMatch && !addresseeMatch && !ditscharMatch) pendingLabel = comment;
         } else if (trimmed === '') {
             flush();
             pendingLabel = null;
@@ -369,6 +408,7 @@ function parseCryptMLExport(text) {
             pendingTime = null;
             pendingOriginator = null;
             pendingAddressee = null;
+            pendingDitschar = null;
         } else {
             current.push(lines[i]);
         }
@@ -385,6 +425,10 @@ function applyBlockToBox(box, block) {
     box.dataset.time = block.time || '';
     box.dataset.originator = block.originator || '';
     box.dataset.addressee = block.addressee || '';
+    // An export names a block's dit, or has no Ditschar field, which means none -- either way the
+    // block is read as it was exported, not by the page setting.
+    box.dataset.ditsource = 'import';
+    box.dataset.ditschar = block.ditschar || '';
 }
 
 function populateCiphertextBoxes(blocks) {
@@ -427,7 +471,7 @@ function findDuplicateBlocks(blocks) {
     var seen = {};
     var existingBoxes = document.querySelectorAll('.ciphertext-box');
     for (var i = 0; i < existingBoxes.length; i++) {
-        var existingLetters = cleanCiphertext(existingBoxes[i].value, charsetCfg.pattern, charsetCfg.caseSensitive);
+        var existingLetters = readCiphertext(existingBoxes[i].value, charsetCfg, ditscharFor(existingBoxes[i])).text;
         if (existingLetters.length > 0) seen[existingLetters] = true;
     }
 
@@ -435,7 +479,7 @@ function findDuplicateBlocks(blocks) {
     for (var b = 0; b < blocks.length; b++) {
         var blockLetters;
         try {
-            blockLetters = cleanCiphertext(blocks[b].text, charsetCfg.pattern, charsetCfg.caseSensitive);
+            blockLetters = readCiphertext(blocks[b].text, charsetCfg, blocks[b].ditschar || '').text;
         } catch (e) {
             continue; // an invalid character here will surface as a normal error at Run time
         }
@@ -558,7 +602,8 @@ function buildRows(leadingCount, trailingCount, charsetCfg) {
 
     for (var i = 0; i < boxes.length; i++) {
         var box = boxes[i];
-        var letters = cleanCiphertext(box.value, charsetCfg.pattern, charsetCfg.caseSensitive);
+        var read = readCiphertext(box.value, charsetCfg, ditscharFor(box));
+        var letters = read.text;
         if (letters.length === 0) continue;
         msgNumber++;
 
@@ -585,6 +630,8 @@ function buildRows(leadingCount, trailingCount, charsetCfg) {
             date: box.dataset.date || '',
             time: box.dataset.time || '',
             gr: groups.length,
+            letterCount: letters.length - read.ditCount,
+            ditCount: read.ditCount,
             leading: leading,
             trailing: trailing,
             groups: groups
@@ -664,6 +711,9 @@ function nonBorrowingSubtract(minuendText, subtrahendText, alphaIdx) {
     var modulus = alphaIdx.alphabet.length;
     var result = '';
     for (var i = 0; i < minuendText.length; i++) {
+        // A dit in either operand makes the difference at that position unknown too; the other
+        // positions of the group are still computed.
+        if (minuendText.charAt(i) === DIT || subtrahendText.charAt(i) === DIT) { result += DIT; continue; }
         var a = alphaIdx.index[minuendText.charAt(i)];
         var b = alphaIdx.index[subtrahendText.charAt(i)];
         if (a === undefined || b === undefined) return null;
@@ -826,6 +876,16 @@ function buildTableElement(rows, columns) {
     return table;
 }
 
+function renderDitNote(rows) {
+    var total = 0;
+    for (var i = 0; i < rows.length; i++) total += rows[i].ditCount;
+    var note = document.getElementById('dit-note');
+    note.style.display = total > 0 ? 'block' : 'none';
+    note.textContent = total > 0
+        ? DIT + ' marks a dit: a position where a symbol exists but is unknown. It keeps its place in the groups of five and is left out of every letter comparison (' + total + ' in all).'
+        : '';
+}
+
 function renderCiphertextDisplay(rows) {
     // Matches find-repetitions.html's formatCiphertextBlock convention (header
     // line + groups of five, ten per row), substituted here with this tool's
@@ -842,7 +902,8 @@ function renderCiphertextDisplay(rows) {
         if (row.time) suffix += ', time: "' + row.time + '"';
         var header = document.createElement('div');
         header.className = 'ct-header';
-        header.textContent = 'Ciphertext ' + row.index + ' (' + row.id + ', ' + row.groups.join('').length + ' letters' + suffix + '):';
+        var ditText = row.ditCount > 0 ? ', ' + row.ditCount + (row.ditCount === 1 ? ' dit' : ' dits') : '';
+        header.textContent = 'Ciphertext ' + row.index + ' (' + row.id + ', ' + row.letterCount + ' letters' + ditText + suffix + '):';
         container.appendChild(header);
 
         var body = document.createElement('div');
@@ -935,6 +996,7 @@ function runBuildLog() {
 
         clearRunError();
         document.getElementById('report-meta').textContent = runHeader();
+        renderDitNote(_currentRows);
         renderCiphertextDisplay(_currentRows);
         renderOutput();
         document.getElementById('diff-tables-container').innerHTML = ''; // stale from a previous Run
@@ -942,7 +1004,10 @@ function runBuildLog() {
         document.getElementById('diff-collapse-btn').style.display = 'none';
         document.getElementById('output-section').style.display = 'block';
     } catch (e) {
-        showRunError('ERROR: ' + e.message);
+        var hint = /Invalid character/.test(e.message)
+            ? '\n\nIf a rejected character marks an unknown symbol (a dit), enter it in "Dits character". An imported ciphertext uses the dit it was exported with.'
+            : '';
+        showRunError('ERROR: ' + e.message + hint);
     }
 }
 
