@@ -8,7 +8,7 @@ const CryptMLEditor = (() => {
     cipher_system: 'unknown',
     charset: '[A-Z]',
     casesensitive: false,
-    ditschar: '-',
+    ditschar: '', // none: a ciphertext that needs a dit says so explicitly
     ignorechars: '[\\s]',
     plaintext_charset: '[A-Z]',
   };
@@ -17,8 +17,24 @@ const CryptMLEditor = (() => {
 
   // ---------- data model ----------
 
+  // "No dit character" is written three ways in a file -- the field absent, "" or null -- and is
+  // held in memory as ''. A ciphertext's own ditschar, even "" or null, overrides the document's.
+  function normalizeDitschar(value) {
+    return value === null || value === undefined ? '' : value;
+  }
+
+  function isValidDitschar(value) {
+    return value === null || value === undefined || (typeof value === 'string' && [...value].length <= 1);
+  }
+
+  function effectiveDitschar(ct, defaults) {
+    return normalizeDitschar('ditschar' in ct && ct.ditschar !== undefined ? ct.ditschar : defaults.ditschar);
+  }
+
   function resolveSettings(documentDefaults) {
-    return { ...DEFAULT_SETTINGS, ...(documentDefaults || {}) };
+    const settings = { ...DEFAULT_SETTINGS, ...(documentDefaults || {}) };
+    settings.ditschar = normalizeDitschar(settings.ditschar);
+    return settings;
   }
 
   function blankOrigin() {
@@ -191,7 +207,7 @@ const CryptMLEditor = (() => {
         cipher_system: ct.cipher_system ?? defaults.cipher_system,
         charset: ct.charset ?? defaults.charset,
         casesensitive: ct.casesensitive ?? defaults.casesensitive,
-        ditschar: ct.ditschar ?? defaults.ditschar,
+        ditschar: 'ditschar' in ct ? normalizeDitschar(ct.ditschar) : defaults.ditschar,
         ignorechars: ct.ignorechars ?? defaults.ignorechars,
         unit_type: ct.unit_type ?? defaults.unit_type,
         codebook_id: ct.codebook_id ?? defaults.codebook_id,
@@ -740,8 +756,8 @@ const CryptMLEditor = (() => {
     for (const key of ['charset', 'ignorechars']) {
       if (!isSingleBracketedClass(defaults[key])) errors.push(`defaults.${key} = ${JSON.stringify(defaults[key])} is not a single bracketed character class`);
     }
-    if (typeof defaults.ditschar !== 'string' || defaults.ditschar.length !== 1) {
-      errors.push(`defaults.ditschar must be exactly one character, got ${JSON.stringify(defaults.ditschar)}`);
+    if (!isValidDitschar(defaults.ditschar)) {
+      errors.push(`defaults.ditschar must be a single character, or empty or null for none, got ${JSON.stringify(defaults.ditschar)}`);
     }
     if (defaults.unit_type !== undefined && !UNIT_TYPE_VALUES.has(defaults.unit_type)) {
       errors.push(`defaults.unit_type = ${JSON.stringify(defaults.unit_type)} not in [${[...UNIT_TYPE_VALUES].join(', ')}]`);
@@ -854,10 +870,10 @@ const CryptMLEditor = (() => {
         }
       }
 
-      let ditschar = ct.ditschar ?? defaults.ditschar;
-      if (typeof ditschar !== 'string' || ditschar.length !== 1) {
-        errors.push(`${where}.ditschar must be exactly one character, got ${JSON.stringify(ditschar)}`);
-        ditschar = defaults.ditschar;
+      let ditschar = effectiveDitschar(ct, defaults);
+      if (!isValidDitschar(ditschar)) {
+        if ('ditschar' in ct) errors.push(`${where}.ditschar must be a single character, or empty or null for none, got ${JSON.stringify(ditschar)}`);
+        ditschar = '';
       }
 
       const charset = ct.charset ?? defaults.charset;
@@ -875,7 +891,7 @@ const CryptMLEditor = (() => {
         errors.push(`${where}: invalid charset/ignorechars regex: ${e.message}`);
       }
 
-      if (charsetRe && ignoreRe.test(ditschar)) {
+      if (charsetRe && ditschar && ignoreRe.test(ditschar)) {
         errors.push(`${where}: ditschar ${JSON.stringify(ditschar)} is also matched by ignorechars ${JSON.stringify(ignorechars)}`);
       }
 
@@ -1081,7 +1097,7 @@ const CryptMLEditor = (() => {
     { key: 'cipher_system', label: 'Cipher system', hint: 'The kind of cipher, e.g. Vigenere, Hill, Playfair, or unknown. Free text.', type: 'text' },
     { key: 'charset', label: 'Charset (regex character class)', hint: 'Regex character class of the valid cipher symbols, e.g. [A-Z] or [A-Z0-9]. It must be a single bracketed class. Every character of the ciphertext must match this, the dits char, or the ignore chars.', type: 'text' },
     { key: 'casesensitive', label: 'Case sensitive', hint: 'Tick if upper and lower case letters are different symbols. Unticked, letters are treated as upper case.', type: 'checkbox' },
-    { key: 'ditschar', label: 'Dits char', hint: 'One character standing for a missing or unrecoverable symbol, e.g. -.', type: 'text' },
+    { key: 'ditschar', label: 'Dits char', hint: 'One character that marks a position where a symbol definitely exists but its identity is unknown, e.g. . or -. Leave empty (the default) when this ciphertext needs none.', type: 'text', maxlength: 1 },
     { key: 'ignorechars', label: 'Ignore chars (regex character class)', hint: 'Regex character class of characters that are silently dropped, such as the spaces between groups: [\s].', type: 'text' },
   ];
 
@@ -1340,7 +1356,7 @@ const CryptMLEditor = (() => {
       input.value = isPlainObject(value) && Object.keys(value).length ? JSON.stringify(value, null, 2) : '';
       input.classList.add('mono-field');
     } else {
-      input = el('input', { type: 'text', onInput: e => setOrClear(e.target.value === '', e.target.value) });
+      input = el('input', { type: 'text', maxlength: spec.maxlength, onInput: e => setOrClear(e.target.value === '', e.target.value) });
       input.value = value ?? '';
     }
     if (spec.monospace) input.classList.add('mono-field');
@@ -1403,6 +1419,7 @@ const CryptMLEditor = (() => {
     validateWarnings,
     isValidUuid,
     parseReference,
+    normalizeDitschar,
     SOURCE_FIELDS, DOCUMENT_SOURCE_FIELDS, HINT_FIELDS, REFERENCE_FIELDS, NOTE_FIELDS, CHATTER_FIELDS,
     ORIGIN_FIELDS, SOLUTION_FIELDS, SOLVER_FIELDS,
     DEFAULTS_ARCHIVAL_FIELDS, DEFAULTS_FORM_FIELDS, ARCHIVAL_FORM_GROUPS, ARCHIVAL_FORM_KEYS,

@@ -38,7 +38,9 @@ fields. A separate, non-blocking `validateWarnings()` channel is introduced alon
 as-is, with no need to edit or re-version them. The archival field set was revised on 4 October 2026,
 before any data used it: `isa_file` and `image_ref` were removed, `isa_page` became `archive_page`, and
 `source_id` and source `id`/`identifier` were added. **1.1** added `origin.time` (see [origin](#origin))
-alongside the existing `origin.date`. **1.0** was the initial release.
+alongside the existing `origin.date`. The default for `ditschar` was changed on 12 October 2026 from a
+hyphen to *none* (see [Dit characters](#dit-characters-ditschar)); no file in the published corpus relied
+on the hyphen. **1.0** was the initial release.
 
 ## Design principles
 
@@ -123,7 +125,7 @@ type is a validation error if it appears on the other.
 | `cipher_system` | no, cascades | e.g. `"Vigenère"`, `"Hill"`, `"Quagmire III"`, `"unknown"`. |
 | `charset` | no, cascades | Regex character class (e.g. `[A-Z]`) matching valid cipher symbols. To match any character (e.g. a concealment/null cipher), use `[\s\S]` — see [Validation rules](#validation-rules) — not `[.]`, which matches only a literal period. |
 | `casesensitive` | no, cascades | Whether `charset` matching is case-sensitive. |
-| `ditschar` | no, cascades | Character standing in for a missing/unrecoverable symbol. |
+| `ditschar` | no, cascades | One character that marks a position where a symbol definitely exists but its identity is unknown, or *none*. The default is none, written as the field absent, `""` or `null`. See [Dit characters](#dit-characters-ditschar). |
 | `ignorechars` | no, cascades | Regex character class (e.g. `[\s]`) of characters silently dropped (whitespace, group separators). |
 | `remove_from_start` | no, default `0` | Number of non-ignored characters (i.e. not matched by `ignorechars`) to strip from the start of `raw` — typically a message preamble. Only legal alongside `raw`; with `parts`, each part has its own instead (see below). No cascade. |
 | `remove_from_end` | no, default `0` | Number of non-ignored characters to strip from the end of `raw` — typically padding added to reach a group-length multiple. Only legal alongside `raw`; with `parts`, each part has its own instead. No cascade. |
@@ -195,7 +197,7 @@ Exactly two cascade behaviors, both document → ciphertext, one level:
    `unit_type`, `codebook_id`, `unit_length`, `channel`). A
    ciphertext's own field, if present, wins; otherwise the document's
    `defaults` value is used; otherwise the built-in default
-   (`charset: "[A-Z]"`, `casesensitive: false`, `ditschar: "-"`,
+   (`charset: "[A-Z]"`, `casesensitive: false`, `ditschar:` none,
    `ignorechars: "[\\s]"`, `cipher_system: "unknown"`,
    `plaintext_charset: "[A-Z]"`). `unit_type`/`codebook_id`/`unit_length`/
    `channel` have no built-in default — absent at every level simply means
@@ -317,6 +319,40 @@ here.)
 ```
 
 Multiple occurrences in one `raw` are allowed; there's no cap.
+
+## Dit characters (`ditschar`)
+
+A **dit** marks a position in the ciphertext where a symbol definitely exists
+but its identity is unknown — a character that was smudged, torn away or
+garbled, yet was plainly there. `ditschar` names the one character that stands
+for it in `raw`.
+
+- **The default is none.** A ciphertext that needs no dit declares nothing.
+  "None" is written three equivalent ways: the field absent, `"ditschar": ""`,
+  or `"ditschar": null`. Only the rare ciphertext that has a dit declares a
+  character, such as `.` (the NSA convention) or `-`.
+- **It cascades, and none can override.** A ciphertext's own `ditschar`,
+  including `""` or `null`, overrides the document's `defaults.ditschar`. So
+  `"ditschar": ""` on one ciphertext switches off a document-wide `.`.
+- **A dit is a position, not a letter.** Unlike an `ignorechars` character,
+  which is dropped and occupies no position, a dit counts toward length,
+  spacing and alignment. A tool that reads a ciphertext must keep every dit as
+  a position that exists but is not a symbol: counted for position, left out of
+  frequency counts, and never matched as though it were a particular letter.
+  How each tool marks it internally is its own affair.
+- **It is not the [gap marker](#gap-marker).** A dit is exactly one unknown
+  symbol at a known position. `[...]` makes no claim about how much text is
+  missing.
+- **It is checked.** A character that matches none of `charset`, the
+  `ditschar` or `ignorechars` is a validation error, so with the default of
+  none a stray `.` or `-` cannot slip in as an undeclared dit. The `ditschar`
+  must not also match `ignorechars`.
+- **Text export.** The Editor's Export writes a block's dit into the
+  metadata comment after its label, as `# Date: "…" Time: "…" Ditschar: "."`,
+  each field omitted when empty, so a block with no dit has no `Ditschar`
+  field. A tool reading an export takes a block without one to have none, and
+  may convert every dit to whatever marker it uses internally, even when two
+  blocks use different dit characters.
 
 ## Corpus identity (`cryptml_uuid`)
 
@@ -690,7 +726,8 @@ problem worth suppressing.
   otherwise entirely unvalidated. See [`extensions`](#extensions).
 - **`source.type`** must be one of the enumerated values (see below) — not
   an arbitrary string.
-- **`ditschar`** must be exactly one character.
+- **`ditschar`** must be a single character, or empty (`""`) or `null` for
+  none. Two or more characters are an error.
 - **`charset` and `ignorechars`** must each be a single bracketed regex
   character class — `[...]` or `[^...]` — spanning the entire value, and
   must compile. Nothing is allowed outside the brackets: no quantifiers,
@@ -839,7 +876,7 @@ alphabet), free-form ids, and one solved entry.
 {
   "cryptml_version": "1.0",
   "title": "MC-I Problem Book, Lesson 2 (excerpt)",
-  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
+  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ignorechars": "[\\s]" },
   "sources": [
     { "type": "book", "title": "Military Cryptanalytics, Part I, Problem Book", "author": "NSA", "page": "L2" }
   ],
@@ -873,7 +910,7 @@ alphabet), free-form ids, and one solved entry.
 ```
 
 Resolved view of `L2-P16-a`: `charset = "[A-Z]"` / `casesensitive = false` /
-`ditschar = "-"` / `ignorechars = "[\\s]"` (all from the document, unchanged),
+`ignorechars = "[\\s]"` (all from the document, unchanged; `ditschar` is none),
 `cipher_system = "Playfair"` (its own), `sources = [ {"type": "book",
 "title": "Military Cryptanalytics, Part I, Problem Book", ...} ]` (merged
 down from the document — it has none of its own). `L2-P17` overrides
@@ -892,7 +929,7 @@ because `cipher_system` is the only thing 'a' and 'b' actually share.
 {
   "cryptml_version": "1.0",
   "title": "Military Cryptanalytics, Part I, Lesson 4 (excerpt)",
-  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ditschar": "-", "ignorechars": "[\\s]" },
+  "defaults": { "charset": "[A-Z]", "casesensitive": false, "ignorechars": "[\\s]" },
   "sources": [
     { "type": "book", "title": "Military Cryptanalytics, Part I", "author": "Friedman and Callimahos" }
   ],

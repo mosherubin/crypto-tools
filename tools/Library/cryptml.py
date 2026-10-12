@@ -13,7 +13,7 @@ DEFAULT_SETTINGS = {
     "cipher_system": "unknown",
     "charset": "[A-Z]",
     "casesensitive": False,
-    "ditschar": "-",
+    "ditschar": "",  # none: a ciphertext that needs a dit says so explicitly
     "ignorechars": "[\\s]",
     "plaintext_charset": "[A-Z]",
     "unit_type": None,
@@ -173,6 +173,16 @@ class CryptMLDocument:
 
 def _is_valid_uuid(value) -> bool:
     return isinstance(value, str) and _UUID_RE.fullmatch(value) is not None
+
+
+# "No dit character" is written three ways in a file -- the field absent, "" or null -- and is
+# held in memory as "". A ciphertext's own ditschar, even "" or null, overrides the document's.
+def _normalize_ditschar(value):
+    return "" if value is None else value
+
+
+def _is_valid_ditschar(value) -> bool:
+    return value is None or (isinstance(value, str) and len(value) <= 1)
 
 
 def _is_positive_int(value) -> bool:
@@ -516,8 +526,9 @@ def validate(data: dict) -> list:
     for key in ('charset', 'ignorechars'):
         if not _is_single_bracketed_class(defaults[key]):
             errors.append(f"defaults.{key} = {defaults[key]!r} is not a single bracketed character class")
-    if not isinstance(defaults['ditschar'], str) or len(defaults['ditschar']) != 1:
-        errors.append(f"defaults.ditschar must be exactly one character, got {defaults['ditschar']!r}")
+    if not _is_valid_ditschar(defaults['ditschar']):
+        errors.append(f"defaults.ditschar must be a single character, or empty or null for none, "
+                      f"got {defaults['ditschar']!r}")
 
     if defaults.get('unit_type') is not None and defaults['unit_type'] not in UNIT_TYPE_VALUES:
         errors.append(f"defaults.unit_type = {defaults['unit_type']!r} not in {sorted(UNIT_TYPE_VALUES)}")
@@ -613,10 +624,12 @@ def validate(data: dict) -> list:
                     if parsed:
                         pending_references.append({'parsed': parsed, 'where': f"{where}.related[{ridx}]", 'raw': r})
 
-        ditschar = ct.get('ditschar', defaults['ditschar'])
-        if not isinstance(ditschar, str) or len(ditschar) != 1:
-            errors.append(f"{where}.ditschar must be exactly one character, got {ditschar!r}")
-            ditschar = defaults['ditschar']
+        ditschar = _normalize_ditschar(ct['ditschar'] if 'ditschar' in ct else defaults['ditschar'])
+        if not _is_valid_ditschar(ditschar):
+            if 'ditschar' in ct:
+                errors.append(f"{where}.ditschar must be a single character, or empty or null for none, "
+                              f"got {ditschar!r}")
+            ditschar = ''
 
         charset = ct.get('charset', defaults['charset'])
         ignorechars = ct.get('ignorechars', defaults['ignorechars'])
@@ -633,7 +646,7 @@ def validate(data: dict) -> list:
             errors.append(f"{where}: invalid charset/ignorechars regex: {e}")
             charset_re = ignore_re = None
 
-        if charset_re is not None and ignore_re.fullmatch(ditschar):
+        if charset_re is not None and ditschar and ignore_re.fullmatch(ditschar):
             errors.append(f"{where}: ditschar {ditschar!r} is also matched by ignorechars {ignorechars!r}")
 
         if has_parts:
@@ -828,6 +841,7 @@ def validate_warnings(data: dict) -> list:
 def _resolve_settings(document_defaults: dict) -> dict:
     resolved = dict(DEFAULT_SETTINGS)
     resolved.update(document_defaults)
+    resolved['ditschar'] = _normalize_ditschar(resolved['ditschar'])
     return resolved
 
 
@@ -859,7 +873,7 @@ def _load_ciphertext(ct: dict, defaults: dict, sole_ciphertext: bool) -> Ciphert
         cipher_system=ct.get('cipher_system', defaults['cipher_system']),
         charset=ct.get('charset', defaults['charset']),
         casesensitive=ct.get('casesensitive', defaults['casesensitive']),
-        ditschar=ct.get('ditschar', defaults['ditschar']),
+        ditschar=_normalize_ditschar(ct['ditschar']) if 'ditschar' in ct else defaults['ditschar'],
         ignorechars=ct.get('ignorechars', defaults['ignorechars']),
         unit_type=ct.get('unit_type', defaults.get('unit_type')),
         codebook_id=ct.get('codebook_id', defaults.get('codebook_id')),

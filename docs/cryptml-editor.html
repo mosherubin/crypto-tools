@@ -717,7 +717,7 @@ function exportableEntries() {
         entries.push({
           label: `${ct.id}/${part.part_id}`, raw: part.raw,
           removeFromStart: part.remove_from_start || 0, removeFromEnd: part.remove_from_end || 0,
-          ignorechars: ct.ignorechars, casesensitive: ct.casesensitive,
+          ignorechars: ct.ignorechars, casesensitive: ct.casesensitive, ditschar: ct.ditschar,
           date: part.origin.date, time: part.origin.time,
         });
       }
@@ -725,7 +725,7 @@ function exportableEntries() {
       entries.push({
         label: ct.id, raw: ct.raw,
         removeFromStart: ct.remove_from_start || 0, removeFromEnd: ct.remove_from_end || 0,
-        ignorechars: ct.ignorechars, casesensitive: ct.casesensitive,
+        ignorechars: ct.ignorechars, casesensitive: ct.casesensitive, ditschar: ct.ditschar,
         date: ct.origin.date, time: ct.origin.time,
       });
     }
@@ -769,10 +769,14 @@ function stripBoundary(raw, removeFromStart, removeFromEnd, ignoreRe) {
   return raw.slice(start, end);
 }
 
-function buildDateTimeComment(date, time) {
+// One optional metadata comment line after a block's label: Date, Time and Ditschar, each
+// omitted when empty. Ditschar is the single character marking an unknown symbol in this block's
+// text; a block with no Ditschar field has none.
+function buildMetadataComment(date, time, ditschar) {
   const parts = [];
   if (date) parts.push(`Date: "${date}"`);
   if (time) parts.push(`Time: "${time}"`);
+  if (ditschar) parts.push(`Ditschar: "${ditschar}"`);
   return parts.length ? `\n# ${parts.join(' ')}` : '';
 }
 
@@ -850,7 +854,7 @@ function buildExportText(filename, entries, honorTrim, codewordToNumber) {
       text = codebookTranslate(clean, codewordToNumber);
     }
 
-    const dtLine = buildDateTimeComment(e.date, e.time);
+    const dtLine = buildMetadataComment(e.date, e.time, e.ditschar);
     return `# ${filename} :: ${e.label}${dtLine}\n${text}`;
   });
 

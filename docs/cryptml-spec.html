@@ -294,8 +294,11 @@ set was revised on 4 October 2026, before any data used it:
 <code>source_id</code> and source
 <code>id</code>/<code>identifier</code> were added. <strong>1.1</strong>
 added <code>origin.time</code> (see <a href="#origin">origin</a>)
-alongside the existing <code>origin.date</code>. <strong>1.0</strong>
-was the initial release.</p>
+alongside the existing <code>origin.date</code>. The default for
+<code>ditschar</code> was changed on 12 October 2026 from a hyphen to
+<em>none</em> (see <a href="#dit-characters-ditschar">Dit
+characters</a>); no file in the published corpus relied on the hyphen.
+<strong>1.0</strong> was the initial release.</p>
 <h2 id="design-principles">Design principles</h2>
 <ul>
 <li><strong>Defaults are robust.</strong> A file containing nothing but
@@ -514,7 +517,10 @@ period.</td>
 <tr>
 <td><code>ditschar</code></td>
 <td>no, cascades</td>
-<td>Character standing in for a missing/unrecoverable symbol.</td>
+<td>One character that marks a position where a symbol definitely exists
+but its identity is unknown, or <em>none</em>. The default is none,
+written as the field absent, <code>""</code> or <code>null</code>. See
+<a href="#dit-characters-ditschar">Dit characters</a>.</td>
 </tr>
 <tr>
 <td><code>ignorechars</code></td>
@@ -750,7 +756,7 @@ level:</p>
 field, if present, wins; otherwise the document’s <code>defaults</code>
 value is used; otherwise the built-in default
 (<code>charset: "[A-Z]"</code>, <code>casesensitive: false</code>,
-<code>ditschar: "-"</code>, <code>ignorechars: "[\\s]"</code>,
+<code>ditschar:</code> none, <code>ignorechars: "[\\s]"</code>,
 <code>cipher_system: "unknown"</code>,
 <code>plaintext_charset: "[A-Z]"</code>).
 <code>unit_type</code>/<code>codebook_id</code>/<code>unit_length</code>/
@@ -916,6 +922,48 @@ just documentation here.)</p>
 class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;1&quot;</span><span class="fu">,</span> <span class="dt">&quot;raw&quot;</span><span class="fu">:</span> <span class="st">&quot;AXBQP LKQRS DTMNC FVXWA QPLEZ TRSUV WNMKL [...] QRTSU VWXYZ ABCDE&quot;</span> <span class="fu">}</span></span></code></pre></div>
 <p>Multiple occurrences in one <code>raw</code> are allowed; there’s no
 cap.</p>
+<h2 id="dit-characters-ditschar">Dit characters
+(<code>ditschar</code>)</h2>
+<p>A <strong>dit</strong> marks a position in the ciphertext where a
+symbol definitely exists but its identity is unknown — a character that
+was smudged, torn away or garbled, yet was plainly there.
+<code>ditschar</code> names the one character that stands for it in
+<code>raw</code>.</p>
+<ul>
+<li><strong>The default is none.</strong> A ciphertext that needs no dit
+declares nothing. “None” is written three equivalent ways: the field
+absent, <code>"ditschar": ""</code>, or <code>"ditschar": null</code>.
+Only the rare ciphertext that has a dit declares a character, such as
+<code>.</code> (the NSA convention) or <code>-</code>.</li>
+<li><strong>It cascades, and none can override.</strong> A ciphertext’s
+own <code>ditschar</code>, including <code>""</code> or
+<code>null</code>, overrides the document’s
+<code>defaults.ditschar</code>. So <code>"ditschar": ""</code> on one
+ciphertext switches off a document-wide <code>.</code>.</li>
+<li><strong>A dit is a position, not a letter.</strong> Unlike an
+<code>ignorechars</code> character, which is dropped and occupies no
+position, a dit counts toward length, spacing and alignment. A tool that
+reads a ciphertext must keep every dit as a position that exists but is
+not a symbol: counted for position, left out of frequency counts, and
+never matched as though it were a particular letter. How each tool marks
+it internally is its own affair.</li>
+<li><strong>It is not the <a href="#gap-marker">gap marker</a>.</strong>
+A dit is exactly one unknown symbol at a known position.
+<code>[...]</code> makes no claim about how much text is missing.</li>
+<li><strong>It is checked.</strong> A character that matches none of
+<code>charset</code>, the <code>ditschar</code> or
+<code>ignorechars</code> is a validation error, so with the default of
+none a stray <code>.</code> or <code>-</code> cannot slip in as an
+undeclared dit. The <code>ditschar</code> must not also match
+<code>ignorechars</code>.</li>
+<li><strong>Text export.</strong> The Editor’s Export writes a block’s
+dit into the metadata comment after its label, as
+<code># Date: "…" Time: "…" Ditschar: "."</code>, each field omitted
+when empty, so a block with no dit has no <code>Ditschar</code> field. A
+tool reading an export takes a block without one to have none, and may
+convert every dit to whatever marker it uses internally, even when two
+blocks use different dit characters.</li>
+</ul>
 <h2 id="corpus-identity-cryptml_uuid">Corpus identity
 (<code>cryptml_uuid</code>)</h2>
 <p><code>cryptml_uuid</code> is an optional document-level UUIDv4
@@ -1636,8 +1684,9 @@ object</strong> — its contents are otherwise entirely unvalidated. See
 <a href="#extensions"><code>extensions</code></a>.</li>
 <li><strong><code>source.type</code></strong> must be one of the
 enumerated values (see below) — not an arbitrary string.</li>
-<li><strong><code>ditschar</code></strong> must be exactly one
-character.</li>
+<li><strong><code>ditschar</code></strong> must be a single character,
+or empty (<code>""</code>) or <code>null</code> for none. Two or more
+characters are an error.</li>
 <li><strong><code>charset</code> and <code>ignorechars</code></strong>
 must each be a single bracketed regex character class —
 <code>[...]</code> or <code>[^...]</code> — spanning the entire value,
@@ -2010,7 +2059,7 @@ different alphabet), free-form ids, and one solved entry.</p>
 class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;MC-I Problem Book, Lesson 2 (excerpt)&quot;</span><span class="fu">,</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span><span class="fu">,</span> <span class="dt">&quot;casesensitive&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;ditschar&quot;</span><span class="fu">:</span> <span class="st">&quot;-&quot;</span><span class="fu">,</span> <span class="dt">&quot;ignorechars&quot;</span><span class="fu">:</span> <span class="st">&quot;[</span><span class="ch">\\</span><span class="st">s]&quot;</span> <span class="fu">},</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span><span class="fu">,</span> <span class="dt">&quot;casesensitive&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;ignorechars&quot;</span><span class="fu">:</span> <span class="st">&quot;[</span><span class="ch">\\</span><span class="st">s]&quot;</span> <span class="fu">},</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sources&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;book&quot;</span><span class="fu">,</span> <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Military Cryptanalytics, Part I, Problem Book&quot;</span><span class="fu">,</span> <span class="dt">&quot;author&quot;</span><span class="fu">:</span> <span class="st">&quot;NSA&quot;</span><span class="fu">,</span> <span class="dt">&quot;page&quot;</span><span class="fu">:</span> <span class="st">&quot;L2&quot;</span> <span class="fu">}</span></span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
@@ -2043,8 +2092,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="
 <span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Resolved view of <code>L2-P16-a</code>:
 <code>charset = "[A-Z]"</code> / <code>casesensitive = false</code> /
-<code>ditschar = "-"</code> / <code>ignorechars = "[\\s]"</code> (all
-from the document, unchanged), <code>cipher_system = "Playfair"</code>
+<code>ignorechars = "[\\s]"</code> (all from the document, unchanged;
+<code>ditschar</code> is none), <code>cipher_system = "Playfair"</code>
 (its own),
 <code>sources = [ {"type": "book", "title": "Military Cryptanalytics, Part I, Problem Book", ...} ]</code>
 (merged down from the document — it has none of its own).
@@ -2065,7 +2114,7 @@ instead, because <code>cipher_system</code> is the only thing ‘a’ and
 class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cryptml_version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Military Cryptanalytics, Part I, Lesson 4 (excerpt)&quot;</span><span class="fu">,</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span><span class="fu">,</span> <span class="dt">&quot;casesensitive&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;ditschar&quot;</span><span class="fu">:</span> <span class="st">&quot;-&quot;</span><span class="fu">,</span> <span class="dt">&quot;ignorechars&quot;</span><span class="fu">:</span> <span class="st">&quot;[</span><span class="ch">\\</span><span class="st">s]&quot;</span> <span class="fu">},</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;defaults&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;charset&quot;</span><span class="fu">:</span> <span class="st">&quot;[A-Z]&quot;</span><span class="fu">,</span> <span class="dt">&quot;casesensitive&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;ignorechars&quot;</span><span class="fu">:</span> <span class="st">&quot;[</span><span class="ch">\\</span><span class="st">s]&quot;</span> <span class="fu">},</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sources&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;book&quot;</span><span class="fu">,</span> <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Military Cryptanalytics, Part I&quot;</span><span class="fu">,</span> <span class="dt">&quot;author&quot;</span><span class="fu">:</span> <span class="st">&quot;Friedman and Callimahos&quot;</span> <span class="fu">}</span></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
