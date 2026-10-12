@@ -4,11 +4,22 @@ Statistical significance evaluation for a located isomorph.
 This is a from-scratch Python reimplementation of the probability model
 originally derived by Moshe Rubin (1988) in ComputeIsomorphCalculations.cpp;
 see compute_prob() there for the original derivation of the formula below.
+
+The expected number of chance isomorphs is the probability of a shape times the
+number of window pairs the search compared. A dit (DIT) occupies a position but
+can never be part of a match, so a window containing one is never compared. The
+comparison count therefore uses the windows that actually can be compared in each
+message -- the dit-free ones -- not the message length: a dit removes up to
+isolen windows, not just one, so neither the length with dits nor the count of
+non-dit letters gives the right number. Dits are counted exactly, from the
+messages themselves.
 """
 
 from collections import Counter
 from dataclasses import dataclass
 import math
+
+from isomorph_search import DIT
 
 _stirling_cache: dict = {}
 
@@ -68,14 +79,39 @@ class IsomorphSignificance:
     significant: bool
 
 
-def evaluate_isomorph(text: str, alphabet_size: int, message_length_a: int, message_length_b: int,
+def _dit_free_run_lengths(message: str) -> list:
+    return [len(run) for run in message.split(DIT) if run]
+
+
+def _window_count(run_lengths: list, isolen: int) -> int:
+    return sum(max(0, run - isolen + 1) for run in run_lengths)
+
+
+def _triangular(k: int) -> int:
+    return k * (k + 1) // 2 if k > 0 else 0
+
+
+def _self_search_comparisons(run_lengths: list, isolen: int) -> int:
+    # Two non-overlapping windows inside one dit-free run: the triangular number
+    # T(run - 2*isolen + 1). Windows in different runs can never overlap, so every
+    # pair of them counts once.
+    within_runs = sum(_triangular(run - 2 * isolen + 1) for run in run_lengths)
+    windows_per_run = [max(0, run - isolen + 1) for run in run_lengths]
+    total = sum(windows_per_run)
+    across_runs = (total * total - sum(w * w for w in windows_per_run)) // 2
+    return within_runs + across_runs
+
+
+def evaluate_isomorph(text: str, alphabet_size: int, message_a: str, message_b: str,
                        self_search: bool, max_expected: float = 10.0) -> IsomorphSignificance:
     """
     Evaluate whether a located isomorph is statistically significant.
 
     text: the isomorph's letters as they appear in the first message (its length is the isomorph length)
-    alphabet_size: number of distinct symbols in the cipher's alphabet
-    message_length_a, message_length_b: lengths of the two ciphertexts being compared
+    alphabet_size: number of distinct symbols in the cipher's alphabet (a dit is not a symbol)
+    message_a, message_b: the two ciphertexts being compared, exactly as passed to
+                  locate_isomorphs, with DIT marking any dits. For a self-search
+                  pass the same message twice.
     self_search: True when comparing a ciphertext against itself
     max_expected: an isomorph is "significant" when the expected number of coincidental
                   occurrences of its pattern shape, across every alignment between
@@ -86,14 +122,11 @@ def evaluate_isomorph(text: str, alphabet_size: int, message_length_a: int, mess
 
     probability = _probability_of_shape(isolen, num_distinct, alphabet_size)
 
+    runs_a = _dit_free_run_lengths(message_a)
     if self_search:
-        # Number of ways to place two non-overlapping length-isolen windows in one
-        # message of length message_length_a is the triangular number T(k), where
-        # k = message_length_a - 2*isolen + 1.
-        k = message_length_a - (2 * isolen) + 1
-        comparisons = k * (k + 1) // 2 if k > 0 else 0
+        comparisons = _self_search_comparisons(runs_a, isolen)
     else:
-        comparisons = (message_length_a - isolen + 1) * (message_length_b - isolen + 1)
+        comparisons = _window_count(runs_a, isolen) * _window_count(_dit_free_run_lengths(message_b), isolen)
 
     expected_occurrences = probability * comparisons
 

@@ -3,7 +3,9 @@ Standalone isomorph search driver.
 Usage: python run_isomorph.py --min-isolen 8 --max-expected 10 --pruning raw shallow deep <ct-file> [<ct-file> ...]
 
 Each <ct-file> is a plain text file containing one ciphertext. Whitespace is
-silently ignored; every other character must belong to --alphabet.
+silently ignored; every other character must belong to --alphabet, or be the
+--ditschar, which marks a position whose symbol exists but is unknown. There is no
+dit unless --ditschar is given. A dit keeps its position but never takes part in a match.
 """
 
 import argparse
@@ -12,7 +14,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Library'))
 
-from isomorph_search import locate_isomorphs, prune_candidates, PRUNE_MODES
+from isomorph_search import DIT, locate_isomorphs, prune_candidates, PRUNE_MODES
 from isomorph_evaluation import evaluate_isomorph
 
 DEFAULT_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -22,20 +24,30 @@ MODE_DISPLAY_ORDER = ('deep', 'shallow', 'raw')
 MODE_HEADINGS = {'raw': 'RAW (NO PRUNING)', 'shallow': 'SHALLOW PRUNING', 'deep': 'DEEP PRUNING'}
 
 
-def load_ciphertext(path: str, alphabet: str) -> str:
-    with open(path, encoding='utf-8') as f:
-        raw = f.read()
-
-    letters = []
+def read_ciphertext(raw: str, alphabet: str, ditschar: str, source: str) -> str:
+    """The ciphertext as a string of letters with each dit as DIT, whatever character it was written with."""
+    symbols = []
     for ch in raw:
-        if ch.isspace():
-            continue
-        folded = ch.upper()
-        if folded not in alphabet:
-            raise ValueError(f"Invalid character {ch!r} in {path}: not in alphabet {alphabet!r}")
-        letters.append(folded)
+        if ch == ditschar:
+            symbols.append(DIT)
+        elif ch.upper() in alphabet:
+            symbols.append(ch.upper())
+        elif not ch.isspace():
+            hint = '' if ditschar else ' If it marks an unknown symbol (a dit), pass --ditschar.'
+            raise ValueError(f"Invalid character {ch!r} in {source}: not in alphabet {alphabet!r}.{hint}")
 
-    return ''.join(letters)
+    return ''.join(symbols)
+
+
+def load_ciphertext(path: str, alphabet: str, ditschar: str) -> str:
+    with open(path, encoding='utf-8') as f:
+        return read_ciphertext(f.read(), alphabet, ditschar, path)
+
+
+def single_character_or_none(value: str):
+    if len(value) > 1:
+        raise argparse.ArgumentTypeError(f"must be a single character, not {value!r}")
+    return value or None
 
 
 def find_significant_isomorphs_for_mode(candidates: list, mode: str, ciphertexts: list, alphabet_size: int,
@@ -47,7 +59,7 @@ def find_significant_isomorphs_for_mode(candidates: list, mode: str, ciphertexts
         self_search = pruned.message_a == pruned.message_b
         significance = evaluate_isomorph(
             pruned.text_a, alphabet_size,
-            len(ciphertexts[pruned.message_a]), len(ciphertexts[pruned.message_b]),
+            ciphertexts[pruned.message_a], ciphertexts[pruned.message_b],
             self_search, max_expected,
         )
         if significance.significant:
@@ -92,15 +104,19 @@ def main():
     parser.add_argument("--min-isolen", type=int, default=8)
     parser.add_argument("--max-expected", type=float, default=10.0)
     parser.add_argument("--alphabet", default=DEFAULT_ALPHABET)
+    parser.add_argument("--ditschar", type=single_character_or_none, default=None,
+                         help="The one character that marks a dit; none by default")
     parser.add_argument("--pruning", nargs="+", choices=PRUNE_MODES, default=["raw"],
                          help="One or more of: raw shallow deep (default: raw)")
     args = parser.parse_args()
 
     alphabet = args.alphabet.upper()
-    ciphertexts = [load_ciphertext(path, alphabet) for path in args.inputs]
+    ciphertexts = [load_ciphertext(path, alphabet, args.ditschar) for path in args.inputs]
 
-    for path, letters in zip(args.inputs, ciphertexts):
-        print(f"{path}: {len(letters)} letters")
+    for path, text in zip(args.inputs, ciphertexts):
+        dit_count = text.count(DIT)
+        dits = f", {dit_count} {'dit' if dit_count == 1 else 'dits'}" if dit_count else ""
+        print(f"{path}: {len(text) - dit_count} letters{dits}")
     print()
 
     candidates = locate_isomorphs(ciphertexts, args.min_isolen)

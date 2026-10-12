@@ -9,10 +9,19 @@ substitution mappings directly, and is the basis of the search below.
 
 This is a from-scratch Python reimplementation of the search algorithm
 originally written in C++ by Moshe Rubin (1988), in IsomorphAlgorithm.cpp.
+
+A ciphertext may contain dits, written DIT: positions where a symbol exists but
+its identity is unknown. A dit occupies its slot, so every position reported is
+a true position, but it is not a symbol -- it never equals a letter or another
+dit. Whether two positions match is therefore unknown wherever a dit is
+involved, so a window containing a dit, in either message, is never isomorphic
+to anything. The search may miss isomorphs this way; it can never invent one.
 """
 
 from dataclasses import dataclass
 from typing import Optional
+
+DIT = "·"
 
 
 @dataclass
@@ -27,22 +36,28 @@ class IsomorphCandidate:
 
 
 def _build_delta(letters: str) -> list:
-    """delta[i] = distance to the next occurrence of letters[i], or None if it never repeats again."""
+    """delta[i] = distance to the next occurrence of letters[i], or None if it never repeats again.
+    A dit is not an occurrence of anything, so it has no delta and is never recorded."""
     delta: list = [None] * len(letters)
     last_seen: dict = {}
     for i, ch in enumerate(letters):
+        if ch == DIT:
+            continue
         if ch in last_seen:
             delta[last_seen[ch]] = i - last_seen[ch]
         last_seen[ch] = i
     return delta
 
 
-def _extend_isomorph(delta_a: list, delta_b: list, start_a: int, start_b: int, max_extent: int) -> int:
+def _extend_isomorph(letters_a: str, delta_a: list, letters_b: str, delta_b: list,
+                      start_a: int, start_b: int, max_extent: int) -> int:
     """Longest length <= max_extent for which the windows starting at start_a (in a)
-    and start_b (in b) share an identical repetition pattern."""
+    and start_b (in b) share an identical repetition pattern and contain no dit."""
     limit = max_extent
     length = 0
     while length < limit:
+        if letters_a[start_a + length] == DIT or letters_b[start_b + length] == DIT:
+            break
         da = delta_a[start_a + length]
         db = delta_b[start_b + length]
         if da != db:
@@ -68,7 +83,7 @@ def _scan_alignment(letters_a: str, delta_a: list, letters_b: str, delta_b: list
         if self_search:
             room = min(room, offset)
 
-        length = _extend_isomorph(delta_a, delta_b, position_a, position_b, room)
+        length = _extend_isomorph(letters_a, delta_a, letters_b, delta_b, position_a, position_b, room)
         if length >= min_isolen:
             candidates.append(IsomorphCandidate(
                 message_a=0, message_b=0,   # filled in by locate_isomorphs
@@ -165,9 +180,10 @@ def locate_isomorphs(ciphertexts: list, min_isolen: int) -> list:
     evidence beyond what an ordinary repeat search already shows.
     No significance filtering is applied here -- see isomorph_evaluation.evaluate_isomorph.
 
-    ciphertexts: list of cleaned ciphertext strings (letters only)
+    ciphertexts: list of cleaned ciphertext strings (letters only), each of which may
+    contain DIT marking a dit. Positions count dits, so they stay true positions.
     Returns a list of IsomorphCandidate, each tagged with the indices (into `ciphertexts`)
-    of the two messages it was found between.
+    of the two messages it was found between. Candidate texts never contain a dit.
     """
     deltas = [_build_delta(letters) for letters in ciphertexts]
     results = []

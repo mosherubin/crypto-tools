@@ -15,6 +15,11 @@ significant once trimmed, and vice versa, so each mode's significant set can
 differ in membership, not just in the details of a shared set. A pruned
 entry's position_a/position_b are the pruned (shifted) span's own start, not
 the original raw candidate's.
+
+A ciphertext entry may name a "ditschar": the one character in its "raw" text
+that marks a dit. It is read exactly as run_isomorph.py reads a file, so a
+fixture can write each ciphertext with a different dit character. Absent means
+none.
 """
 
 import argparse
@@ -28,6 +33,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Library'))
 
 from isomorph_search import locate_isomorphs, prune_candidates, PRUNE_MODES
 from isomorph_evaluation import evaluate_isomorph
+from run_isomorph import read_ciphertext
 
 FLOAT_TOLERANCE = 1e-4
 
@@ -47,7 +53,7 @@ def _find_significant_for_mode(candidates: list, mode: str, ciphertexts: list, a
         self_search = pruned.message_a == pruned.message_b
         sig = evaluate_isomorph(
             pruned.text_a, alphabet_size,
-            len(ciphertexts[pruned.message_a]), len(ciphertexts[pruned.message_b]),
+            ciphertexts[pruned.message_a], ciphertexts[pruned.message_b],
             self_search, max_expected,
         )
         if sig.significant:
@@ -93,8 +99,10 @@ def validate_fixture(path: str) -> bool:
 
     print(f"=== {fixture.get('test_case_id', path)} ===")
 
-    ciphertexts = [ct["raw"] for ct in fixture["ciphertexts"]]
-    alphabet_size = len(fixture["parameters"]["alphabet"])
+    alphabet = fixture["parameters"]["alphabet"]
+    ciphertexts = [read_ciphertext(ct["raw"], alphabet, ct.get("ditschar"), ct["name"])
+                   for ct in fixture["ciphertexts"]]
+    alphabet_size = len(alphabet)
     min_isolen = fixture["parameters"]["min_isolen"]
     max_expected = fixture["parameters"]["max_expected"]
 
