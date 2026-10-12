@@ -97,11 +97,11 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.22)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.23)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
-<div class="row" data-tooltip="Enter or paste the ciphertext here. Spaces, punctuation, and dashes (dits) are handled automatically; only characters matching the selected character set are extracted for analysis.">
+<div class="row" data-tooltip="Enter or paste the ciphertext here. Only characters matching the selected character set are extracted for analysis. If the ciphertext contains dit (missing-letter) markers, enter the dit character below.">
   <span class="lbl">Ciphertext:</span>
   <div class="ctrl">
     <textarea id="ciphertext" placeholder="Paste ciphertext here..."></textarea>
@@ -126,6 +126,14 @@
     </select>
     <input type="text" id="custom_charset" style="display:none; font-family:monospace; width:16em;"
            placeholder="e.g. ab or adfgvx or A-IK-Z" oninput="onCustomCharsetChange()">
+  </div>
+</div>
+
+<div class="row" data-tooltip="The character used in the ciphertext to mark a missing letter (dit). Leave blank if the ciphertext contains no dits. A dit is kept as a position-preserving placeholder in all position-dependent tests (digraphic IC, local roughness, width tests, etc.).">
+  <span class="lbl">Dits character:</span>
+  <div class="ctrl">
+    <input type="text" id="ditschar" maxlength="1" style="width:4em; font-family:monospace;"
+           placeholder="none">
   </div>
 </div>
 
@@ -187,6 +195,10 @@
 <script>
 'use strict';
 
+// ── constants ────────────────────────────────────────────────────────────────
+
+var DIT = '·';  // middle dot: position-preserving placeholder for dit characters
+
 // ── utility ──────────────────────────────────────────────────────────────────
 
 function pyRound(x, dp) {
@@ -220,26 +232,37 @@ function expandAlphabet(charsetRe, caseSensitive) {
     return letters.concat(digits).join('');
 }
 
-function createFromText(raw, charsetPattern, caseSensitive, description) {
+function createFromText(raw, charsetPattern, caseSensitive, description, ditschar) {
     var flags = caseSensitive ? '' : 'i';
     var charsetRe = new RegExp('^(?:' + charsetPattern + ')$', flags);
     var ignoreRe  = new RegExp('^(?:\\s)$');
-    var ditschar  = '-';
+    // ditschar: null/undefined/'' = none; single char = dit character; DIT itself used for delta-stream re-analysis
 
     var alphabet = expandAlphabet(charsetRe, caseSensitive);
     if (!alphabet) throw new Error("charset '" + charsetPattern + "' matched no characters");
 
+    var ditscharFolded = (ditschar && ditschar !== DIT)
+                         ? (caseSensitive ? ditschar : ditschar.toUpperCase())
+                         : ditschar || null;
+
     var letters = [];
+    var streamChars = [];
     var ditscount = 0;
     var errors = [];
 
     for (var i = 0; i < raw.length; i++) {
         var ch = raw[i];
         var folded = caseSensitive ? ch : ch.toUpperCase();
-        if (charsetRe.test(folded)) {
-            letters.push(folded);
-        } else if (folded === ditschar) {
+        if (ch === DIT) {
+            // DIT sentinel from a delta-stream re-analysis pass
             ditscount++;
+            streamChars.push(DIT);
+        } else if (charsetRe.test(folded)) {
+            letters.push(folded);
+            streamChars.push(folded);
+        } else if (ditscharFolded && folded === ditscharFolded) {
+            ditscount++;
+            streamChars.push(DIT);
         } else if (ignoreRe.test(ch)) {
             // skip
         } else {
@@ -256,8 +279,9 @@ function createFromText(raw, charsetPattern, caseSensitive, description) {
         raw: raw,
         alphabet: alphabet,
         caseSensitive: caseSensitive,
-        ditschar: ditschar,
+        ditschar: ditschar || null,
         letters: letters.join(''),
+        stream: streamChars.join(''),
         ditscount: ditscount,
     };
 }
@@ -278,6 +302,7 @@ function runMonoCount(ct) {
 function runIcMono(ct, counts) {
     var N = ct.letters.length;
     var c = ct.alphabet.length;
+    if (N < 2) return { ic: 0.0, sigmage: 0.0, total: N, hitsObserved: 0, hitsExpected: 0 };
     var S = 0;
     var vals = Object.values(counts);
     for (var i = 0; i < vals.length; i++) S += vals[i] * (vals[i] - 1);
@@ -295,6 +320,7 @@ function runIcMono(ct, counts) {
 function _computeDigraphic(ct, bigrams, sigmageType) {
     var C = ct.alphabet.length;
     var M = bigrams.length;
+    if (M < 2) return { ic: 0.0, sigmage: 0.0, total: M, hitsObserved: 0, hitsExpected: 0 };
     var countMap = {};
     for (var i = 0; i < M; i++) {
         var key = bigrams[i][0] + bigrams[i][1];
@@ -318,20 +344,23 @@ function _computeDigraphic(ct, bigrams, sigmageType) {
 }
 
 function runDigraphicOverall(ct) {
-    var text = ct.letters, bigrams = [];
-    for (var i = 0; i < text.length - 1; i++) bigrams.push([text[i], text[i+1]]);
+    var stream = ct.stream, bigrams = [];
+    for (var i = 0; i < stream.length - 1; i++)
+        if (stream[i] !== DIT && stream[i+1] !== DIT) bigrams.push([stream[i], stream[i+1]]);
     return _computeDigraphic(ct, bigrams, 'overall');
 }
 
 function runDigraphicCutA(ct) {
-    var text = ct.letters, bigrams = [];
-    for (var i = 0; i < text.length - 1; i += 2) bigrams.push([text[i], text[i+1]]);
+    var stream = ct.stream, bigrams = [];
+    for (var i = 0; i < stream.length - 1; i += 2)
+        if (stream[i] !== DIT && stream[i+1] !== DIT) bigrams.push([stream[i], stream[i+1]]);
     return _computeDigraphic(ct, bigrams, 'onoff');
 }
 
 function runDigraphicCutB(ct) {
-    var text = ct.letters, bigrams = [];
-    for (var i = 1; i < text.length - 1; i += 2) bigrams.push([text[i], text[i+1]]);
+    var stream = ct.stream, bigrams = [];
+    for (var i = 1; i < stream.length - 1; i += 2)
+        if (stream[i] !== DIT && stream[i+1] !== DIT) bigrams.push([stream[i], stream[i+1]]);
     return _computeDigraphic(ct, bigrams, 'onoff');
 }
 
@@ -341,6 +370,7 @@ function runDigraphicCutB(ct) {
 function _computeTrigraphic(ct, trigrams) {
     var C = ct.alphabet.length;
     var M = trigrams.length;
+    if (M < 2) return { ic: 0.0, sigmage: 0.0, total: M, hitsObserved: 0, hitsExpected: 0.0 };
     var countMap = {};
     for (var i = 0; i < M; i++) {
         var key = trigrams[i][0] + trigrams[i][1] + trigrams[i][2];
@@ -363,26 +393,34 @@ function _computeTrigraphic(ct, trigrams) {
 }
 
 function runTrigraphicOverall(ct) {
-    var text = ct.letters, tgs = [];
-    for (var i = 0; i < text.length - 2; i++) tgs.push([text[i], text[i+1], text[i+2]]);
+    var stream = ct.stream, tgs = [];
+    for (var i = 0; i < stream.length - 2; i++)
+        if (stream[i] !== DIT && stream[i+1] !== DIT && stream[i+2] !== DIT)
+            tgs.push([stream[i], stream[i+1], stream[i+2]]);
     return _computeTrigraphic(ct, tgs);
 }
 
 function runTrigraphicCutA(ct) {
-    var text = ct.letters, tgs = [];
-    for (var i = 0; i < text.length - 2; i += 3) tgs.push([text[i], text[i+1], text[i+2]]);
+    var stream = ct.stream, tgs = [];
+    for (var i = 0; i < stream.length - 2; i += 3)
+        if (stream[i] !== DIT && stream[i+1] !== DIT && stream[i+2] !== DIT)
+            tgs.push([stream[i], stream[i+1], stream[i+2]]);
     return _computeTrigraphic(ct, tgs);
 }
 
 function runTrigraphicCutB(ct) {
-    var text = ct.letters, tgs = [];
-    for (var i = 1; i < text.length - 2; i += 3) tgs.push([text[i], text[i+1], text[i+2]]);
+    var stream = ct.stream, tgs = [];
+    for (var i = 1; i < stream.length - 2; i += 3)
+        if (stream[i] !== DIT && stream[i+1] !== DIT && stream[i+2] !== DIT)
+            tgs.push([stream[i], stream[i+1], stream[i+2]]);
     return _computeTrigraphic(ct, tgs);
 }
 
 function runTrigraphicCutC(ct) {
-    var text = ct.letters, tgs = [];
-    for (var i = 2; i < text.length - 2; i += 3) tgs.push([text[i], text[i+1], text[i+2]]);
+    var stream = ct.stream, tgs = [];
+    for (var i = 2; i < stream.length - 2; i += 3)
+        if (stream[i] !== DIT && stream[i+1] !== DIT && stream[i+2] !== DIT)
+            tgs.push([stream[i], stream[i+1], stream[i+2]]);
     return _computeTrigraphic(ct, tgs);
 }
 
@@ -390,20 +428,26 @@ function runTrigraphicCutC(ct) {
 // Ported from tests/local_roughness.py
 
 function runLocalRoughness(ct, counts) {
-    var text = ct.letters;
-    var N = text.length;
+    var stream = ct.stream;
+    var N = ct.letters.length;
     var s = ct.alphabet.length;
     var S = 0;
     var vals = Object.values(counts);
     for (var i = 0; i < vals.length; i++) S += vals[i] * (vals[i] - 1);
-    var icPrecise = S * s / (N * (N - 1));
-    var maxOffset = Math.min(33, N - 1);
+    var icPrecise = (N >= 2) ? S * s / (N * (N - 1)) : 0.0;
+    var maxOffset = Math.min(33, stream.length - 1);
     var entries = [];
     for (var offset = 1; offset <= maxOffset; offset++) {
-        var P = N - offset;
-        var observed = 0;
-        for (var j = 0; j < P; j++) {
-            if (text[j] === text[j + offset]) observed++;
+        var P = 0, observed = 0;
+        for (var j = 0; j < stream.length - offset; j++) {
+            if (stream[j] !== DIT && stream[j + offset] !== DIT) {
+                P++;
+                if (stream[j] === stream[j + offset]) observed++;
+            }
+        }
+        if (P === 0 || icPrecise === 0.0) {
+            entries.push({ offset: offset, observed: observed, expected: 0, sigmage: 0.0 });
+            continue;
         }
         var expectedPrecise = icPrecise * P / s;
         var sigmage = (s * (observed - expectedPrecise)) / Math.sqrt(P * icPrecise * (s - icPrecise));
@@ -421,23 +465,25 @@ function runLocalRoughness(ct, counts) {
 // Ported from tests/width_tests.py
 
 function runWidthTests(ct, counts) {
-    var text = ct.letters;
-    var N = text.length;
+    var stream = ct.stream;
+    var N = ct.letters.length;  // letter count for the sigmage formula
     var c = ct.alphabet.length;
     var S = 0;
     var vals = Object.values(counts);
     for (var i = 0; i < vals.length; i++) S += vals[i] * (vals[i] - 1);
-    var deltaMono = S * c / (N * (N - 1));
+    var deltaMono = (N >= 2) ? S * c / (N * (N - 1)) : 0.0;
     var entries = [];
     for (var w = 2; w <= 51; w++) {
         var totalHits = 0, totalComps = 0;
         for (var k = 0; k < w; k++) {
             var colCounts = {};
             var Mk = 0;
-            for (var j = k; j < N; j += w) {
-                var ch = text[j];
-                colCounts[ch] = (colCounts[ch] || 0) + 1;
-                Mk++;
+            for (var j = k; j < stream.length; j += w) {
+                var ch = stream[j];
+                if (ch !== DIT) {
+                    colCounts[ch] = (colCounts[ch] || 0) + 1;
+                    Mk++;
+                }
             }
             var colVals = Object.values(colCounts);
             for (var m = 0; m < colVals.length; m++)
@@ -462,19 +508,21 @@ function runWidthTests(ct, counts) {
 // Ported from tests/polygraphic_ic.py
 
 function runPolygraphicIc(ct) {
-    var text = ct.letters;
-    var N = text.length;
+    var stream = ct.stream;
     var c = ct.alphabet.length;
     var entries = [];
     for (var m = 3; m <= 5; m++) {
-        var mN = N - m + 1;
+        var windows = [];
+        for (var i = 0; i <= stream.length - m; i++) {
+            var win = stream.slice(i, i + m);
+            if (win.indexOf(DIT) < 0) windows.push(win);
+        }
+        var mN = windows.length;
         if (mN < 2) break;
         var cm = Math.pow(c, m);
         var gramCounts = {};
-        for (var i = 0; i < mN; i++) {
-            var key = text.slice(i, i + m);
-            gramCounts[key] = (gramCounts[key] || 0) + 1;
-        }
+        for (var wi = 0; wi < windows.length; wi++)
+            gramCounts[windows[wi]] = (gramCounts[windows[wi]] || 0) + 1;
         var gVals = Object.values(gramCounts);
         var observed = 0;
         for (var j = 0; j < gVals.length; j++)
@@ -500,18 +548,21 @@ function runPolygraphicIc(ct) {
 var MAX_REPEATS = 50;
 var MIN_LENGTH  = 4;
 
-function _findRepeats(letters) {
-    var n = letters.length;
+function _findRepeats(stream) {
+    var n = stream.length;
     var repeats = [];
     for (var offset = 2; offset < n - 2; offset++) {
         var i = 0;
         while (i <= n - offset - 1) {
-            if (letters[i] === letters[i + offset]) {
+            if (stream[i] !== DIT && stream[i] === stream[i + offset]) {
                 var length = 1;
-                while ((i + length < n - offset) && (letters[i + length] === letters[i + offset + length]))
+                while ((i + length < n - offset) &&
+                       stream[i + length] !== DIT &&
+                       stream[i + offset + length] !== DIT &&
+                       (stream[i + length] === stream[i + offset + length]))
                     length++;
                 if (length >= MIN_LENGTH) {
-                    repeats.push({ length: length, position: i + 1, offset: offset, text: letters.slice(i, i + length) });
+                    repeats.push({ length: length, position: i + 1, offset: offset, text: stream.slice(i, i + length) });
                     i += length;
                 } else {
                     i++;
@@ -545,7 +596,7 @@ function _sortedRepeats(repeats) {
 }
 
 function runListOfRepeats(ct, maxRepeats) {
-    var raw    = _findRepeats(ct.letters);
+    var raw    = _findRepeats(ct.stream);
     var sorted = _sortedRepeats(raw);
     var displayed = (maxRepeats === 0) ? sorted : sorted.slice(0, maxRepeats);
     return { repeats: displayed, totalFound: sorted.length };
@@ -560,25 +611,29 @@ var DEFAULT_ALPHABETS = {
     '[A-Za-z0-9]': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
 };
 
-function computeDeltaStream(letters, alphabet, offset) {
-    var c = letters.length - offset;
+function computeDeltaStream(stream, alphabet, offset) {
+    var len = stream.length - offset;
     var val = {};
     for (var i = 0; i < alphabet.length; i++) val[alphabet[i]] = i;
     var result = [];
     var mod = alphabet.length;
-    for (var j = 0; j < c; j++) {
-        var d = ((val[letters[j + offset]] - val[letters[j]]) % mod + mod) % mod;
-        result.push(alphabet[d]);
+    for (var j = 0; j < len; j++) {
+        if (stream[j] === DIT || stream[j + offset] === DIT) {
+            result.push(DIT);
+        } else {
+            var d = ((val[stream[j + offset]] - val[stream[j]]) % mod + mod) % mod;
+            result.push(alphabet[d]);
+        }
     }
     return result.join('');
 }
 
 function runDeltaStream(ct, offset, alphabet) {
-    var N = ct.letters.length;
+    var N = ct.stream.length;
     var entries = [];
     if (offset >= 1 && offset <= N - 1)
         entries.push({ offset: offset, alphabet: alphabet,
-                       stream: computeDeltaStream(ct.letters, alphabet, offset) });
+                       stream: computeDeltaStream(ct.stream, alphabet, offset) });
     return { entries: entries };
 }
 
@@ -771,9 +826,10 @@ function formatListing(ct, mc, icResult,
         for (var di = 0; di < dsResult.entries.length; di++) {
             var de = dsResult.entries[di];
             out.push('OFFSET ' + _padStart(String(de.offset), 2) + '  ALPHABET  ' + de.alphabet);
+            var display = de.stream.replace(new RegExp(DIT, 'g'), '.');
             var dgroups = [];
-            for (var dg = 0; dg < de.stream.length; dg += 5)
-                dgroups.push(de.stream.slice(dg, dg + 5));
+            for (var dg = 0; dg < display.length; dg += 5)
+                dgroups.push(display.slice(dg, dg + 5));
             for (var dr = 0; dr < dgroups.length; dr += 10)
                 out.push(dgroups.slice(dr, dr + 10).join(' '));
         }
@@ -855,7 +911,7 @@ function runSuite(ct, displayCt, maxRepeats, deltaConfig, includeIsomorphs, rawT
         parts.push(sep);
         var deltaCt = createFromText(entry.stream,
                           deltaConfig.charsetPattern, deltaConfig.caseSensitive,
-                          'Delta stream offset=' + entry.offset);
+                          'Delta stream offset=' + entry.offset, DIT);
         parts.push(runSuite(deltaCt, false, maxRepeats, null, true));
     }
 
@@ -875,7 +931,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.22)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.23)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
@@ -956,7 +1012,8 @@ function runTests() {
         } else {
             charsetCfg = CHARSET_MAP[charsetKey] || CHARSET_MAP['[A-Za-z]'];
         }
-        var ct = createFromText(rawText, charsetCfg.pattern, charsetCfg.caseSensitive, desc);
+        var ditscharVal = document.getElementById('ditschar').value || null;
+        var ct = createFromText(rawText, charsetCfg.pattern, charsetCfg.caseSensitive, desc, ditscharVal);
 
         if (ct.letters.length < 4) {
             out.value = 'ERROR: Too few cipher characters (' + ct.letters.length + '); need at least 4.';

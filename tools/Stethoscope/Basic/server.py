@@ -31,6 +31,7 @@ def _find_significant_isomorphs(letters: str, alphabet_size: int) -> list:
 from flask import Flask, request, jsonify
 
 import ciphertext as ct_module
+from ciphertext import DIT as _DIT
 import tests.mono_count as mono_count
 import tests.compute_ic_mono as compute_ic_mono
 import tests.digraphic_ic as digraphic_ic
@@ -117,7 +118,7 @@ _HTML = """\
 </style>
 </head>
 <body>
-<h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.22)</span></h1>
+<h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.23)</span></h1>
 
 <div class="row">
   <span class="lbl">Ciphertext:</span>
@@ -141,6 +142,16 @@ _HTML = """\
       <option value="[0-9]">[0-9] — 10 characters</option>
       <option value="[A-Za-z0-9]">[A-Za-z0-9] — 36 characters</option>
     </select>
+  </div>
+</div>
+
+<div class="row">
+  <span class="lbl">Dits character:</span>
+  <div class="ctrl">
+    <input type="text" id="dits_char" maxlength="1"
+           style="width:3em; font-family:monospace;"
+           placeholder="(none)"
+           title="Single character that marks a missing symbol (dit). Leave blank if none.">
   </div>
 </div>
 
@@ -170,7 +181,7 @@ function runHeader() {
   const hh   = String(n.getHours()).padStart(2, '0');
   const mm   = String(n.getMinutes()).padStart(2, '0');
   const ss   = String(n.getSeconds()).padStart(2, '0');
-  return `STETHOSCOPE PROGRAM (version 0.22)  (Moshe Rubin)  Timestamp  ${dd} ${mon} ${yyyy}  -  ${hh}:${mm}:${ss}`;
+  return `STETHOSCOPE PROGRAM (version 0.23)  (Moshe Rubin)  Timestamp  ${dd} ${mon} ${yyyy}  -  ${hh}:${mm}:${ss}`;
 }
 
 async function runTests() {
@@ -186,6 +197,7 @@ async function runTests() {
         ciphertext:        document.getElementById('ciphertext').value,
         description:       document.getElementById('description').value,
         charset:           document.getElementById('charset').value,
+        ditschar:          document.getElementById('dits_char').value || null,
         display_ciphertext: document.getElementById('display_ct').checked,
       })
     });
@@ -233,6 +245,7 @@ def run():
     charset_key = payload.get('charset', '[A-Za-z]')
     display_ct  = payload.get('display_ciphertext', False)
     max_repeats = int(payload.get('max_repeats', 50))
+    ditschar    = payload.get('ditschar') or None  # '' or null → None
     delta_config = None
     if payload.get('delta_enabled'):
         delta_config = {
@@ -248,6 +261,7 @@ def run():
             charset_pattern=charset_pattern,
             casesensitive=casesensitive,
             description=description,
+            ditschar=ditschar,
         )
     except Exception as e:
         return jsonify({'error': str(e)})
@@ -297,12 +311,12 @@ def _run_suite(ct, display_ct: bool, max_repeats: int = 50,
     if delta_config:
         offset   = delta_config['offset']
         alphabet = delta_config['alphabet'] or ct.alphabet
-        N = len(ct.letters)
-        if 1 <= offset <= N - 1:
+        stream_len = len(ct.stream)
+        if 1 <= offset <= stream_len - 1:
             from tests.delta_stream import DeltaEntry, DeltaResult, compute_stream
-            stream = compute_stream(ct.letters, alphabet, offset)
+            ds_stream = compute_stream(ct.stream, alphabet, offset)
             ds_result = DeltaResult(
-                entries=[DeltaEntry(offset=offset, alphabet=alphabet, stream=stream)],
+                entries=[DeltaEntry(offset=offset, alphabet=alphabet, stream=ds_stream)],
                 passed=None,
             )
     else:
@@ -323,6 +337,7 @@ def _run_suite(ct, display_ct: bool, max_repeats: int = 50,
             charset_pattern=charset_pattern,
             casesensitive=casesensitive,
             description=f'Delta stream offset={entry.offset}',
+            ditschar=_DIT,
         )
         parts.append('')
         parts.append(sep)

@@ -3,6 +3,8 @@ STETHOSCOPE test: List of Repeats.
 
 Finds all repeated sequences of length >= 4 in the ciphertext.
 For each offset (2..N-3), scans left-to-right for maximal-length matches.
+A run stops when either character is DIT; reported positions are 1-based
+TRUE stream positions; repeated text contains no DIT.
 Sorts by repeated string, then within blocks sharing the same first 4 characters
 re-sorts by (position, offset).
 Prints up to max_repeats entries (0 = all); if more exist prints "MORE (# remaining)".
@@ -11,7 +13,7 @@ Prints up to max_repeats entries (0 = all); if more exist prints "MORE (# remain
 from dataclasses import dataclass, field
 from typing import Optional
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from ciphertext import CiphertextData
+from ciphertext import CiphertextData, DIT
 
 MIN_LENGTH = 4
 
@@ -19,7 +21,7 @@ MIN_LENGTH = 4
 @dataclass
 class Repeat:
     length: int
-    position: int   # 1-based
+    position: int   # 1-based stream position
     offset: int
     text: str
 
@@ -32,22 +34,25 @@ class RepeatsResult:
     errors: list = field(default_factory=list)
 
 
-def _find_repeats(letters: str) -> list:
-    n = len(letters)
+def _find_repeats(stream: str) -> list:
+    n = len(stream)
     repeats = []
     for offset in range(2, n - 2):
         i = 0
         while i <= n - offset - 1:
-            if letters[i] == letters[i + offset]:
+            if stream[i] != DIT and stream[i] == stream[i + offset]:
                 length = 1
-                while (i + length < n - offset) and (letters[i + length] == letters[i + offset + length]):
+                while (i + length < n - offset and
+                       stream[i + length] != DIT and
+                       stream[i + offset + length] != DIT and
+                       stream[i + length] == stream[i + offset + length]):
                     length += 1
                 if length >= MIN_LENGTH:
                     repeats.append(Repeat(
                         length=length,
-                        position=i + 1,
+                        position=i + 1,   # 1-based stream position
                         offset=offset,
-                        text=letters[i:i + length],
+                        text=stream[i:i + length],
                     ))
                     i += length
                 else:
@@ -79,7 +84,7 @@ def _sorted_repeats(repeats: list) -> list:
 
 
 def run(ct: CiphertextData, max_repeats: int = 50) -> RepeatsResult:
-    raw_repeats = _find_repeats(ct.letters)
+    raw_repeats = _find_repeats(ct.stream)
     sorted_rep = _sorted_repeats(raw_repeats)
     total = len(sorted_rep)
     displayed = sorted_rep if max_repeats == 0 else sorted_rep[:max_repeats]
@@ -105,7 +110,6 @@ def run(ct: CiphertextData, max_repeats: int = 50) -> RepeatsResult:
                 errors.append(
                     f"repeat[{idx}] {field_name}: computed {gv!r}, expected {ev!r}"
                 )
-
 
     return RepeatsResult(
         repeats=displayed,

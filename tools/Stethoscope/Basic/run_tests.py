@@ -23,6 +23,7 @@ def _find_significant_isomorphs(letters: str, alphabet_size: int) -> list:
     return results
 
 import ciphertext
+from ciphertext import DIT as _DIT
 import format_report
 import version as _version
 import tests.mono_count as mono_count
@@ -171,6 +172,7 @@ def run_file(path: str):
                     charset_pattern=ct.charset,
                     casesensitive=ct.casesensitive,
                     description=f'Delta stream offset={entry.offset}',
+                    ditschar=_DIT,
                 )
                 print()
                 print(sep)

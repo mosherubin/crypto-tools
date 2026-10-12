@@ -1,0 +1,17 @@
+{
+  "test_case_id": "dit-abc-def",
+  "description": "Verifies digraphic IC uses ct.stream so dits break pairs at the correct positions.",
+  "ciphertext": {
+    "raw": "ABC.DEF",
+    "charset": "[A-Z]",
+    "casesensitive": false,
+    "ditschar": "."
+  },
+  "expected_results": {
+    "ditscount": 1,
+    "total_letters": 6,
+    "compute_digraphic_ic_overall": {"total": 4},
+    "compute_digraphic_ic_cut_a":   {"total": 2},
+    "compute_digraphic_ic_cut_b":   {"total": 2}
+  }
+}

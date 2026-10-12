@@ -1,0 +1,21 @@
+{
+  "test_case_id": "dit-aba-a-dash",
+  "description": "Same text as dit-aba-a-dot but with '-' as ditschar; statistics must be identical.",
+  "ciphertext": {
+    "raw": "ABA-A",
+    "charset": "[A-Z]",
+    "casesensitive": false,
+    "ditschar": "-"
+  },
+  "expected_results": {
+    "ditscount": 1,
+    "total_letters": 4,
+    "local_roughness": [
+      {},
+      {"observed": 2, "expected": 1, "sigmage": 1.4}
+    ],
+    "width_tests": [
+      {"width": 2, "hits": 3, "comparisons": 3}
+    ]
+  }
+}

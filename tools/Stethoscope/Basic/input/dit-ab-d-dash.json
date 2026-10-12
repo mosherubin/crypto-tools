@@ -1,0 +1,17 @@
+{
+  "test_case_id": "dit-ab-d-dash",
+  "description": "Same as dit-ab-d-dot but ditschar '-'; statistics must be identical.",
+  "ciphertext": {
+    "raw": "AB-D",
+    "charset": "[A-Z]",
+    "casesensitive": false,
+    "ditschar": "-"
+  },
+  "delta_stream": [
+    {"offset": 1, "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "stream": "B··"}
+  ],
+  "expected_results": {
+    "ditscount": 1,
+    "total_letters": 3
+  }
+}

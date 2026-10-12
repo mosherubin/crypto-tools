@@ -8,6 +8,7 @@ Width tests, polygraphic IC, and list of repeats follow below.
 """
 
 import sys, os; sys.path.insert(0, os.path.dirname(__file__))
+from ciphertext import DIT
 
 _ISO_MIN_LEN = 4
 _ISO_MAX_EXPECTED = 0.5
@@ -156,7 +157,8 @@ def format_listing(ct, mc_result, ic_result,
         out.append('DELTA STREAM')
         for e in ds_result.entries:
             out.append(f'OFFSET {e.offset:>2}  ALPHABET  {e.alphabet}')
-            groups = [e.stream[i:i + 5] for i in range(0, len(e.stream), 5)]
+            display = e.stream.replace(DIT, '.')  # NSA convention: print dits as '.'
+            groups = [display[i:i + 5] for i in range(0, len(display), 5)]
             rows = [' '.join(groups[i:i + 10]) for i in range(0, len(groups), 10)]
             for row in rows:
                 out.append(row)

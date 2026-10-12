@@ -7,7 +7,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Optional
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from ciphertext import CiphertextData
+from ciphertext import CiphertextData, DIT
 
 
 @dataclass
@@ -25,19 +25,34 @@ class DigraphicIcResult:
             self.errors = []
 
 
-def _bigrams_overall(text: str):
-    return [(text[i], text[i + 1]) for i in range(len(text) - 1)]
+def _bigrams_overall(stream: str):
+    return [(stream[i], stream[i + 1]) for i in range(len(stream) - 1)
+            if stream[i] != DIT and stream[i + 1] != DIT]
 
-def _bigrams_cut_a(text: str):
-    return [(text[i], text[i + 1]) for i in range(0, len(text) - 1, 2)]
+def _bigrams_cut_a(stream: str):
+    return [(stream[i], stream[i + 1]) for i in range(0, len(stream) - 1, 2)
+            if stream[i] != DIT and stream[i + 1] != DIT]
 
-def _bigrams_cut_b(text: str):
-    return [(text[i], text[i + 1]) for i in range(1, len(text) - 1, 2)]
+def _bigrams_cut_b(stream: str):
+    return [(stream[i], stream[i + 1]) for i in range(1, len(stream) - 1, 2)
+            if stream[i] != DIT and stream[i + 1] != DIT]
 
 
 def _compute(ct: CiphertextData, bigrams: list, sigmage_type: str, expected: dict) -> DigraphicIcResult:
     C = len(ct.alphabet)
     M = len(bigrams)
+
+    if M < 2:
+        result = DigraphicIcResult(ic=0.0, sigmage=0.0, total=M,
+                                   hits_observed=0, hits_expected=0)
+        if expected:
+            errors = []
+            for name, got, exp in [('total', M, expected.get('total'))]:
+                if exp is not None and got != exp:
+                    errors.append(f"{name}: computed {got}, expected {exp}")
+            result.passed = len(errors) == 0
+            result.errors = errors
+        return result
 
     counts = defaultdict(int)
     for bg in bigrams:
@@ -84,16 +99,16 @@ def _compute(ct: CiphertextData, bigrams: list, sigmage_type: str, expected: dic
 
 
 def run_overall(ct: CiphertextData) -> DigraphicIcResult:
-    bigrams = _bigrams_overall(ct.letters)
+    bigrams = _bigrams_overall(ct.stream)
     expected = ct.expected_results.get('compute_digraphic_ic_overall', {})
     return _compute(ct, bigrams, 'overall', expected)
 
 def run_cut_a(ct: CiphertextData) -> DigraphicIcResult:
-    bigrams = _bigrams_cut_a(ct.letters)
+    bigrams = _bigrams_cut_a(ct.stream)
     expected = ct.expected_results.get('compute_digraphic_ic_cut_a', {})
     return _compute(ct, bigrams, 'onoff', expected)
 
 def run_cut_b(ct: CiphertextData) -> DigraphicIcResult:
-    bigrams = _bigrams_cut_b(ct.letters)
+    bigrams = _bigrams_cut_b(ct.stream)
     expected = ct.expected_results.get('compute_digraphic_ic_cut_b', {})
     return _compute(ct, bigrams, 'onoff', expected)

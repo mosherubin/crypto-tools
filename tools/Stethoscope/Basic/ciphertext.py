@@ -6,6 +6,9 @@ Parses a JSON input file and produces a CiphertextData object that all tests con
 import json
 import re
 from dataclasses import dataclass, field
+from typing import Optional
+
+DIT = '·'  # middle dot: position-preserving placeholder for dit characters
 
 
 @dataclass
@@ -16,9 +19,10 @@ class CiphertextData:
     charset: str           # regex pattern used to match valid cipher symbols
     alphabet: str          # ordered string of all symbols matched by charset (e.g. "ABC...Z")
     casesensitive: bool
-    ditschar: str          # single character representing a missing symbol
+    ditschar: Optional[str]  # None = no dits accepted; single char = the dit character
     letters: str           # cleaned text: only charset symbols (dits removed)
     ditscount: int         # number of dits found in the raw (after case-fold)
+    stream: str            # position-preserving: letters + DIT in place of dits; ignored chars dropped
     expected_results: dict = field(default_factory=dict)
     delta_stream: list = field(default_factory=list)
 
@@ -49,12 +53,7 @@ def _expand_alphabet(charset_re: re.Pattern, casesensitive: bool) -> str:
 
 def _strip_ignored_boundary(raw: str, remove_from_start: int, remove_from_end: int,
                              ignore_re: re.Pattern) -> str:
-    """Strip `remove_from_start`/`remove_from_end` non-ignored characters from raw's ends.
-
-    Characters matching `ignore_re` (e.g. whitespace between groups) don't count
-    toward the removal total, so a preamble/postamble can be specified by its
-    cipher-letter length without having to also count intervening spaces.
-    """
+    """Strip `remove_from_start`/`remove_from_end` non-ignored characters from raw's ends."""
     start = 0
     if remove_from_start:
         seen = 0
@@ -99,10 +98,14 @@ def load(path: str) -> CiphertextData:
     charset_pattern: str = ct.get('charset', r'[A-Z]')
     ignorechars_pattern: str = ct.get('ignorechars', r'\s')
     casesensitive: bool = ct.get('casesensitive', False)
-    ditschar: str = ct.get('ditschar', '-')
 
-    if len(ditschar) != 1:
-        raise ValueError(f"ditschar must be a single character; got '{ditschar}'")
+    raw_ditschar = ct.get('ditschar')
+    if raw_ditschar is None or raw_ditschar == '':
+        ditschar = None
+    elif isinstance(raw_ditschar, str) and len(raw_ditschar) == 1:
+        ditschar = raw_ditschar
+    else:
+        raise ValueError(f"ditschar must be a single character, empty string, or absent; got {raw_ditschar!r}")
 
     re_flags = 0 if casesensitive else re.IGNORECASE
     try:
@@ -114,7 +117,7 @@ def load(path: str) -> CiphertextData:
     except re.error as e:
         raise ValueError(f"Invalid ignorechars regex '{ignorechars_pattern}': {e}") from e
 
-    if ignore_re.fullmatch(ditschar):
+    if ditschar is not None and ignore_re.fullmatch(ditschar):
         raise ValueError(
             f"ditschar {ditschar!r} will be ignored by the 'ignorechars' regex "
             f"'{ignorechars_pattern}'; modify one of the strings."
@@ -130,6 +133,7 @@ def load(path: str) -> CiphertextData:
         raise ValueError(f"charset regex '{charset_pattern}' matched no printable ASCII characters")
 
     letters = []
+    stream_chars = []
     ditscount = 0
     errors = []
 
@@ -137,8 +141,10 @@ def load(path: str) -> CiphertextData:
         folded = ch if casesensitive else ch.upper()
         if charset_re.fullmatch(folded):
             letters.append(folded)
-        elif folded == ditschar:
+            stream_chars.append(folded)
+        elif ditschar is not None and folded == (ditschar if casesensitive else ditschar.upper()):
             ditscount += 1
+            stream_chars.append(DIT)
         elif ignore_re.fullmatch(ch):
             pass  # silently drop
         else:
@@ -166,6 +172,7 @@ def load(path: str) -> CiphertextData:
         ditschar=ditschar,
         letters=''.join(letters),
         ditscount=ditscount,
+        stream=''.join(stream_chars),
         expected_results=expected_results,
         delta_stream=delta_stream,
     )
@@ -174,14 +181,14 @@ def load(path: str) -> CiphertextData:
 def create_from_text(raw: str, charset_pattern: str = '[A-Z]',
                      casesensitive: bool = False,
                      description: str = '',
-                     ditschar: str = '-',
+                     ditschar: Optional[str] = None,
                      ignorechars_pattern: str = r'\s') -> CiphertextData:
     """Create CiphertextData directly from a raw string (no JSON file)."""
     re_flags = 0 if casesensitive else re.IGNORECASE
     charset_re = re.compile(charset_pattern, re_flags)
     ignore_re  = re.compile(ignorechars_pattern, re_flags)
 
-    if ignore_re.fullmatch(ditschar):
+    if ditschar is not None and ignore_re.fullmatch(ditschar):
         raise ValueError(
             f"ditschar {ditschar!r} is matched by ignorechars '{ignorechars_pattern}'"
         )
@@ -191,6 +198,7 @@ def create_from_text(raw: str, charset_pattern: str = '[A-Z]',
         raise ValueError(f"charset regex '{charset_pattern}' matched no printable ASCII characters")
 
     letters = []
+    stream_chars = []
     ditscount = 0
     errors = []
 
@@ -198,8 +206,10 @@ def create_from_text(raw: str, charset_pattern: str = '[A-Z]',
         folded = ch if casesensitive else ch.upper()
         if charset_re.fullmatch(folded):
             letters.append(folded)
-        elif folded == ditschar:
+            stream_chars.append(folded)
+        elif ditschar is not None and folded == (ditschar if casesensitive else ditschar.upper()):
             ditscount += 1
+            stream_chars.append(DIT)
         elif ignore_re.fullmatch(ch):
             pass
         else:
@@ -220,5 +230,6 @@ def create_from_text(raw: str, charset_pattern: str = '[A-Z]',
         ditschar=ditschar,
         letters=''.join(letters),
         ditscount=ditscount,
+        stream=''.join(stream_chars),
         expected_results={},
     )

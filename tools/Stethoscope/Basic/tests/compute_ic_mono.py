@@ -30,6 +30,10 @@ def run(ct: CiphertextData, mono_counts: dict[str, int]) -> IcMonoResult:
 
     S = sum(v * (v - 1) for v in mono_counts.values())
 
+    if N < 2:
+        return IcMonoResult(ic=0.0, sigmage=0.0, total=N,
+                            hits_observed=0, hits_expected=0)
+
     ic = round(S * c / (N * (N - 1)), 4)
     sd = math.sqrt((2 * (c - 1)) / (N * (N - 1)))
     sigmage = round((ic - 1.0) / sd, 1)

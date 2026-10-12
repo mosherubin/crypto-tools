@@ -6,7 +6,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Optional
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from ciphertext import CiphertextData
+from ciphertext import CiphertextData, DIT
 
 
 @dataclass
@@ -25,19 +25,31 @@ class LocalRoughnessResult:
 
 
 def run(ct: CiphertextData, mono_counts: dict) -> LocalRoughnessResult:
-    text = ct.letters
-    N = len(text)
+    stream = ct.stream
+    stream_len = len(stream)
+    N = len(ct.letters)
     s = len(ct.alphabet)
 
     S = sum(v * (v - 1) for v in mono_counts.values())
-    ic_precise = S * s / (N * (N - 1))
+    ic_precise = S * s / (N * (N - 1)) if N >= 2 else 0.0
 
-    max_offset = min(33, N - 1)
+    max_offset = min(33, stream_len - 1)
     entries = []
 
     for offset in range(1, max_offset + 1):
-        P = N - offset
-        observed = sum(1 for i in range(P) if text[i] == text[i + offset])
+        P = 0
+        observed = 0
+        for i in range(stream_len - offset):
+            if stream[i] != DIT and stream[i + offset] != DIT:
+                P += 1
+                if stream[i] == stream[i + offset]:
+                    observed += 1
+
+        if P == 0 or ic_precise == 0.0:
+            entries.append(LocalRoughnessEntry(
+                offset=offset, observed=observed, expected=0, sigmage=0.0))
+            continue
+
         expected_precise = ic_precise * P / s
         sigmage = (s * (observed - expected_precise)) / math.sqrt(P * ic_precise * (s - ic_precise))
 

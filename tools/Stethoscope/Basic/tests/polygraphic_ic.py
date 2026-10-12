@@ -7,7 +7,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from ciphertext import CiphertextData
+from ciphertext import CiphertextData, DIT
 
 
 @dataclass
@@ -28,20 +28,22 @@ class PolygraphicResult:
 
 
 def run(ct: CiphertextData) -> PolygraphicResult:
-    text = ct.letters
-    N = len(text)
+    stream = ct.stream
+    stream_len = len(stream)
     c = len(ct.alphabet)
 
     entries = []
     for m in range(3, 6):
-        mN = N - m + 1
+        windows = [stream[i:i + m] for i in range(stream_len - m + 1)
+                   if DIT not in stream[i:i + m]]
+        mN = len(windows)
         if mN < 2:
             break
         cm = c ** m
 
         gram_counts = defaultdict(int)
-        for i in range(mN):
-            gram_counts[text[i:i + m]] += 1
+        for w in windows:
+            gram_counts[w] += 1
 
         observed = sum(v * (v - 1) // 2 for v in gram_counts.values())
         expected = mN * (mN - 1) / (2 * cm)

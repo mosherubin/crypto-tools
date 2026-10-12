@@ -7,7 +7,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Optional
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from ciphertext import CiphertextData
+from ciphertext import CiphertextData, DIT
 
 
 @dataclass
@@ -25,22 +25,38 @@ class TrigraphicIcResult:
             self.errors = []
 
 
-def _bigrams_overall(text: str):
-    return [(text[i], text[i+1], text[i+2]) for i in range(len(text) - 2)]
+def _trigrams_overall(stream: str):
+    return [(stream[i], stream[i+1], stream[i+2]) for i in range(len(stream) - 2)
+            if DIT not in (stream[i], stream[i+1], stream[i+2])]
 
-def _trigrams_cut_A(text: str):
-    return [(text[i], text[i+1], text[i+2]) for i in range(0, len(text) - 2, 3)]
+def _trigrams_cut_A(stream: str):
+    return [(stream[i], stream[i+1], stream[i+2]) for i in range(0, len(stream) - 2, 3)
+            if DIT not in (stream[i], stream[i+1], stream[i+2])]
 
-def _trigrams_cut_B(text: str):
-    return [(text[i], text[i+1], text[i+2]) for i in range(1, len(text) - 2, 3)]
+def _trigrams_cut_B(stream: str):
+    return [(stream[i], stream[i+1], stream[i+2]) for i in range(1, len(stream) - 2, 3)
+            if DIT not in (stream[i], stream[i+1], stream[i+2])]
 
-def _trigrams_cut_C(text: str):
-    return [(text[i], text[i+1], text[i+2]) for i in range(2, len(text) - 2, 3)]
+def _trigrams_cut_C(stream: str):
+    return [(stream[i], stream[i+1], stream[i+2]) for i in range(2, len(stream) - 2, 3)
+            if DIT not in (stream[i], stream[i+1], stream[i+2])]
 
 
 def _compute(ct: CiphertextData, trigrams: list, expected: dict) -> TrigraphicIcResult:
     C = len(ct.alphabet)
     M = len(trigrams)
+
+    if M < 2:
+        result = TrigraphicIcResult(ic=0.0, sigmage=0.0, total=M,
+                                    hits_observed=0, hits_expected=0.0)
+        if expected:
+            errors = []
+            for name, got, exp in [('total', M, expected.get('total'))]:
+                if exp is not None and got != exp:
+                    errors.append(f"{name}: computed {got}, expected {exp}")
+            result.passed = len(errors) == 0
+            result.errors = errors
+        return result
 
     counts = defaultdict(int)
     for tg in trigrams:
@@ -86,21 +102,21 @@ def _compute(ct: CiphertextData, trigrams: list, expected: dict) -> TrigraphicIc
 
 
 def run_overall(ct: CiphertextData) -> TrigraphicIcResult:
-    trigrams = _bigrams_overall(ct.letters)
+    trigrams = _trigrams_overall(ct.stream)
     expected = ct.expected_results.get('compute_trigraphic_ic_overall', {})
     return _compute(ct, trigrams, expected)
 
 def run_cut_A(ct: CiphertextData) -> TrigraphicIcResult:
-    trigrams = _trigrams_cut_A(ct.letters)
+    trigrams = _trigrams_cut_A(ct.stream)
     expected = ct.expected_results.get('compute_trigraphic_ic_cut_A', {})
     return _compute(ct, trigrams, expected)
 
 def run_cut_B(ct: CiphertextData) -> TrigraphicIcResult:
-    trigrams = _trigrams_cut_B(ct.letters)
+    trigrams = _trigrams_cut_B(ct.stream)
     expected = ct.expected_results.get('compute_trigraphic_ic_cut_B', {})
     return _compute(ct, trigrams, expected)
 
 def run_cut_C(ct: CiphertextData) -> TrigraphicIcResult:
-    trigrams = _trigrams_cut_C(ct.letters)
+    trigrams = _trigrams_cut_C(ct.stream)
     expected = ct.expected_results.get('compute_trigraphic_ic_cut_C', {})
     return _compute(ct, trigrams, expected)

@@ -7,7 +7,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from ciphertext import CiphertextData
+from ciphertext import CiphertextData, DIT
 
 
 @dataclass
@@ -27,22 +27,23 @@ class WidthTestsResult:
 
 
 def run(ct: CiphertextData, mono_counts: dict) -> WidthTestsResult:
-    text = ct.letters
-    N = len(text)
+    stream = ct.stream
+    N = len(ct.letters)  # letter count for the sigmage formula
     c = len(ct.alphabet)
 
     S = sum(v * (v - 1) for v in mono_counts.values())
-    delta_mono = S * c / (N * (N - 1))
+    delta_mono = S * c / (N * (N - 1)) if N >= 2 else 0.0
 
     entries = []
     for w in range(2, 52):
-        columns = [text[k::w] for k in range(w)]
+        columns = [stream[k::w] for k in range(w)]
         total_hits = 0
         total_comps = 0
         for col in columns:
-            Mk = len(col)
+            col_letters = [ch for ch in col if ch != DIT]
+            Mk = len(col_letters)
             counts = defaultdict(int)
-            for ch in col:
+            for ch in col_letters:
                 counts[ch] += 1
             pairs = sum(v * (v - 1) // 2 for v in counts.values())
             total_hits += pairs

@@ -1,0 +1,17 @@
+{
+  "test_case_id": "dit-ab-d-dot",
+  "description": "Delta stream of AB.D at offset 1 gives B followed by two DIT positions.",
+  "ciphertext": {
+    "raw": "AB.D",
+    "charset": "[A-Z]",
+    "casesensitive": false,
+    "ditschar": "."
+  },
+  "delta_stream": [
+    {"offset": 1, "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "stream": "B··"}
+  ],
+  "expected_results": {
+    "ditscount": 1,
+    "total_letters": 3
+  }
+}
