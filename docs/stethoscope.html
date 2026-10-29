@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.23)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.24)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -198,6 +198,8 @@
 // ── constants ────────────────────────────────────────────────────────────────
 
 var DIT = '·';  // middle dot: position-preserving placeholder for dit characters
+
+function yieldToUI() { return new Promise(function(r) { setTimeout(r, 0); }); }
 
 // ── utility ──────────────────────────────────────────────────────────────────
 
@@ -548,10 +550,11 @@ function runPolygraphicIc(ct) {
 var MAX_REPEATS = 50;
 var MIN_LENGTH  = 4;
 
-function _findRepeats(stream) {
+async function _findRepeats(stream) {
     var n = stream.length;
     var repeats = [];
     for (var offset = 2; offset < n - 2; offset++) {
+        if (offset % 200 === 0) await yieldToUI();
         var i = 0;
         while (i <= n - offset - 1) {
             if (stream[i] !== DIT && stream[i] === stream[i + offset]) {
@@ -595,8 +598,8 @@ function _sortedRepeats(repeats) {
     return result;
 }
 
-function runListOfRepeats(ct, maxRepeats) {
-    var raw    = _findRepeats(ct.stream);
+async function runListOfRepeats(ct, maxRepeats) {
+    var raw    = await _findRepeats(ct.stream);
     var sorted = _sortedRepeats(raw);
     var displayed = (maxRepeats === 0) ? sorted : sorted.slice(0, maxRepeats);
     return { repeats: displayed, totalFound: sorted.length };
@@ -846,7 +849,7 @@ var CHARSET_MAP = {
     '[A-Za-z0-9]': { pattern: '[A-Za-z0-9]', caseSensitive: false },
 };
 
-function runSuite(ct, displayCt, maxRepeats, deltaConfig, includeIsomorphs, rawText, groupSize, lineLen) {
+async function runSuite(ct, displayCt, maxRepeats, deltaConfig, includeIsomorphs, rawText, groupSize, lineLen, statusEl) {
     if (includeIsomorphs === undefined) includeIsomorphs = true;
     if (groupSize === undefined) groupSize = 5;
     if (lineLen === undefined) lineLen = 50;
@@ -879,23 +882,42 @@ function runSuite(ct, displayCt, maxRepeats, deltaConfig, includeIsomorphs, rawT
         }
         parts.push('');
     }
+    function status(msg) { if (statusEl) statusEl.value = msg; }
+    status('Running... (counting)');
     var mc          = runMonoCount(ct);
     var icResult    = runIcMono(ct, mc.counts);
+    await yieldToUI();
+    status('Running... (local roughness)');
     var lr          = runLocalRoughness(ct, mc.counts);
+    await yieldToUI();
+    status('Running... (width tests)');
     var wt          = runWidthTests(ct, mc.counts);
+    await yieldToUI();
+    status('Running... (polygraphic IC)');
     var poly        = runPolygraphicIc(ct);
-    var lor         = runListOfRepeats(ct, maxRepeats);
+    await yieldToUI();
+    status('Running... (repeats)');
+    var lor         = await runListOfRepeats(ct, maxRepeats);
+    await yieldToUI();
+    status('Running... (delta stream)');
     var ds          = deltaConfig
                       ? runDeltaStream(ct, deltaConfig.offset, deltaConfig.alphabet)
                       : { entries: [] };
+    await yieldToUI();
+    status('Running... (digraphic IC)');
     var digOverall  = runDigraphicOverall(ct);
     var digCutA     = runDigraphicCutA(ct);
     var digCutB     = runDigraphicCutB(ct);
+    await yieldToUI();
+    status('Running... (trigraphic IC)');
     var trigOverall = runTrigraphicOverall(ct);
     var trigCutA    = runTrigraphicCutA(ct);
     var trigCutB    = runTrigraphicCutB(ct);
     var trigCutC    = runTrigraphicCutC(ct);
+    await yieldToUI();
+    status('Running... (isomorphs)');
     var isoResult   = includeIsomorphs ? _findSignificantIsomorphs(ct.letters, ct.alphabet.length) : null;
+    await yieldToUI();
     parts.push(formatListing(ct, mc, icResult,
         digOverall, digCutA, digCutB,
         trigOverall, trigCutA, trigCutB, trigCutC,
@@ -912,7 +934,7 @@ function runSuite(ct, displayCt, maxRepeats, deltaConfig, includeIsomorphs, rawT
         var deltaCt = createFromText(entry.stream,
                           deltaConfig.charsetPattern, deltaConfig.caseSensitive,
                           'Delta stream offset=' + entry.offset, DIT);
-        parts.push(runSuite(deltaCt, false, maxRepeats, null, true));
+        parts.push(await runSuite(deltaCt, false, maxRepeats, null, true, undefined, undefined, undefined, statusEl));
     }
 
     return parts.join('\n');
@@ -931,7 +953,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.23)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.24)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
@@ -986,11 +1008,12 @@ function savePdf() {
     window.print();
 }
 
-function runTests() {
+async function runTests() {
     var btn = document.getElementById('run-btn');
     btn.disabled = true;
     var out = document.getElementById('output');
     out.value = 'Running...';
+    await yieldToUI();
     try {
         var rawText    = document.getElementById('ciphertext').value;
         var desc       = document.getElementById('description').value.trim();
@@ -1031,7 +1054,7 @@ function runTests() {
                 caseSensitive:  charsetCfg.caseSensitive,
             };
         }
-        var output   = runSuite(ct, displayCt, maxRepeats, deltaConfig, true, rawText, groupSize, lineLen);
+        var output   = await runSuite(ct, displayCt, maxRepeats, deltaConfig, true, rawText, groupSize, lineLen, out);
         var descLine = desc ? 'Description: ' + desc : '';
         var text;
         if (displayCt && descLine) {
