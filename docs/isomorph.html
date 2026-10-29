@@ -101,6 +101,12 @@
     font-size: 1em;
     cursor: pointer;
   }
+  #cancel-btn {
+    margin: 6px 0 0 12px;
+    padding: 7px 30px;
+    font-size: 1em;
+    cursor: pointer;
+  }
   #print-area { display: none; }
   @media print {
     body > * { display: none !important; }
@@ -194,6 +200,7 @@
 
 <button id="run-btn" onclick="runIsomorphSearch()" data-tooltip="Locate and evaluate all statistically significant isomorphs across the ciphertext(s) above.">Run</button>
 <button id="pdf-btn" onclick="savePdf()" data-tooltip="Open the browser print dialog to save the output report as a PDF or send to a printer.">Print</button>
+<button id="cancel-btn" style="display:none" onclick="cancelSearch()" data-tooltip="Stop the search in progress. Nothing is reported for a cancelled search, since a partial list would be incomplete and out of order.">Cancel</button>
 
 <textarea id="output" readonly></textarea>
 <pre id="print-area"></pre>
@@ -282,24 +289,22 @@ function scanAlignment(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, se
     return candidates;
 }
 
-function findIsomorphsBetween(lettersA, deltaA, lettersB, deltaB, minIsolen, selfSearch) {
+async function findIsomorphsBetween(lettersA, deltaA, lettersB, deltaB, minIsolen, selfSearch, yieldToBrowser) {
     var lenA = lettersA.length, lenB = lettersB.length;
     var candidates = [];
 
-    if (selfSearch) {
-        for (var offset = minIsolen; offset < lenA; offset++) {
-            candidates = candidates.concat(scanAlignment(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, true));
-        }
-    } else {
-        for (var offset = -(lenA - 1); offset < lenB; offset++) {
-            candidates = candidates.concat(scanAlignment(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, false));
-        }
+    var firstOffset = selfSearch ? minIsolen : -(lenA - 1);
+    var endOffset = selfSearch ? lenA : lenB;
+    for (var offset = firstOffset; offset < endOffset; offset++) {
+        var found = scanAlignment(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, selfSearch);
+        for (var i = 0; i < found.length; i++) candidates.push(found[i]);
+        await yieldToBrowser();
     }
 
     return candidates;
 }
 
-function filterMaximal(candidates) {
+async function filterMaximal(candidates, yieldToBrowser) {
     // Discard any candidate whose span is entirely contained within another
     // candidate's span at the same alignment (same message pair and offset).
     // Sliding the scan forward one position at a time necessarily re-reports every
@@ -313,11 +318,13 @@ function filterMaximal(candidates) {
         var key = c.messageA + ',' + c.messageB + ',' + offset;
         if (!groups.hasOwnProperty(key)) groups[key] = [];
         groups[key].push(c);
+        if ((i & 1023) === 0) await yieldToBrowser();
     }
 
     var maximal = [];
     for (var key2 in groups) {
         if (!groups.hasOwnProperty(key2)) continue;
+        await yieldToBrowser();
         var group = groups[key2];
         for (var a = 0; a < group.length; a++) {
             var candidate = group[a];
@@ -364,27 +371,31 @@ function isDisguisedRepetition(candidate, minIsolen) {
     return true;
 }
 
-function locateIsomorphs(ciphertexts, minIsolen) {
+async function locateIsomorphs(ciphertexts, minIsolen, yieldToBrowser, onPair) {
     var deltas = [];
     for (var d = 0; d < ciphertexts.length; d++) deltas.push(buildDelta(ciphertexts[d]));
 
-    var results = [];
+    var pairCount = ciphertexts.length * (ciphertexts.length + 1) / 2;
+    var pairNumber = 0;
+    var genuine = [];
     for (var i = 0; i < ciphertexts.length; i++) {
         for (var j = i; j < ciphertexts.length; j++) {
-            var selfSearch = (i === j);
-            var found = findIsomorphsBetween(ciphertexts[i], deltas[i], ciphertexts[j], deltas[j], minIsolen, selfSearch);
+            onPair(++pairNumber, pairCount);
+
+            var found = await findIsomorphsBetween(ciphertexts[i], deltas[i], ciphertexts[j], deltas[j], minIsolen, i === j, yieldToBrowser);
             for (var k = 0; k < found.length; k++) {
                 found[k].messageA = i;
                 found[k].messageB = j;
             }
-            results = results.concat(found);
-        }
-    }
 
-    var maximal = filterMaximal(results);
-    var genuine = [];
-    for (var m = 0; m < maximal.length; m++) {
-        if (!isDisguisedRepetition(maximal[m], minIsolen)) genuine.push(maximal[m]);
+            // The maximal filter groups by message pair, so filtering each pair as it is
+            // scanned gives the same list as filtering them all at the end, without ever
+            // holding every pair's raw candidates at once.
+            var maximal = await filterMaximal(found, yieldToBrowser);
+            for (var m = 0; m < maximal.length; m++) {
+                if (!isDisguisedRepetition(maximal[m], minIsolen)) genuine.push(maximal[m]);
+            }
+        }
     }
     return genuine;
 }
@@ -472,7 +483,7 @@ function applyPruning(candidate, mode, minIsolen) {
     };
 }
 
-function pruneCandidates(candidates, mode, minIsolen) {
+async function pruneCandidates(candidates, mode, minIsolen, yieldToBrowser) {
     // Apply a pruning mode to every candidate in a located list, dropping any
     // that fall below minIsolen and de-duplicating any that converge on the
     // same pruned span. Distinct raw maximal candidates (e.g. two overlapping
@@ -484,6 +495,7 @@ function pruneCandidates(candidates, mode, minIsolen) {
     var seen = {};
     var pruned = [];
     for (var i = 0; i < candidates.length; i++) {
+        if ((i & 1023) === 0) await yieldToBrowser();
         var result = applyPruning(candidates[i], mode, minIsolen);
         if (!result) continue;
         var key = result.messageA + ',' + result.messageB + ',' + result.positionA + ',' + result.positionB + ',' + result.length;
@@ -881,11 +893,45 @@ function formatResults(results, minIsolen, maxExpected) {
 
 // ── main run ──────────────────────────────────────────────────────────────────
 
-function runIsomorphSearch() {
+var SLICE_MS = 40;
+var CANCELLED = { cancelled: true };
+var _searchRunning = false;
+var _searchCancelled = false;
+
+function cancelSearch() {
+    _searchCancelled = true;
+}
+
+// The search is one long computation. Run in a single piece it freezes the page, and the
+// browser's slow-script watchdog then keeps asking whether to stop it. Instead the work runs in
+// slices of SLICE_MS, handing control back to the browser between them so the page can repaint
+// and handle clicks. A cancel is noticed here, at the next slice.
+function createYielder(showProgress) {
+    var sliceStart = performance.now();
+    return async function() {
+        if (performance.now() - sliceStart < SLICE_MS) return;
+        showProgress();
+        await new Promise(function(resolve) { setTimeout(resolve, 0); });
+        if (_searchCancelled) throw CANCELLED;
+        sliceStart = performance.now();
+    };
+}
+
+async function runIsomorphSearch() {
     var btn = document.getElementById('run-btn');
+    var cancelBtn = document.getElementById('cancel-btn');
     btn.disabled = true;
+    cancelBtn.style.display = '';
+    _searchRunning = true;
+    _searchCancelled = false;
     var out = document.getElementById('output');
     out.value = 'Running...';
+
+    var startedAt = performance.now();
+    var status = '';
+    var yieldToBrowser = createYielder(function() {
+        out.value = 'Running...  ' + status + '  (' + Math.round((performance.now() - startedAt) / 1000) + ' s elapsed)';
+    });
 
     try {
         var charsetKey = document.getElementById('charset').value;
@@ -894,7 +940,6 @@ function runIsomorphSearch() {
             var normalized = normalizeCustomCharset(document.getElementById('custom_charset').value);
             if (!normalized) {
                 out.value = 'ERROR: Invalid or empty custom character set.';
-                btn.disabled = false;
                 return;
             }
             charsetCfg = { pattern: normalized, caseSensitive: false };
@@ -905,7 +950,6 @@ function runIsomorphSearch() {
         var alphabet = expandAlphabet(new RegExp('^(?:' + charsetCfg.pattern + ')$', charsetCfg.caseSensitive ? '' : 'i'), charsetCfg.caseSensitive);
         if (!alphabet) {
             out.value = "ERROR: charset '" + charsetCfg.pattern + "' matched no characters.";
-            btn.disabled = false;
             return;
         }
 
@@ -928,7 +972,6 @@ function runIsomorphSearch() {
 
         if (ciphertexts.length === 0) {
             out.value = 'ERROR: Please enter at least one ciphertext.';
-            btn.disabled = false;
             return;
         }
 
@@ -939,7 +982,6 @@ function runIsomorphSearch() {
 
         if (pruneModes.length === 0) {
             out.value = 'ERROR: Please select at least one pruning option (Raw, Shallow, or Deep).';
-            btn.disabled = false;
             return;
         }
 
@@ -949,7 +991,9 @@ function runIsomorphSearch() {
         var displayCt = document.getElementById('display_ct').checked;
         var desc = document.getElementById('description').value.trim();
 
-        var candidates = locateIsomorphs(ciphertexts, minIsolen);
+        var candidates = await locateIsomorphs(ciphertexts, minIsolen, yieldToBrowser, function(pairNumber, pairCount) {
+            status = 'Searching message pair ' + pairNumber + ' of ' + pairCount;
+        });
 
         // Output order is fixed regardless of checkbox order: Deep, then Shallow, then Raw.
         var MODE_DISPLAY_ORDER = ['deep', 'shallow', 'raw'];
@@ -960,9 +1004,11 @@ function runIsomorphSearch() {
             var mode = MODE_DISPLAY_ORDER[od];
             if (pruneModes.indexOf(mode) === -1) continue;
 
+            status = 'Evaluating (' + mode + ')';
             var results = [];
-            var prunedCandidates = pruneCandidates(candidates, mode, minIsolen);
+            var prunedCandidates = await pruneCandidates(candidates, mode, minIsolen, yieldToBrowser);
             for (var c = 0; c < prunedCandidates.length; c++) {
+                if ((c & 1023) === 0) await yieldToBrowser();
                 var pruned = prunedCandidates[c];
 
                 var selfSearch = pruned.messageA === pruned.messageB;
@@ -997,18 +1043,24 @@ function runIsomorphSearch() {
 
         out.value = parts.join('\n');
     } catch (e) {
-        var hint = /Invalid character/.test(e.message)
-            ? '\n\nIf a rejected character marks an unknown symbol (a dit), enter it in "Dits character". An imported ciphertext uses the dit it was exported with.'
-            : '';
-        out.value = 'ERROR: ' + e.message + hint;
+        if (e === CANCELLED) {
+            out.value = 'Cancelled.';
+        } else {
+            var hint = /Invalid character/.test(e.message)
+                ? '\n\nIf a rejected character marks an unknown symbol (a dit), enter it in "Dits character". An imported ciphertext uses the dit it was exported with.'
+                : '';
+            out.value = 'ERROR: ' + e.message + hint;
+        }
+    } finally {
+        btn.disabled = false;
+        cancelBtn.style.display = 'none';
+        _searchRunning = false;
     }
-
-    btn.disabled = false;
 }
 
 function savePdf() {
     var content = document.getElementById('output').value;
-    if (!content || content === 'Running...') return;
+    if (!content || _searchRunning) return;
     document.getElementById('print-area').textContent = content;
     window.print();
 }
