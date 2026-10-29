@@ -860,10 +860,18 @@ function formatCiphertextBlock(text, ordinalLabel, sourceLabel, date, time) {
     return lines.join('\n');
 }
 
+// Four decimals print any value below 0.00005 as 0.0000, hiding how significant it is, so those
+// are shown in scientific notation instead; every other value is formatted as before.
+function formatExpected(value) {
+    var fixed = value.toFixed(4);
+    if (value === 0 || fixed !== '0.0000') return fixed;
+    return value.toExponential(4).replace(/e([+-])(\d)$/, function(match, sign, digit) { return 'e' + sign + '0' + digit; });
+}
+
 function formatResultRowPrefix(candidate, significance) {
     return padStart(candidate.messageA + 1, 6) + ' ' + padStart(candidate.messageB + 1, 6) + ' ' +
            padStart(candidate.positionA + 1, 6) + ' ' + padStart(candidate.positionB + 1, 6) + ' ' +
-           padStart(candidate.length, 4) + ' ' + padStart(significance.expectedOccurrences.toFixed(4), 12) + '   ';
+           padStart(candidate.length, 4) + ' ' + padStart(formatExpected(significance.expectedOccurrences), 12) + '   ';
 }
 
 function formatResults(results, minIsolen, maxExpected) {

@@ -68,6 +68,13 @@ def find_significant_isomorphs_for_mode(candidates: list, mode: str, ciphertexts
     return results
 
 
+def format_expected(value: float) -> str:
+    # Four decimals print any value below 0.00005 as 0.0000, hiding how significant it is, so
+    # those are shown in scientific notation instead; every other value is formatted as before.
+    fixed = f"{value:.4f}"
+    return f"{value:.4e}" if value > 0 and fixed == "0.0000" else fixed
+
+
 def format_results(results: list, min_isolen: int, max_expected: float) -> str:
     lines = [f"SIGNIFICANT ISOMORPHS  (minimum length {min_isolen}, maximum expected {max_expected})"]
     lines.append(f"{'MSG A':>6} {'MSG B':>6} {'POS A':>6} {'POS B':>6} {'LEN':>4} {'EXPECTED':>12}   STRINGS")
@@ -75,7 +82,7 @@ def format_results(results: list, min_isolen: int, max_expected: float) -> str:
         lines.append(
             f"{candidate.message_a:>6} {candidate.message_b:>6} "
             f"{candidate.position_a + 1:>6} {candidate.position_b + 1:>6} "
-            f"{candidate.length:>4} {significance.expected_occurrences:>12.4f}   "
+            f"{candidate.length:>4} {format_expected(significance.expected_occurrences):>12}   "
             f"{candidate.text_a} / {candidate.text_b}"
         )
     if not results:
