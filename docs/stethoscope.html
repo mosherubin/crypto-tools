@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.25)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.26)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -939,7 +939,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.25)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.26)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
@@ -1067,7 +1067,7 @@ document.getElementById('delta_alphabet').value =
 // ── isomorph search ──────────────────────────────────────────────────────────
 // Ported from isomorph.html (isomorph_search.py + isomorph_evaluation.py)
 
-var _ISO_MIN_LEN = 4;
+var _ISO_MIN_LEN = 8;
 var _ISO_MAX_EXPECTED = 0.5;
 
 function _buildDelta(letters) {
