@@ -97,7 +97,7 @@
 <body>
 <p><a href="index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.24)</span></h1>
+  <h1>STETHOSCOPE PROGRAM <span style="letter-spacing:normal; font-size:0.75em;">(version 0.25)</span></h1>
   <button id="guide-btn" onclick="window.open('stethoscope-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -882,41 +882,27 @@ async function runSuite(ct, displayCt, maxRepeats, deltaConfig, includeIsomorphs
         }
         parts.push('');
     }
-    function status(msg) { if (statusEl) statusEl.value = msg; }
-    status('Running... (counting)');
+    async function step(msg, fn) { if (statusEl) statusEl.value = msg; await yieldToUI(); return fn(); }
     var mc          = runMonoCount(ct);
     var icResult    = runIcMono(ct, mc.counts);
-    await yieldToUI();
-    status('Running... (local roughness)');
-    var lr          = runLocalRoughness(ct, mc.counts);
-    await yieldToUI();
-    status('Running... (width tests)');
-    var wt          = runWidthTests(ct, mc.counts);
-    await yieldToUI();
-    status('Running... (polygraphic IC)');
-    var poly        = runPolygraphicIc(ct);
-    await yieldToUI();
-    status('Running... (repeats)');
+    var lr          = await step('Running... (local roughness)',  function() { return runLocalRoughness(ct, mc.counts); });
+    var wt          = await step('Running... (width tests)',      function() { return runWidthTests(ct, mc.counts); });
+    var poly        = await step('Running... (polygraphic IC)',   function() { return runPolygraphicIc(ct); });
+    if (statusEl) statusEl.value = 'Running... (repeats)'; await yieldToUI();
     var lor         = await runListOfRepeats(ct, maxRepeats);
-    await yieldToUI();
-    status('Running... (delta stream)');
-    var ds          = deltaConfig
-                      ? runDeltaStream(ct, deltaConfig.offset, deltaConfig.alphabet)
-                      : { entries: [] };
-    await yieldToUI();
-    status('Running... (digraphic IC)');
-    var digOverall  = runDigraphicOverall(ct);
+    var ds          = await step('Running... (delta stream)',     function() {
+        return deltaConfig ? runDeltaStream(ct, deltaConfig.offset, deltaConfig.alphabet) : { entries: [] };
+    });
+    var digOverall  = await step('Running... (digraphic IC)',     function() { return runDigraphicOverall(ct); });
     var digCutA     = runDigraphicCutA(ct);
     var digCutB     = runDigraphicCutB(ct);
     await yieldToUI();
-    status('Running... (trigraphic IC)');
-    var trigOverall = runTrigraphicOverall(ct);
+    var trigOverall = await step('Running... (trigraphic IC)',    function() { return runTrigraphicOverall(ct); });
     var trigCutA    = runTrigraphicCutA(ct);
     var trigCutB    = runTrigraphicCutB(ct);
     var trigCutC    = runTrigraphicCutC(ct);
-    await yieldToUI();
-    status('Running... (isomorphs)');
-    var isoResult   = includeIsomorphs ? _findSignificantIsomorphs(ct.letters, ct.alphabet.length) : null;
+    if (statusEl) statusEl.value = 'Running... (isomorphs)'; await yieldToUI();
+    var isoResult   = includeIsomorphs ? await _findSignificantIsomorphs(ct.letters, ct.alphabet.length) : null;
     await yieldToUI();
     parts.push(formatListing(ct, mc, icResult,
         digOverall, digCutA, digCutB,
@@ -953,7 +939,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'STETHOSCOPE PROGRAM (version 0.24)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'STETHOSCOPE PROGRAM (version 0.25)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 var _DEFAULT_ALPHABETS = {
@@ -1126,14 +1112,18 @@ function _scanAlignmentIso(lettersA, deltaA, lettersB, deltaB, offset, minIsolen
     return candidates;
 }
 
-function _findIsomorphsBetweenIso(lettersA, deltaA, lettersB, deltaB, minIsolen, selfSearch) {
+async function _findIsomorphsBetweenIso(lettersA, deltaA, lettersB, deltaB, minIsolen, selfSearch) {
     var lenA = lettersA.length, lenB = lettersB.length, candidates = [], offset;
     if (selfSearch) {
-        for (offset = minIsolen; offset < lenA; offset++)
+        for (offset = minIsolen; offset < lenA; offset++) {
+            if (offset % 200 === 0) await yieldToUI();
             candidates = candidates.concat(_scanAlignmentIso(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, true));
+        }
     } else {
-        for (offset = -(lenA - 1); offset < lenB; offset++)
+        for (offset = -(lenA - 1); offset < lenB; offset++) {
+            if (offset % 200 === 0) await yieldToUI();
             candidates = candidates.concat(_scanAlignmentIso(lettersA, deltaA, lettersB, deltaB, offset, minIsolen, false));
+        }
     }
     return candidates;
 }
@@ -1180,13 +1170,13 @@ function _isDisguisedRepetitionIso(candidate, minIsolen) {
     return true;
 }
 
-function _locateIsomorphsIso(ciphertexts, minIsolen) {
+async function _locateIsomorphsIso(ciphertexts, minIsolen) {
     var deltas = [], d, i, j, k, found;
     for (d = 0; d < ciphertexts.length; d++) deltas.push(_buildDelta(ciphertexts[d]));
     var results = [];
     for (i = 0; i < ciphertexts.length; i++) {
         for (j = i; j < ciphertexts.length; j++) {
-            found = _findIsomorphsBetweenIso(ciphertexts[i], deltas[i], ciphertexts[j], deltas[j], minIsolen, i === j);
+            found = await _findIsomorphsBetweenIso(ciphertexts[i], deltas[i], ciphertexts[j], deltas[j], minIsolen, i === j);
             for (k = 0; k < found.length; k++) { found[k].messageA = i; found[k].messageB = j; }
             results = results.concat(found);
         }
@@ -1241,8 +1231,8 @@ function _isoEvaluate(text, alphabetSize, lenA, lenB, selfSearch, maxExpected) {
              expectedOccurrences: expected, significant: expected <= maxExpected };
 }
 
-function _findSignificantIsomorphs(letters, alphabetSize) {
-    var candidates = _locateIsomorphsIso([letters], _ISO_MIN_LEN);
+async function _findSignificantIsomorphs(letters, alphabetSize) {
+    var candidates = await _locateIsomorphsIso([letters], _ISO_MIN_LEN);
     var results = [], i, c, sig;
     for (i = 0; i < candidates.length; i++) {
         c = candidates[i];
