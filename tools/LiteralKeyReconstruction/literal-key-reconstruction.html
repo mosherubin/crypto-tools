@@ -17,7 +17,7 @@
   button { padding: 0.4rem 0.9rem; cursor: pointer; }
   button:disabled { cursor: default; }
   #error { font-family: sans-serif; color: #b00; margin-top: 1rem; }
-  #summary, #verification, #trial-message, #match-summary { font-family: sans-serif; margin-top: 1rem; }
+  #summary, #verification, #trial-message { font-family: sans-serif; margin-top: 1rem; }
   #verification { color: #060; font-weight: bold; }
   #trial-message { color: #b00; }
   #workspace { display: none; }
@@ -42,6 +42,8 @@
   #picker button { font-family: monospace; font-size: 1rem; padding: 0.3rem 0.55rem; margin: 0 0.15rem 0.3rem 0; }
   #picker button.likely-letter { background: #ffe9a8; border: 1px solid #c90; border-radius: 3px; }
   #legend { font-size: 0.85rem; color: #555; }
+  #match-summary { font-family: sans-serif; }
+  #search-progress { display: none; width: 10rem; }
   #matches { margin-top: 0.5rem; }
   #matches button { font-family: monospace; font-size: 1rem; margin: 0 0.3rem 0.3rem 0; padding: 0.2rem 0.5rem; }
 </style>
@@ -115,7 +117,11 @@
       <input type="number" id="word-length-min" min="1" value="5">
       <label for="word-length-min">letters</label>
     </div>
-    <div id="match-summary"></div>
+    <div class="inline field">
+      <button id="search-toggle" disabled>Search again</button>
+      <progress id="search-progress" max="1" value="0"></progress>
+      <span id="match-summary"></span>
+    </div>
     <div id="matches"></div>
   </div>
 
@@ -127,6 +133,7 @@ const LETTER_FREQUENCY = [
 ];
 const LIKELY_TAIL = 0.1;
 const MAX_MATCHES_SHOWN = 300;
+const SEARCH_SLICE_MILLISECONDS = 40;
 
 const byId = id => document.getElementById(id);
 
@@ -139,6 +146,7 @@ let redoStack = [];
 // Words grouped by their own numerical key: a word can only fill a span whose numbers rank the same way.
 let wordIndex = new Map();
 let wordCount = 0;
+let search = null;
 
 function parseNumericalKey(text) {
   const key = (text.match(/\d+/g) || []).map(Number);
@@ -240,7 +248,7 @@ function commit(nextLetters) {
   undoStack.push(letters);
   redoStack = [];
   letters = nextLetters;
-  render();
+  renderAndSearch();
 }
 
 function fitWord(cellLetters, word, startPosition) {
@@ -260,32 +268,37 @@ function spanCandidates(from, to) {
   }));
 }
 
-function findPhrases(from, to, minWords, maxWords, minLength) {
-  const phrases = [];
+// Yields after every word tried so the caller can pause; `done` is the fraction of the search tree
+// already covered, each level sharing its parent's portion equally among its candidate words.
+function* findPhrases(from, to, minWords, maxWords, minLength) {
   const candidates = new Map();
   const candidatesFor = (start, end) => {
     const span = `${start}-${end}`;
     if (!candidates.has(span)) candidates.set(span, spanCandidates(start, end));
     return candidates.get(span);
   };
-  const extend = (start, words, cellLetters) => {
+  function* extend(start, words, cellLetters, done, share) {
     if (start > to) {
-      if (words.length >= minWords) phrases.push({ words, letters: cellLetters });
+      if (words.length >= minWords) yield { done, phrase: { words, letters: cellLetters } };
       return;
     }
     if (words.length === maxWords) return;
+    const options = [];
     for (let end = start + minLength - 1; end <= to; end++) {
       const lettersLeft = to - end;
       if (lettersLeft > 0 && lettersLeft < minLength) continue;
-      for (const word of candidatesFor(start, end)) {
-        if (phrases.length > MAX_MATCHES_SHOWN) return;
-        const { next, conflicts } = fitWord(cellLetters, word, start);
-        if (conflicts.length === 0) extend(end + 1, [...words, word], next);
+      candidatesFor(start, end).forEach(word => options.push({ word, end }));
+    }
+    for (const [index, option] of options.entries()) {
+      const doneBefore = done + share * index / options.length;
+      yield { done: doneBefore };
+      const { next, conflicts } = fitWord(cellLetters, option.word, start);
+      if (conflicts.length === 0) {
+        yield* extend(option.end + 1, [...words, option.word], next, doneBefore, share / options.length);
       }
     }
-  };
-  extend(from, [], letters);
-  return phrases;
+  }
+  yield* extend(from, [], letters, 0, 1);
 }
 
 function loadWords(words) {
@@ -397,12 +410,53 @@ function renderVerification(limits) {
     : `Literal key: ${literalKey} — it does NOT derive the numerical key.`;
 }
 
-function renderMatches() {
-  const summary = byId('match-summary');
-  const matchesNode = byId('matches');
-  matchesNode.replaceChildren();
+function showSearchState(summaryText, running) {
+  byId('match-summary').textContent = summaryText;
+  byId('search-progress').style.display = running ? 'inline-block' : 'none';
+  byId('search-toggle').textContent = running ? 'Stop' : 'Search again';
+  byId('search-toggle').disabled = wordCount === 0;
+}
+
+function endSearch(summaryText) {
+  search = null;
+  showSearchState(summaryText, false);
+}
+
+function percentDone(run) {
+  return `${(run.done * 100).toFixed(1)}%`;
+}
+
+function runSearchSlice(run) {
+  if (search !== run) return;
+  const deadline = performance.now() + SEARCH_SLICE_MILLISECONDS;
+  while (performance.now() < deadline) {
+    const step = run.steps.next();
+    if (step.done) {
+      endSearch(`${wordCount} words loaded; ${run.found} fit ${run.span}.`);
+      return;
+    }
+    run.done = step.value.done;
+    const phrase = step.value.phrase;
+    if (!phrase) continue;
+    const button = element('button', '', phrase.words.join(' '));
+    button.addEventListener('click', () => commit(phrase.letters));
+    byId('matches').append(button);
+    run.found++;
+    if (run.found === MAX_MATCHES_SHOWN) {
+      endSearch(`Stopped at the first ${run.found} that fit ${run.span}, ${percentDone(run)} of the way through.`);
+      return;
+    }
+  }
+  byId('search-progress').value = run.done;
+  showSearchState(`Searching: ${percentDone(run)} done, ${run.found} fit so far.`, true);
+  setTimeout(() => runSearchSlice(run), 0);
+}
+
+function startSearch() {
+  search = null;
+  byId('matches').replaceChildren();
   if (wordCount === 0) {
-    summary.textContent = '';
+    showSearchState('', false);
     return;
   }
   const from = Number(byId('span-from').value) - 1;
@@ -411,23 +465,25 @@ function renderMatches() {
   const maxWords = Number(byId('words-max').value);
   const minLength = Number(byId('word-length-min').value);
   if (!(from >= 0 && to >= from && to < table.key.length)) {
-    summary.textContent = `Positions must run from 1 to ${table.key.length}.`;
+    showSearchState(`Positions must run from 1 to ${table.key.length}.`, false);
     return;
   }
   if (!(minWords >= 1 && maxWords >= minWords && minLength >= 1)) {
-    summary.textContent = 'The word count must run from 1 upwards, and words need at least 1 letter.';
+    showSearchState('The word count must run from 1 upwards, and words need at least 1 letter.', false);
     return;
   }
-  const phrases = findPhrases(from, to, minWords, maxWords, minLength);
-  const shown = phrases.slice(0, MAX_MATCHES_SHOWN);
-  const found = phrases.length > shown.length ? `more than ${shown.length} fit` : `${phrases.length} fit`;
-  summary.textContent = `${wordCount} words loaded; ${found} positions ${from + 1}-${to + 1}`
-    + (phrases.length > shown.length ? ` (first ${shown.length} shown).` : '.');
-  shown.forEach(phrase => {
-    const button = element('button', '', phrase.words.join(' '));
-    button.addEventListener('click', () => commit(phrase.letters));
-    matchesNode.append(button);
-  });
+  const positionCount = to - from + 1;
+  if (minWords * minLength > positionCount) {
+    showSearchState(`${minWords} word${minWords > 1 ? 's' : ''} of at least ${minLength} letters cannot fit in ${positionCount} positions.`, false);
+    return;
+  }
+  search = {
+    steps: findPhrases(from, to, minWords, maxWords, minLength),
+    span: `positions ${from + 1}-${to + 1}`,
+    found: 0,
+    done: 0,
+  };
+  runSearchSlice(search);
 }
 
 function render() {
@@ -437,7 +493,6 @@ function render() {
   renderTable(limits);
   renderPicker();
   renderVerification(limits);
-  renderMatches();
   byId('undo').disabled = undoStack.length === 0;
   byId('redo').disabled = redoStack.length === 0;
   byId('reset').disabled = letters.every(letter => letter === null);
@@ -446,6 +501,11 @@ function render() {
 function select(cell) {
   selected = cell;
   render();
+}
+
+function renderAndSearch() {
+  render();
+  startSearch();
 }
 
 function start(key) {
@@ -466,7 +526,7 @@ function start(key) {
   byId('span-from').value = 1;
   byId('span-to').value = key.length;
   byId('workspace').style.display = 'block';
-  render();
+  renderAndSearch();
 }
 
 function startFromNumericalKey() {
@@ -498,13 +558,13 @@ byId('derive').addEventListener('click', () => {
 byId('undo').addEventListener('click', () => {
   redoStack.push(letters);
   letters = undoStack.pop();
-  render();
+  renderAndSearch();
 });
 
 byId('redo').addEventListener('click', () => {
   undoStack.push(letters);
   letters = redoStack.pop();
-  render();
+  renderAndSearch();
 });
 
 byId('reset').addEventListener('click', () => commit(letters.map(() => null)));
@@ -532,11 +592,19 @@ byId('word-file').addEventListener('change', async event => {
   if (!file) return;
   const words = (await file.text()).split(/\r?\n/).map(line => line.trim().toUpperCase());
   loadWords(words.filter(word => /^[A-Z]+$/.test(word)));
-  render();
+  renderAndSearch();
 });
 
 ['span-from', 'span-to', 'words-min', 'words-max', 'word-length-min']
-  .forEach(id => byId(id).addEventListener('input', renderMatches));
+  .forEach(id => byId(id).addEventListener('input', startSearch));
+
+byId('search-toggle').addEventListener('click', () => {
+  if (search === null) {
+    startSearch();
+    return;
+  }
+  endSearch(`Stopped ${percentDone(search)} of the way through: ${search.found} fit ${search.span} so far.`);
+});
 
 document.addEventListener('keydown', event => {
   if (selected === null || event.target.tagName === 'INPUT' || event.ctrlKey || event.metaKey || event.altKey) return;
