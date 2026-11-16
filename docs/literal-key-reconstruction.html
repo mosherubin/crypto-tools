@@ -6,8 +6,9 @@
 <title>Literal Key Reconstruction</title>
 <style>
   body { font-family: monospace; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-  h1, h2, p, label, a, button, li { font-family: sans-serif; }
+  h1, h2, h3, p, label, a, button, li { font-family: sans-serif; }
   h2 { font-size: 1.1rem; margin-top: 2rem; }
+  h3 { font-size: 1rem; margin-top: 1.5rem; }
   .field { margin-top: 1rem; }
   .field label { display: block; margin-bottom: 0.3rem; }
   .inline { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
@@ -45,7 +46,7 @@
   #match-summary { font-family: sans-serif; }
   #search-progress { display: none; width: 10rem; }
   #matches { margin-top: 0.5rem; }
-  #matches button { font-family: monospace; font-size: 1rem; margin: 0 0.3rem 0.3rem 0; padding: 0.2rem 0.5rem; }
+  #matches button, #longest-words button { font-family: monospace; font-size: 1rem; margin: 0 0.3rem 0.3rem 0; padding: 0.2rem 0.5rem; }
 </style>
 </head>
 <body>
@@ -100,7 +101,8 @@
 
     <h2>Word list matching</h2>
     <p>Load a text file with one word per line to list the words that fit the table as it now stands.
-      The chosen positions are dissected into every possible run of words, and each word or phrase that fits is listed.</p>
+      Long words rarely fit by accident, so pin one from the first list, then let the second list fill in the rest:
+      it dissects the chosen positions into every possible run of words, fewest words first.</p>
     <div class="inline">
       <input type="file" id="word-file" accept=".txt,text/plain">
     </div>
@@ -117,6 +119,11 @@
       <input type="number" id="word-length-min" min="1" value="5">
       <label for="word-length-min">letters</label>
     </div>
+    <h3>Longest words that fit anywhere</h3>
+    <p id="longest-summary"></p>
+    <div id="longest-words"></div>
+
+    <h3>Words and phrases filling the positions</h3>
     <div class="inline field">
       <button id="search-toggle" disabled>Search again</button>
       <progress id="search-progress" max="1" value="0"></progress>
@@ -134,6 +141,7 @@ const LETTER_FREQUENCY = [
 const LIKELY_TAIL = 0.1;
 const MAX_MATCHES_SHOWN = 300;
 const SEARCH_SLICE_MILLISECONDS = 40;
+const MAX_LONGEST_WORDS_SHOWN = 60;
 
 const byId = id => document.getElementById(id);
 
@@ -268,8 +276,26 @@ function spanCandidates(from, to) {
   }));
 }
 
-// Yields after every word tried so the caller can pause; `done` is the fraction of the search tree
-// already covered, each level sharing its parent's portion equally among its candidate words.
+function longestFittingWords(minLength) {
+  const { key } = table;
+  const fits = [];
+  for (let length = key.length; length >= minLength; length--) {
+    for (let from = 0; from + length <= key.length; from++) {
+      const alreadyChosen = key.slice(from, from + length).every(number => letters[number - 1] !== null);
+      if (alreadyChosen) continue;
+      for (const word of spanCandidates(from, from + length - 1)) {
+        if (fitWord(letters, word, from).conflicts.length > 0) continue;
+        fits.push({ word, from });
+        if (fits.length === MAX_LONGEST_WORDS_SHOWN) return fits;
+      }
+    }
+  }
+  return fits;
+}
+
+// Searches phrases of the fewest words first. Yields after every word tried so the caller can pause;
+// `done` is the fraction of the search already covered, each word count getting an equal portion
+// and each level sharing its parent's portion equally among its candidate words.
 function* findPhrases(from, to, minWords, maxWords, minLength) {
   const candidates = new Map();
   const candidatesFor = (start, end) => {
@@ -277,16 +303,15 @@ function* findPhrases(from, to, minWords, maxWords, minLength) {
     if (!candidates.has(span)) candidates.set(span, spanCandidates(start, end));
     return candidates.get(span);
   };
-  function* extend(start, words, cellLetters, done, share) {
-    if (start > to) {
-      if (words.length >= minWords) yield { done, phrase: { words, letters: cellLetters } };
+  function* extend(start, words, cellLetters, wordsLeft, done, share) {
+    if (wordsLeft === 0) {
+      yield { done, phrase: { words, letters: cellLetters } };
       return;
     }
-    if (words.length === maxWords) return;
+    const firstEnd = wordsLeft === 1 ? to : start + minLength - 1;
+    const lastEnd = to - (wordsLeft - 1) * minLength;
     const options = [];
-    for (let end = start + minLength - 1; end <= to; end++) {
-      const lettersLeft = to - end;
-      if (lettersLeft > 0 && lettersLeft < minLength) continue;
+    for (let end = firstEnd; end <= lastEnd; end++) {
       candidatesFor(start, end).forEach(word => options.push({ word, end }));
     }
     for (const [index, option] of options.entries()) {
@@ -294,11 +319,17 @@ function* findPhrases(from, to, minWords, maxWords, minLength) {
       yield { done: doneBefore };
       const { next, conflicts } = fitWord(cellLetters, option.word, start);
       if (conflicts.length === 0) {
-        yield* extend(option.end + 1, [...words, option.word], next, doneBefore, share / options.length);
+        yield* extend(option.end + 1, [...words, option.word], next, wordsLeft - 1, doneBefore, share / options.length);
       }
     }
   }
-  yield* extend(from, [], letters, 0, 1);
+  const mostWords = Math.min(maxWords, Math.floor((to - from + 1) / minLength));
+  const share = 1 / (mostWords - minWords + 1);
+  for (let phraseLength = minWords; phraseLength <= mostWords; phraseLength++) {
+    const done = (phraseLength - minWords) * share;
+    yield { done, phraseLength };
+    yield* extend(from, [], letters, phraseLength, done, share);
+  }
 }
 
 function loadWords(words) {
@@ -410,6 +441,26 @@ function renderVerification(limits) {
     : `Literal key: ${literalKey} — it does NOT derive the numerical key.`;
 }
 
+function renderLongestWords() {
+  const summary = byId('longest-summary');
+  const list = byId('longest-words');
+  list.replaceChildren();
+  if (wordCount === 0) {
+    summary.textContent = '';
+    return;
+  }
+  const minLength = Math.max(1, Number(byId('word-length-min').value));
+  const fits = longestFittingWords(minLength);
+  summary.textContent = fits.length === 0
+    ? `No word of at least ${minLength} letters fits anywhere new.`
+    : `The ${fits.length} longest, with their positions. Click one to pin it.`;
+  fits.forEach(({ word, from }) => {
+    const button = element('button', '', `${word} ${from + 1}-${from + word.length}`);
+    button.addEventListener('click', () => commit(fitWord(letters, word, from).next));
+    list.append(button);
+  });
+}
+
 function showSearchState(summaryText, running) {
   byId('match-summary').textContent = summaryText;
   byId('search-progress').style.display = running ? 'inline-block' : 'none';
@@ -436,6 +487,7 @@ function runSearchSlice(run) {
       return;
     }
     run.done = step.value.done;
+    run.phraseLength = step.value.phraseLength ?? run.phraseLength;
     const phrase = step.value.phrase;
     if (!phrase) continue;
     const button = element('button', '', phrase.words.join(' '));
@@ -448,7 +500,7 @@ function runSearchSlice(run) {
     }
   }
   byId('search-progress').value = run.done;
-  showSearchState(`Searching: ${percentDone(run)} done, ${run.found} fit so far.`, true);
+  showSearchState(`Searching ${run.phraseLength}-word phrases: ${percentDone(run)} done, ${run.found} fit so far.`, true);
   setTimeout(() => runSearchSlice(run), 0);
 }
 
@@ -505,6 +557,7 @@ function select(cell) {
 
 function renderAndSearch() {
   render();
+  renderLongestWords();
   startSearch();
 }
 
@@ -597,6 +650,7 @@ byId('word-file').addEventListener('change', async event => {
 
 ['span-from', 'span-to', 'words-min', 'words-max', 'word-length-min']
   .forEach(id => byId(id).addEventListener('input', startSearch));
+byId('word-length-min').addEventListener('input', renderLongestWords);
 
 byId('search-toggle').addEventListener('click', () => {
   if (search === null) {
