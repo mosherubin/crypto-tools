@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Literal Key Reconstruction</title>
+<style>
+  body { font-family: monospace; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+  h1, h2, h3, p, label, a, button, li { font-family: sans-serif; }
+  h2 { font-size: 1.1rem; margin-top: 2rem; }
+  h3 { font-size: 1rem; margin-top: 1.5rem; }
+  .field { margin-top: 1rem; }
+  .field label { display: block; margin-bottom: 0.3rem; }
+  .inline { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+  input[type="text"] { font-family: monospace; font-size: 1rem; padding: 0.3rem; box-sizing: border-box; }
+  input.wide { flex: 1; min-width: 12rem; }
+  input[type="number"] { font-family: monospace; font-size: 1rem; padding: 0.3rem; width: 4.5rem; }
+  button { padding: 0.4rem 0.9rem; cursor: pointer; }
+  button:disabled { cursor: default; }
+  #error { font-family: sans-serif; color: #b00; margin-top: 1rem; }
+  #summary, #verification, #trial-message { font-family: sans-serif; margin-top: 1rem; }
+  #verification { color: #060; font-weight: bold; }
+  #trial-message { color: #b00; }
+  #workspace { display: none; }
+  .scroll { overflow-x: auto; }
+
+  #table { border-collapse: collapse; margin-top: 1rem; }
+  #table th, #table td { border: 1px solid #ccc; text-align: center; min-width: 3.2rem; height: 3.4rem; padding: 0.1rem 0.2rem; }
+  #table th { background: #f4f4f4; height: auto; padding: 0.3rem; }
+  #table thead th { border-bottom: 2px solid #999; }
+  #table tfoot th, #table tfoot td { border-top: 2px solid #999; height: 2.4rem; font-size: 1.3rem; font-weight: bold; }
+  #table .cell { cursor: pointer; }
+  #table .cell:hover { background: #eef4ff; }
+  #table .selected { outline: 3px solid #36c; outline-offset: -3px; background: #eef4ff; }
+  .number { font-size: 0.8rem; color: #555; }
+  .likely { font-weight: bold; }
+  .limits { font-size: 0.75rem; color: #888; }
+  .letter { font-size: 1.3rem; font-weight: bold; }
+  .deduced { color: #06c; font-style: italic; }
+  .unknown { color: #bbb; }
+
+  #picker { margin-top: 1rem; min-height: 2.5rem; }
+  #picker button { font-family: monospace; font-size: 1rem; padding: 0.3rem 0.55rem; margin: 0 0.15rem 0.3rem 0; }
+  #picker button.likely-letter { background: #ffe9a8; border: 1px solid #c90; border-radius: 3px; }
+  #legend { font-size: 0.85rem; color: #555; }
+  #match-summary { font-family: sans-serif; }
+  #search-progress { display: none; width: 10rem; }
+  #matches { margin-top: 0.5rem; }
+  #matches button, #longest-words button { font-family: monospace; font-size: 1rem; margin: 0 0.3rem 0.3rem 0; padding: 0.2rem 0.5rem; }
+</style>
+</head>
+<body>
+  <p><a href="index.html">&larr; back to tools</a></p>
+  <h1>Literal Key Reconstruction</h1>
+  <p>Reconstruct the literal key (the word or phrase) behind a transposition cipher's numerical key, using the keyword reconstruction table of <i>Military Cryptanalysis IV</i> and <i>Military Cryptanalytics II</i>.</p>
+
+  <div class="field">
+    <label for="numerical-key">Numerical key</label>
+    <div class="inline">
+      <input type="text" id="numerical-key" class="wide" value="11-13-1-8-5-4-6-3-2-12-7-10-9">
+      <button id="build">Build table</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="literal-key">Or derive a numerical key from a literal key</label>
+    <div class="inline">
+      <input type="text" id="literal-key" class="wide" placeholder="INADVISABLE">
+      <button id="derive">Derive numerical key</button>
+    </div>
+  </div>
+
+  <div id="error"></div>
+
+  <div id="workspace">
+    <h2>Reconstruction table</h2>
+    <div id="summary"></div>
+    <div class="scroll"><table id="table"></table></div>
+    <p id="legend">
+      Each cell shows its number, the <b>likely</b> letters (estimated from English letter frequencies) and, in grey, the hard limits.
+      Chosen letters are black; <span class="deduced">forced letters are blue italic</span>.
+      Click a cell, then click or type a letter. Arrow keys move, Delete clears.
+    </p>
+    <div id="picker"></div>
+    <div class="inline">
+      <button id="undo">Undo</button>
+      <button id="redo">Redo</button>
+      <button id="reset">Reset</button>
+    </div>
+    <div id="verification"></div>
+
+    <h2>Trial word</h2>
+    <div class="inline">
+      <label for="trial-word">Word</label>
+      <input type="text" id="trial-word">
+      <label for="trial-start">starting at position</label>
+      <input type="number" id="trial-start" min="1" value="1">
+      <button id="trial-apply">Try</button>
+    </div>
+    <div id="trial-message"></div>
+
+    <h2>Word list matching</h2>
+    <p>Load a text file with one word per line to list the words that fit the table as it now stands.
+      Long words rarely fit by accident, so pin one from the first list, then let the second list fill in the rest:
+      it dissects the chosen positions into every possible run of words, fewest words first.</p>
+    <div class="inline">
+      <input type="file" id="word-file" accept=".txt,text/plain">
+    </div>
+    <div class="inline field">
+      <label for="span-from">Positions</label>
+      <input type="number" id="span-from" min="1" value="1">
+      <label for="span-to">to</label>
+      <input type="number" id="span-to" min="1" value="1">
+      <label for="words-min">holding from</label>
+      <input type="number" id="words-min" min="1" value="1">
+      <label for="words-max">to</label>
+      <input type="number" id="words-max" min="1" value="3">
+      <label for="word-length-min">words of at least</label>
+      <input type="number" id="word-length-min" min="1" value="5">
+      <label for="word-length-min">letters</label>
+    </div>
+    <h3>Longest words that fit anywhere</h3>
+    <p id="longest-summary"></p>
+    <div id="longest-words"></div>
+
+    <h3>Words and phrases filling the positions</h3>
+    <div class="inline field">
+      <button id="search-toggle" disabled>Search again</button>
+      <progress id="search-progress" max="1" value="0"></progress>
+      <span id="match-summary"></span>
+    </div>
+    <div id="matches"></div>
+  </div>
+
+<script>
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const LETTER_FREQUENCY = [
+  8.17, 1.49, 2.78, 4.25, 12.70, 2.23, 2.02, 6.09, 6.97, 0.15, 0.77, 4.03, 2.41,
+  6.75, 7.51, 1.93, 0.10, 5.99, 6.33, 9.06, 2.76, 0.98, 2.36, 0.15, 1.97, 0.07,
+];
+const LIKELY_TAIL = 0.1;
+const MAX_MATCHES_SHOWN = 300;
+const SEARCH_SLICE_MILLISECONDS = 40;
+const MAX_LONGEST_WORDS_SHOWN = 60;
+
+const byId = id => document.getElementById(id);
+
+// Cells are indexed by number - 1; `letters` holds the user's chosen letter (0-25) or null per cell.
+let table = null;
+let letters = [];
+let selected = null;
+let undoStack = [];
+let redoStack = [];
+// Words grouped by their own numerical key: a word can only fill a span whose numbers rank the same way.
+let wordIndex = new Map();
+let wordCount = 0;
+let search = null;
+
+function parseNumericalKey(text) {
+  const key = (text.match(/\d+/g) || []).map(Number);
+  if (key.length === 0) throw new Error('Enter a numerical key, e.g. 6-9-1-4-11-7-10-2-3-8-5.');
+  const missing = key.map((_, i) => i + 1).filter(number => !key.includes(number));
+  if (missing.length > 0) {
+    throw new Error(`A numerical key of length ${key.length} must use each of 1..${key.length} exactly once; missing ${missing.join(', ')}.`);
+  }
+  return key;
+}
+
+function deriveNumericalKey(literalKey) {
+  const order = [...literalKey]
+    .map((letter, position) => ({ letter, position }))
+    .sort((a, b) => a.letter.localeCompare(b.letter) || a.position - b.position);
+  const key = [];
+  order.forEach((entry, rank) => { key[entry.position] = rank + 1; });
+  return key;
+}
+
+function buildTable(key) {
+  const positionOf = [];
+  key.forEach((number, position) => { positionOf[number - 1] = position; });
+  const rowOf = [0];
+  for (let cell = 1; cell < key.length; cell++) {
+    const startsNewRow = positionOf[cell] < positionOf[cell - 1];
+    rowOf.push(rowOf[cell - 1] + (startsNewRow ? 1 : 0));
+  }
+  const rowCount = rowOf[key.length - 1] + 1;
+  if (rowCount > ALPHABET.length) {
+    throw new Error(`This key needs ${rowCount} different letters, more than the alphabet holds.`);
+  }
+  return { key, positionOf, rowOf, rowCount };
+}
+
+function computeLimits(cellLetters) {
+  const { rowOf } = table;
+  const count = cellLetters.length;
+  const low = [], high = [];
+  const conflicts = new Set();
+  for (let cell = 0; cell < count; cell++) {
+    const floor = cell === 0 ? 0 : low[cell - 1] + rowOf[cell] - rowOf[cell - 1];
+    if (cellLetters[cell] !== null && cellLetters[cell] < floor) conflicts.add(cell);
+    low[cell] = cellLetters[cell] ?? floor;
+  }
+  for (let cell = count - 1; cell >= 0; cell--) {
+    const ceiling = cell === count - 1 ? ALPHABET.length - 1 : high[cell + 1] - (rowOf[cell + 1] - rowOf[cell]);
+    if (cellLetters[cell] !== null && cellLetters[cell] > ceiling) conflicts.add(cell);
+    high[cell] = cellLetters[cell] ?? ceiling;
+  }
+  return { low, high, conflicts: [...conflicts] };
+}
+
+function binomial(n, k) {
+  let result = 1;
+  for (let i = 1; i <= k; i++) result = result * (n - k + i) / i;
+  return result;
+}
+
+// The cells between two chosen letters are treated as an ordered sample of English letters
+// drawn from between those letters; the likely range is the middle of this cell's order statistic.
+function likelyRange(cellLetters, cell, limits) {
+  let before = cell - 1, after = cell + 1;
+  while (before >= 0 && cellLetters[before] === null) before--;
+  while (after < cellLetters.length && cellLetters[after] === null) after++;
+  const firstLetter = before >= 0 ? cellLetters[before] : 0;
+  const lastLetter = after < cellLetters.length ? cellLetters[after] : ALPHABET.length - 1;
+  const sampleSize = after - before - 1;
+  const rank = cell - before;
+
+  const total = LETTER_FREQUENCY.slice(firstLetter, lastLetter + 1).reduce((sum, f) => sum + f, 0);
+  const quantiles = [];
+  let cumulative = 0;
+  for (let letter = firstLetter; letter <= lastLetter; letter++) {
+    cumulative += LETTER_FREQUENCY[letter] / total;
+    const p = Math.min(cumulative, 1);
+    let atOrBelow = 0;
+    for (let j = rank; j <= sampleSize; j++) {
+      atOrBelow += binomial(sampleSize, j) * p ** j * (1 - p) ** (sampleSize - j);
+    }
+    if (quantiles.length === 0 && atOrBelow >= LIKELY_TAIL) quantiles.push(letter);
+    if (atOrBelow >= 1 - LIKELY_TAIL || letter === lastLetter) { quantiles.push(letter); break; }
+  }
+  const clamp = letter => Math.max(limits.low[cell], Math.min(limits.high[cell], letter));
+  return { low: clamp(quantiles[0]), high: clamp(quantiles[quantiles.length - 1]) };
+}
+
+function rangeText(low, high) {
+  return low === high ? ALPHABET[low] : `${ALPHABET[low]}-${ALPHABET[high]}`;
+}
+
+function withLetter(cell, letter) {
+  const next = letters.slice();
+  next[cell] = letter;
+  return next;
+}
+
+function commit(nextLetters) {
+  undoStack.push(letters);
+  redoStack = [];
+  letters = nextLetters;
+  renderAndSearch();
+}
+
+function fitWord(cellLetters, word, startPosition) {
+  const next = cellLetters.slice();
+  [...word].forEach((letter, offset) => {
+    next[table.key[startPosition + offset] - 1] = ALPHABET.indexOf(letter);
+  });
+  return { next, conflicts: computeLimits(next).conflicts };
+}
+
+function spanCandidates(from, to) {
+  const span = table.key.slice(from, to + 1);
+  const pattern = span.map(number => span.filter(other => other < number).length + 1).join(',');
+  return (wordIndex.get(pattern) || []).filter(word => [...word].every((letter, offset) => {
+    const chosen = letters[span[offset] - 1];
+    return chosen === null || ALPHABET[chosen] === letter;
+  }));
+}
+
+function longestFittingWords(minLength) {
+  const { key } = table;
+  const fits = [];
+  for (let length = key.length; length >= minLength; length--) {
+    for (let from = 0; from + length <= key.length; from++) {
+      const alreadyChosen = key.slice(from, from + length).every(number => letters[number - 1] !== null);
+      if (alreadyChosen) continue;
+      for (const word of spanCandidates(from, from + length - 1)) {
+        if (fitWord(letters, word, from).conflicts.length > 0) continue;
+        fits.push({ word, from });
+        if (fits.length === MAX_LONGEST_WORDS_SHOWN) return fits;
+      }
+    }
+  }
+  return fits;
+}
+
+// Searches phrases of the fewest words first. Yields after every word tried so the caller can pause;
+// `done` is the fraction of the search already covered, each word count getting an equal portion
+// and each level sharing its parent's portion equally among its candidate words.
+function* findPhrases(from, to, minWords, maxWords, minLength) {
+  const candidates = new Map();
+  const candidatesFor = (start, end) => {
+    const span = `${start}-${end}`;
+    if (!candidates.has(span)) candidates.set(span, spanCandidates(start, end));
+    return candidates.get(span);
+  };
+  function* extend(start, words, cellLetters, wordsLeft, done, share) {
+    if (wordsLeft === 0) {
+      yield { done, phrase: { words, letters: cellLetters } };
+      return;
+    }
+    const firstEnd = wordsLeft === 1 ? to : start + minLength - 1;
+    const lastEnd = to - (wordsLeft - 1) * minLength;
+    const options = [];
+    for (let end = firstEnd; end <= lastEnd; end++) {
+      candidatesFor(start, end).forEach(word => options.push({ word, end }));
+    }
+    for (const [index, option] of options.entries()) {
+      const doneBefore = done + share * index / options.length;
+      yield { done: doneBefore };
+      const { next, conflicts } = fitWord(cellLetters, option.word, start);
+      if (conflicts.length === 0) {
+        yield* extend(option.end + 1, [...words, option.word], next, wordsLeft - 1, doneBefore, share / options.length);
+      }
+    }
+  }
+  const mostWords = Math.min(maxWords, Math.floor((to - from + 1) / minLength));
+  const share = 1 / (mostWords - minWords + 1);
+  for (let phraseLength = minWords; phraseLength <= mostWords; phraseLength++) {
+    const done = (phraseLength - minWords) * share;
+    yield { done, phraseLength };
+    yield* extend(from, [], letters, phraseLength, done, share);
+  }
+}
+
+function loadWords(words) {
+  const uniqueWords = new Set(words);
+  wordIndex = new Map();
+  uniqueWords.forEach(word => {
+    const pattern = deriveNumericalKey(word).join(',');
+    if (!wordIndex.has(pattern)) wordIndex.set(pattern, []);
+    wordIndex.get(pattern).push(word);
+  });
+  wordCount = uniqueWords.size;
+}
+
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function renderCell(td, cell, limits) {
+  td.append(element('div', 'number', cell + 1));
+  if (limits.low[cell] === limits.high[cell]) {
+    td.append(element('div', letters[cell] === null ? 'letter deduced' : 'letter', ALPHABET[limits.low[cell]]));
+    return;
+  }
+  const likely = likelyRange(letters, cell, limits);
+  td.append(element('div', 'likely', rangeText(likely.low, likely.high)));
+  td.append(element('div', 'limits', rangeText(limits.low[cell], limits.high[cell])));
+}
+
+function renderTable(limits) {
+  const { key, rowOf, rowCount } = table;
+  const tableNode = byId('table');
+  tableNode.replaceChildren();
+
+  const headRow = element('tr');
+  headRow.append(element('th'));
+  key.forEach(number => headRow.append(element('th', '', number)));
+  const head = element('thead');
+  head.append(headRow);
+
+  const body = element('tbody');
+  for (let row = 0; row < rowCount; row++) {
+    const tr = element('tr');
+    tr.append(element('th', '', row + 1));
+    key.forEach(number => {
+      const cell = number - 1;
+      const td = element('td');
+      if (rowOf[cell] === row) {
+        td.className = cell === selected ? 'cell selected' : 'cell';
+        td.addEventListener('click', () => select(cell));
+        renderCell(td, cell, limits);
+      }
+      tr.append(td);
+    });
+    body.append(tr);
+  }
+
+  const footRow = element('tr');
+  footRow.append(element('th', '', 'Key'));
+  key.forEach(number => {
+    const cell = number - 1;
+    const known = limits.low[cell] === limits.high[cell];
+    const td = element('td', 'cell', known ? ALPHABET[limits.low[cell]] : '·');
+    if (!known) td.classList.add('unknown');
+    else if (letters[cell] === null) td.classList.add('deduced');
+    if (cell === selected) td.classList.add('selected');
+    td.addEventListener('click', () => select(cell));
+    footRow.append(td);
+  });
+  const foot = element('tfoot');
+  foot.append(footRow);
+
+  tableNode.append(head, body, foot);
+}
+
+function renderPicker() {
+  const picker = byId('picker');
+  picker.replaceChildren();
+  if (selected === null) return;
+  const others = withLetter(selected, null);
+  const limits = computeLimits(others);
+  const likely = likelyRange(others, selected, limits);
+  [...ALPHABET].forEach((letter, index) => {
+    const button = element('button', '', letter);
+    button.disabled = index < limits.low[selected] || index > limits.high[selected];
+    if (!button.disabled && index >= likely.low && index <= likely.high) button.className = 'likely-letter';
+    button.addEventListener('click', () => commit(withLetter(selected, index)));
+    picker.append(button);
+  });
+  const clear = element('button', '', 'Clear');
+  clear.disabled = letters[selected] === null;
+  clear.addEventListener('click', () => commit(withLetter(selected, null)));
+  picker.append(clear);
+}
+
+function renderVerification(limits) {
+  const { key } = table;
+  const complete = limits.low.every((low, cell) => low === limits.high[cell]);
+  if (!complete) {
+    byId('verification').textContent = '';
+    return;
+  }
+  const literalKey = key.map(number => ALPHABET[limits.low[number - 1]]).join('');
+  const matches = deriveNumericalKey(literalKey).join('-') === key.join('-');
+  byId('verification').textContent = matches
+    ? `Literal key: ${literalKey} — it derives the numerical key exactly.`
+    : `Literal key: ${literalKey} — it does NOT derive the numerical key.`;
+}
+
+function renderLongestWords() {
+  const summary = byId('longest-summary');
+  const list = byId('longest-words');
+  list.replaceChildren();
+  if (wordCount === 0) {
+    summary.textContent = '';
+    return;
+  }
+  const minLength = Math.max(1, Number(byId('word-length-min').value));
+  const fits = longestFittingWords(minLength);
+  summary.textContent = fits.length === 0
+    ? `No word of at least ${minLength} letters fits anywhere new.`
+    : `The ${fits.length} longest, with their positions. Click one to pin it.`;
+  fits.forEach(({ word, from }) => {
+    const button = element('button', '', `${word} ${from + 1}-${from + word.length}`);
+    button.addEventListener('click', () => commit(fitWord(letters, word, from).next));
+    list.append(button);
+  });
+}
+
+function showSearchState(summaryText, running) {
+  byId('match-summary').textContent = summaryText;
+  byId('search-progress').style.display = running ? 'inline-block' : 'none';
+  byId('search-toggle').textContent = running ? 'Stop' : 'Search again';
+  byId('search-toggle').disabled = wordCount === 0;
+}
+
+function endSearch(summaryText) {
+  search = null;
+  showSearchState(summaryText, false);
+}
+
+function percentDone(run) {
+  return `${(run.done * 100).toFixed(1)}%`;
+}
+
+function runSearchSlice(run) {
+  if (search !== run) return;
+  const deadline = performance.now() + SEARCH_SLICE_MILLISECONDS;
+  while (performance.now() < deadline) {
+    const step = run.steps.next();
+    if (step.done) {
+      endSearch(`${wordCount} words loaded; ${run.found} fit ${run.span}.`);
+      return;
+    }
+    run.done = step.value.done;
+    run.phraseLength = step.value.phraseLength ?? run.phraseLength;
+    const phrase = step.value.phrase;
+    if (!phrase) continue;
+    const button = element('button', '', phrase.words.join(' '));
+    button.addEventListener('click', () => commit(phrase.letters));
+    byId('matches').append(button);
+    run.found++;
+    if (run.found === MAX_MATCHES_SHOWN) {
+      endSearch(`Stopped at the first ${run.found} that fit ${run.span}, ${percentDone(run)} of the way through.`);
+      return;
+    }
+  }
+  byId('search-progress').value = run.done;
+  showSearchState(`Searching ${run.phraseLength}-word phrases: ${percentDone(run)} done, ${run.found} fit so far.`, true);
+  setTimeout(() => runSearchSlice(run), 0);
+}
+
+function startSearch() {
+  search = null;
+  byId('matches').replaceChildren();
+  if (wordCount === 0) {
+    showSearchState('', false);
+    return;
+  }
+  const from = Number(byId('span-from').value) - 1;
+  const to = Number(byId('span-to').value) - 1;
+  const minWords = Number(byId('words-min').value);
+  const maxWords = Number(byId('words-max').value);
+  const minLength = Number(byId('word-length-min').value);
+  if (!(from >= 0 && to >= from && to < table.key.length)) {
+    showSearchState(`Positions must run from 1 to ${table.key.length}.`, false);
+    return;
+  }
+  if (!(minWords >= 1 && maxWords >= minWords && minLength >= 1)) {
+    showSearchState('The word count must run from 1 upwards, and words need at least 1 letter.', false);
+    return;
+  }
+  const positionCount = to - from + 1;
+  if (minWords * minLength > positionCount) {
+    showSearchState(`${minWords} word${minWords > 1 ? 's' : ''} of at least ${minLength} letters cannot fit in ${positionCount} positions.`, false);
+    return;
+  }
+  search = {
+    steps: findPhrases(from, to, minWords, maxWords, minLength),
+    span: `positions ${from + 1}-${to + 1}`,
+    found: 0,
+    done: 0,
+  };
+  runSearchSlice(search);
+}
+
+function render() {
+  const limits = computeLimits(letters);
+  byId('summary').textContent =
+    `${table.key.length} numbers in ${table.rowCount} rows: the literal key contains at least ${table.rowCount} different letters.`;
+  renderTable(limits);
+  renderPicker();
+  renderVerification(limits);
+  byId('undo').disabled = undoStack.length === 0;
+  byId('redo').disabled = redoStack.length === 0;
+  byId('reset').disabled = letters.every(letter => letter === null);
+}
+
+function select(cell) {
+  selected = cell;
+  render();
+}
+
+function renderAndSearch() {
+  render();
+  renderLongestWords();
+  startSearch();
+}
+
+function start(key) {
+  byId('error').textContent = '';
+  byId('trial-message').textContent = '';
+  try {
+    table = buildTable(key);
+  } catch (error) {
+    table = null;
+    byId('workspace').style.display = 'none';
+    byId('error').textContent = error.message;
+    return;
+  }
+  letters = key.map(() => null);
+  selected = null;
+  undoStack = [];
+  redoStack = [];
+  byId('span-from').value = 1;
+  byId('span-to').value = key.length;
+  byId('workspace').style.display = 'block';
+  renderAndSearch();
+}
+
+function startFromNumericalKey() {
+  try {
+    start(parseNumericalKey(byId('numerical-key').value));
+  } catch (error) {
+    byId('workspace').style.display = 'none';
+    byId('error').textContent = error.message;
+  }
+}
+
+function lettersOnly(text) {
+  return text.toUpperCase().replace(/[^A-Z]/g, '');
+}
+
+byId('build').addEventListener('click', startFromNumericalKey);
+
+byId('derive').addEventListener('click', () => {
+  const literalKey = lettersOnly(byId('literal-key').value);
+  if (literalKey.length === 0) {
+    byId('error').textContent = 'Enter a literal key made of letters.';
+    return;
+  }
+  const key = deriveNumericalKey(literalKey);
+  byId('numerical-key').value = key.join('-');
+  start(key);
+});
+
+byId('undo').addEventListener('click', () => {
+  redoStack.push(letters);
+  letters = undoStack.pop();
+  renderAndSearch();
+});
+
+byId('redo').addEventListener('click', () => {
+  undoStack.push(letters);
+  letters = redoStack.pop();
+  renderAndSearch();
+});
+
+byId('reset').addEventListener('click', () => commit(letters.map(() => null)));
+
+byId('trial-apply').addEventListener('click', () => {
+  const message = byId('trial-message');
+  const word = lettersOnly(byId('trial-word').value);
+  const startPosition = Number(byId('trial-start').value) - 1;
+  if (word.length === 0 || !(startPosition >= 0) || startPosition + word.length > table.key.length) {
+    message.textContent = `The word must fit within positions 1-${table.key.length}.`;
+    return;
+  }
+  const { next, conflicts } = fitWord(letters, word, startPosition);
+  if (conflicts.length > 0) {
+    const positions = conflicts.map(cell => table.positionOf[cell] + 1).sort((a, b) => a - b);
+    message.textContent = `${word} does not fit: the alphabetical order breaks at position${positions.length > 1 ? 's' : ''} ${positions.join(', ')}.`;
+    return;
+  }
+  message.textContent = '';
+  commit(next);
+});
+
+byId('word-file').addEventListener('change', async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const words = (await file.text()).split(/\r?\n/).map(line => line.trim().toUpperCase());
+  loadWords(words.filter(word => /^[A-Z]+$/.test(word)));
+  renderAndSearch();
+});
+
+['span-from', 'span-to', 'words-min', 'words-max', 'word-length-min']
+  .forEach(id => byId(id).addEventListener('input', startSearch));
+byId('word-length-min').addEventListener('input', renderLongestWords);
+
+byId('search-toggle').addEventListener('click', () => {
+  if (search === null) {
+    startSearch();
+    return;
+  }
+  endSearch(`Stopped ${percentDone(search)} of the way through: ${search.found} fit ${search.span} so far.`);
+});
+
+document.addEventListener('keydown', event => {
+  if (selected === null || event.target.tagName === 'INPUT' || event.ctrlKey || event.metaKey || event.altKey) return;
+  const { key, positionOf } = table;
+  if (event.key === 'Escape') {
+    selected = null;
+    render();
+  } else if (event.key === 'ArrowLeft' && positionOf[selected] > 0) {
+    select(key[positionOf[selected] - 1] - 1);
+  } else if (event.key === 'ArrowRight' && positionOf[selected] < key.length - 1) {
+    select(key[positionOf[selected] + 1] - 1);
+  } else if (event.key === 'Delete' || event.key === 'Backspace') {
+    if (letters[selected] !== null) commit(withLetter(selected, null));
+  } else if (/^[a-zA-Z]$/.test(event.key)) {
+    const letter = ALPHABET.indexOf(event.key.toUpperCase());
+    const limits = computeLimits(withLetter(selected, null));
+    if (letter >= limits.low[selected] && letter <= limits.high[selected]) commit(withLetter(selected, letter));
+  } else {
+    return;
+  }
+  event.preventDefault();
+});
+
+startFromNumericalKey();
+</script>
+<script data-goatcounter="https://mosherubin.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
