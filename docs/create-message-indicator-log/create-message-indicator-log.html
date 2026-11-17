@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CREATE MESSAGE INDICATOR LOG</title>
+<link rel="stylesheet" href="../css/site.css">
 <style>
   * { box-sizing: border-box; }
   body {
-    font-family: Arial, sans-serif;
+    font-family: var(--sans-font);
     max-width: 1400px;
     margin: 0 auto;
     padding: 24px 20px;
-    background: #fff;
   }
   .header-row {
     display: flex;
@@ -43,7 +43,7 @@
     width: 100%;
     height: 110px;
     resize: both;
-    font-family: monospace;
+    font-family: var(--mono-font);
     font-size: 0.9em;
   }
   .ct-btn-row {
@@ -54,7 +54,7 @@
   .ct-btn-row button {
     width: 30px;
     height: 26px;
-    font-family: monospace;
+    font-family: var(--mono-font);
     font-size: 1em;
     font-weight: bold;
     line-height: 1;
@@ -82,24 +82,24 @@
     display: none;
     margin: 10px 0 4px 232px;
     padding: 8px 12px;
-    color: #900;
-    background: #fdecea;
-    border: 1px solid #f5b0a8;
+    color: var(--error);
+    background: var(--error-surface);
+    border: 1px solid var(--error-border);
     border-radius: 3px;
-    font-family: Arial, sans-serif;
+    font-family: var(--sans-font);
     font-size: 0.9em;
     max-width: 900px;
     white-space: pre-wrap;
   }
   #output-section { display: none; margin-top: 20px; }
   #report-meta {
-    font-family: monospace;
+    font-family: var(--mono-font);
     font-size: 0.85em;
-    color: #333;
+    color: var(--text);
     margin-bottom: 10px;
   }
   #ciphertext-display {
-    font-family: monospace;
+    font-family: var(--mono-font);
     font-size: 0.85em;
     white-space: pre;
     margin-bottom: 14px;
@@ -107,32 +107,32 @@
   #ciphertext-display .ct-header { font-weight: bold; margin-top: 8px; }
   #ciphertext-display .ct-header:first-child { margin-top: 0; }
   #legend {
-    font-family: Arial, sans-serif;
+    font-family: var(--sans-font);
     font-size: 0.9em;
     margin-bottom: 12px;
   }
   table#mil-table, table.diff-table {
     border-collapse: collapse;
-    font-family: monospace;
+    font-family: var(--mono-font);
     font-size: 0.9em;
   }
   table#mil-table th, table#mil-table td, table.diff-table th, table.diff-table td {
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
     padding: 4px 8px;
     text-align: center;
     white-space: nowrap;
   }
   table#mil-table th, table.diff-table th {
-    background: #f0f0f0;
-    font-family: Arial, sans-serif;
+    background: var(--surface);
+    font-family: var(--sans-font);
     font-size: 0.85em;
   }
   table#mil-table th { cursor: pointer; user-select: none; }
-  table#mil-table th:hover { background: #e2e2e2; }
+  table#mil-table th:hover { background: var(--surface-hover); }
   table#mil-table td.num { text-align: right; }
   table#mil-table th.divider, table#mil-table td.divider,
-  table.diff-table th.divider, table.diff-table td.divider { border-left: 2px solid #888; }
-  table.diff-table td.key-col { background: #f7f7f7; font-weight: bold; }
+  table.diff-table th.divider, table.diff-table td.divider { border-left: 2px solid var(--border-strong); }
+  table.diff-table td.key-col { background: var(--surface); font-weight: bold; }
   #diff-btn {
     margin: 16px 6px 4px 0;
     padding: 7px 30px;
@@ -148,13 +148,13 @@
   }
   #diff-tables-container details {
     margin: 6px 0;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border);
     border-radius: 3px;
     padding: 4px 10px;
   }
   #diff-tables-container summary {
     cursor: pointer;
-    font-family: Arial, sans-serif;
+    font-family: var(--sans-font);
     font-weight: bold;
     padding: 4px 0;
   }
@@ -164,20 +164,20 @@
     body > * { display: none !important; }
     #print-area {
       display: block !important;
-      font-family: Arial, sans-serif;
+      font-family: var(--sans-font);
       font-size: 0.85em;
     }
     #print-area table {
       border-collapse: collapse;
-      font-family: monospace;
+      font-family: var(--mono-font);
       font-size: 0.85em;
     }
     #print-area th, #print-area td {
-      border: 1px solid #999;
+      border: 1px solid var(--border-strong);
       padding: 3px 6px;
       text-align: center;
     }
-    #print-area th.divider, #print-area td.divider { border-left: 2px solid #555; }
+    #print-area th.divider, #print-area td.divider { border-left: 2px solid var(--muted); }
   }
 </style>
 </head>
@@ -206,7 +206,7 @@
       <option value="[A-Za-z0-9]">[A-Za-z0-9] -- 36 characters</option>
       <option value="[Other]">Other...</option>
     </select>
-    <input type="text" id="custom_charset" style="display:none; font-family:monospace; width:16em;"
+    <input type="text" id="custom_charset" style="display:none; font-family:var(--mono-font); width:16em;"
            placeholder="e.g. ab or adfgvx or A-IK-Z">
   </div>
 </div>
@@ -214,7 +214,7 @@
 <div class="row" data-tooltip="Optional. One character that marks a position where a symbol exists but is unknown (a dit), such as . or -. Leave it empty for none, which is the default. It applies to ciphertexts you type or paste. An imported ciphertext uses the dit it was exported with, or none if its export names none. A dit keeps its position, so the groups of five stay aligned, but it is left out of every letter comparison.">
   <span class="lbl">Dits character:</span>
   <div class="ctrl">
-    <input type="text" id="page_ditschar" maxlength="1" style="width:3em; font-family:monospace;" placeholder="none">
+    <input type="text" id="page_ditschar" maxlength="1" style="width:3em; font-family:var(--mono-font);" placeholder="none">
   </div>
 </div>
 
@@ -1026,7 +1026,7 @@ addCiphertextBox();
 (function() {
     var tip = document.createElement('div');
     tip.style.cssText = 'position:fixed;background:#222;color:#fff;padding:6px 10px;'
-        + 'border-radius:4px;font-size:0.82em;font-family:Arial,sans-serif;'
+        + 'border-radius:4px;font-size:0.82em;font-family:var(--sans-font);'
         + 'letter-spacing:normal;line-height:1.4;white-space:normal;max-width:300px;'
         + 'z-index:9999;pointer-events:none;display:none;'
         + 'box-shadow:0 2px 6px rgba(0,0,0,0.35);';

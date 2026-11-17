@@ -4,49 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Literal Key Reconstruction</title>
+<link rel="stylesheet" href="../css/site.css">
 <style>
-  body { font-family: monospace; max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-  h1, h2, h3, p, label, a, button, li { font-family: sans-serif; }
+  body { font-family: var(--mono-font); max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+  h1, h2, h3, p, label, a, button, li { font-family: var(--sans-font); }
   h2 { font-size: 1.1rem; margin-top: 2rem; }
   h3 { font-size: 1rem; margin-top: 1.5rem; }
   .field { margin-top: 1rem; }
   .field label { display: block; margin-bottom: 0.3rem; }
   .inline { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-  input[type="text"] { font-family: monospace; font-size: 1rem; padding: 0.3rem; box-sizing: border-box; }
+  input[type="text"] { font-family: var(--mono-font); font-size: 1rem; padding: 0.3rem; box-sizing: border-box; }
   input.wide { flex: 1; min-width: 12rem; }
-  input[type="number"] { font-family: monospace; font-size: 1rem; padding: 0.3rem; width: 4.5rem; }
+  input[type="number"] { font-family: var(--mono-font); font-size: 1rem; padding: 0.3rem; width: 4.5rem; }
   button { padding: 0.4rem 0.9rem; cursor: pointer; }
   button:disabled { cursor: default; }
-  #error { font-family: sans-serif; color: #b00; margin-top: 1rem; }
-  #summary, #verification, #trial-message { font-family: sans-serif; margin-top: 1rem; }
-  #verification { color: #060; font-weight: bold; }
-  #trial-message { color: #b00; }
+  #error { font-family: var(--sans-font); color: var(--error); margin-top: 1rem; }
+  #summary, #verification, #trial-message { font-family: var(--sans-font); margin-top: 1rem; }
+  #verification { color: var(--success); font-weight: bold; }
+  #trial-message { color: var(--error); }
   #workspace { display: none; }
   .scroll { overflow-x: auto; }
 
   #table { border-collapse: collapse; margin-top: 1rem; }
-  #table th, #table td { border: 1px solid #ccc; text-align: center; min-width: 3.2rem; height: 3.4rem; padding: 0.1rem 0.2rem; }
-  #table th { background: #f4f4f4; height: auto; padding: 0.3rem; }
-  #table thead th { border-bottom: 2px solid #999; }
-  #table tfoot th, #table tfoot td { border-top: 2px solid #999; height: 2.4rem; font-size: 1.3rem; font-weight: bold; }
+  #table th, #table td { border: 1px solid var(--border); text-align: center; min-width: 3.2rem; height: 3.4rem; padding: 0.1rem 0.2rem; }
+  #table th { background: var(--surface); height: auto; padding: 0.3rem; }
+  #table thead th { border-bottom: 2px solid var(--border-strong); }
+  #table tfoot th, #table tfoot td { border-top: 2px solid var(--border-strong); height: 2.4rem; font-size: 1.3rem; font-weight: bold; }
   #table .cell { cursor: pointer; }
-  #table .cell:hover { background: #eef4ff; }
-  #table .selected { outline: 3px solid #36c; outline-offset: -3px; background: #eef4ff; }
-  .number { font-size: 0.8rem; color: #555; }
+  #table .cell:hover { background: var(--selected); }
+  #table .selected { outline: 3px solid var(--link); outline-offset: -3px; background: var(--selected); }
+  .number { font-size: 0.8rem; color: var(--muted); }
   .likely { font-weight: bold; }
-  .limits { font-size: 0.75rem; color: #888; }
+  .limits { font-size: 0.75rem; color: var(--muted); }
   .letter { font-size: 1.3rem; font-weight: bold; }
-  .deduced { color: #06c; font-style: italic; }
-  .unknown { color: #bbb; }
+  .deduced { color: var(--link); font-style: italic; }
+  .unknown { color: var(--border-strong); }
 
   #picker { margin-top: 1rem; min-height: 2.5rem; }
-  #picker button { font-family: monospace; font-size: 1rem; padding: 0.3rem 0.55rem; margin: 0 0.15rem 0.3rem 0; }
-  #picker button.likely-letter { background: #ffe9a8; border: 1px solid #c90; border-radius: 3px; }
-  #legend { font-size: 0.85rem; color: #555; }
-  #match-summary { font-family: sans-serif; }
+  #picker button { font-family: var(--mono-font); font-size: 1rem; padding: 0.3rem 0.55rem; margin: 0 0.15rem 0.3rem 0; }
+  #picker button.likely-letter { background: var(--warning-surface); border: 1px solid var(--warning); border-radius: 3px; }
+  #legend { font-size: 0.85rem; color: var(--muted); }
+  #match-summary { font-family: var(--sans-font); }
   #search-progress { display: none; width: 10rem; }
   #matches { margin-top: 0.5rem; }
-  #matches button, #longest-words button { font-family: monospace; font-size: 1rem; margin: 0 0.3rem 0.3rem 0; padding: 0.2rem 0.5rem; }
+  #matches button, #longest-words button { font-family: var(--mono-font); font-size: 1rem; margin: 0 0.3rem 0.3rem 0; padding: 0.2rem 0.5rem; }
 </style>
 </head>
 <body>

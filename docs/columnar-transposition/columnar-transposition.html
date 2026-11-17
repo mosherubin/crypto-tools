@@ -4,18 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Columnar Transposition Table</title>
+<link rel="stylesheet" href="../css/site.css">
 <style>
-  body { font-family: monospace; max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
-  h1 { font-family: sans-serif; }
-  p, label { font-family: sans-serif; }
-  a { font-family: sans-serif; }
+  body { font-family: var(--mono-font); max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: var(--sans-font); }
+  p, label { font-family: var(--sans-font); }
+  a { font-family: var(--sans-font); }
   .field { margin-top: 1rem; }
   .field label { display: block; margin-bottom: 0.3rem; }
-  input[type="text"] { font-family: monospace; font-size: 1rem; padding: 0.3rem; width: 100%; box-sizing: border-box; }
+  input[type="text"] { font-family: var(--mono-font); font-size: 1rem; padding: 0.3rem; width: 100%; box-sizing: border-box; }
   .radios { display: flex; gap: 1.5rem; }
   .radios label { display: flex; align-items: center; gap: 0.4rem; }
-  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: sans-serif; cursor: pointer; }
-  #status { font-family: sans-serif; color: #b00; margin-top: 1rem; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: var(--sans-font); cursor: pointer; }
+  #status { font-family: var(--sans-font); color: var(--error); margin-top: 1rem; }
   #grid-output {
     border-collapse: collapse;
     margin-top: 1.5rem;
@@ -26,22 +27,22 @@
     unicode-bidi: bidi-override;
   }
   #grid-output th, #grid-output td {
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
     padding: 0.2rem 0.6rem;
     text-align: center;
-    font-family: monospace;
+    font-family: var(--mono-font);
     font-size: 1rem;
   }
-  #grid-output th { background: #f4f4f4; border-bottom: 2px solid #999; }
-  #grid-output td.row-number { background: #f4f4f4; font-weight: bold; }
+  #grid-output th { background: var(--surface); border-bottom: 2px solid var(--border-strong); }
+  #grid-output td.row-number { background: var(--surface); font-weight: bold; }
   #plaintext-output {
-    background: #f4f4f4;
+    background: var(--surface);
     padding: 1rem;
     margin-top: 1rem;
     overflow-x: auto;
     white-space: pre;
-    border: 1px solid #ccc;
-    font-family: monospace;
+    border: 1px solid var(--border);
+    font-family: var(--mono-font);
     font-size: 1rem;
     /* Deliberately NOT bidi-overridden, unlike the grid: this text is meant to be
        read as natural running text, so Hebrew/Arabic must flow right-to-left here. */
@@ -54,7 +55,7 @@
     color: #fff;
     padding: 0.4rem 0.6rem;
     border-radius: 4px;
-    font-family: sans-serif;
+    font-family: var(--sans-font);
     font-size: 0.85rem;
     line-height: 1.3;
     pointer-events: none;
@@ -75,7 +76,7 @@
   <div class="field">
     <label for="file-input">Ciphertext file</label>
     <input type="file" id="file-input">
-    <p style="font-size: 0.85rem; color: #555; margin: 0.3rem 0 0;">Lines starting with '#' are treated as comments and ignored. Everything else is
+    <p style="font-size: 0.85rem; color: var(--muted); margin: 0.3rem 0 0;">Lines starting with '#' are treated as comments and ignored. Everything else is
        concatenated with whitespace stripped.</p>
   </div>
 

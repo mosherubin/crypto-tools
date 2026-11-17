@@ -1,0 +1,55 @@
+body {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+h1, h2, h3, h4, h5, h6 { line-height: 1.25; margin: 1.8em 0 0.6em; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.2rem; }
+
+header#title-block-header { margin-bottom: 2rem; }
+header#title-block-header .title { margin-top: 0; }
+header#title-block-header .author, header#title-block-header .date { color: var(--muted); margin: 0.2em 0; }
+
+img { max-width: 100%; height: auto; }
+
+code, pre { font-family: var(--mono-font); font-size: 0.9em; }
+:not(pre) > code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 4px; }
+pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  overflow-x: auto;
+  line-height: 1.4;
+}
+
+blockquote { margin: 1em 0; padding: 0 1em; color: var(--muted); border-left: 3px solid var(--border); }
+
+table { border-collapse: collapse; margin: 1em 0; display: block; overflow-x: auto; }
+th, td { border: 1px solid var(--border); padding: 0.35em 0.7em; vertical-align: top; }
+th { background: var(--surface); text-align: left; }
+
+hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+
+nav#TOC { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 1rem; margin-bottom: 2rem; }
+nav#TOC > ul { padding-left: 1.2rem; }
+nav#TOC:not(:has(li)) { display: none; }
+
+/* Pandoc's syntax highlighting colours are picked for a light background. */
+@media (prefers-color-scheme: dark) {
+  code span.al, code span.er { color: #ff7b72; }
+  code span.an, code span.co, code span.cv, code span.do { color: #8b949e; }
+  code span.at, code span.va { color: #79c0ff; }
+  code span.bn, code span.dv, code span.fl, code span.cn { color: #79c0ff; }
+  code span.bu, code span.cf, code span.kw { color: #ff7b72; }
+  code span.ch, code span.sc, code span.ss, code span.st, code span.vs { color: #a5d6ff; }
+  code span.dt { color: #ffa657; }
+  code span.fu { color: #d2a8ff; }
+  code span.im, code span.pp { color: #ff7b72; }
+  code span.op, code span.ot { color: #e6edf3; }
+}
