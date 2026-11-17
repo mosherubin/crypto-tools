@@ -1,6 +1,6 @@
 """
 Loader/saver for CryptML (Cryptographic Markup Language) documents.
-Format defined in docs/cryptml-spec.md.
+Format defined in docs/cryptml/cryptml-spec.md.
 """
 
 import json

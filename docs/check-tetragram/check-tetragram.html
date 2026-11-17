@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-  <p><a href="index.html">&larr; back to tools</a></p>
+  <p><a href="../index.html">&larr; back to tools</a></p>
   <h1>Check Tetragram</h1>
   <p>Look up a (possibly wildcard) tetragram against the frequency data used by the Quagmire solver.</p>
   <p>Tetragram: 4 characters, A-Z or <code>.</code> for wildcard (e.g. <code>..QE</code>, <code>TION</code>). Grade cutoff: a single letter A-Z &mdash; grades <em>above</em> this are considered valid.</p>
@@ -44,8 +44,8 @@
 
   <pre id="output" readonly></pre>
 
-<script src="js/tetragram-data.js"></script>
-<script src="js/reconstruction-matrix.js"></script>
+<script src="../js/tetragram-data.js"></script>
+<script src="../js/reconstruction-matrix.js"></script>
 <script>
 const { isTetragramValid } = ReconstructionMatrix;
 
