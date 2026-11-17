@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FIND REPETITIONS</title>
+<link rel="stylesheet" href="../css/site.css">
 <style>
   * { box-sizing: border-box; }
   body {
-    font-family: Arial, sans-serif;
+    font-family: var(--sans-font);
     max-width: 1400px;
     margin: 0 auto;
     padding: 24px 20px;
-    background: #fff;
   }
   .header-row {
     display: flex;
@@ -50,7 +50,7 @@
     width: 100%;
     height: 110px;
     resize: both;
-    font-family: monospace;
+    font-family: var(--mono-font);
     font-size: 0.9em;
   }
   .ct-btn-row {
@@ -61,7 +61,7 @@
   .ct-btn-row button {
     width: 30px;
     height: 26px;
-    font-family: monospace;
+    font-family: var(--mono-font);
     font-size: 1em;
     font-weight: bold;
     line-height: 1;
@@ -84,11 +84,11 @@
     display: block;
     width: 100%;
     height: 680px;
-    font-family: monospace;
+    font-family: var(--mono-font);
     font-size: 0.82em;
     line-height: 1.35;
-    background: #f6f6f6;
-    border: 1px solid #ccc;
+    background: var(--surface);
+    border: 1px solid var(--border);
     padding: 8px;
     resize: vertical;
     white-space: pre;
@@ -106,7 +106,7 @@
     body > * { display: none !important; }
     #print-area {
       display: block !important;
-      font-family: monospace;
+      font-family: var(--mono-font);
       font-size: 0.75em;
       line-height: 1.35;
       white-space: pre;
@@ -147,7 +147,7 @@
       <option value="[A-Za-z0-9]">[A-Za-z0-9] -- 36 characters</option>
       <option value="[Other]">Other...</option>
     </select>
-    <input type="text" id="custom_charset" style="display:none; font-family:monospace; width:16em;"
+    <input type="text" id="custom_charset" style="display:none; font-family:var(--mono-font); width:16em;"
            placeholder="e.g. ab or adfgvx or A-IK-Z">
   </div>
 </div>
@@ -155,7 +155,7 @@
 <div class="row" data-tooltip="Optional. One character that marks a position where a symbol exists but is unknown (a dit), such as . or -. Leave it empty for none, which is the default. It applies to ciphertexts you type or paste. An imported ciphertext uses the dit it was exported with, or none if its export names none. A dit keeps its position, so every later position is unchanged, but it never matches anything -- not even another dit -- so a repetition stops at a dit.">
   <span class="lbl">Dits character:</span>
   <div class="ctrl">
-    <input type="text" id="page_ditschar" maxlength="1" style="width:3em; font-family:monospace;" placeholder="none">
+    <input type="text" id="page_ditschar" maxlength="1" style="width:3em; font-family:var(--mono-font);" placeholder="none">
   </div>
 </div>
 
@@ -736,7 +736,7 @@ addCiphertextBox();
 (function() {
     var tip = document.createElement('div');
     tip.style.cssText = 'position:fixed;background:#222;color:#fff;padding:6px 10px;'
-        + 'border-radius:4px;font-size:0.82em;font-family:Arial,sans-serif;'
+        + 'border-radius:4px;font-size:0.82em;font-family:var(--sans-font);'
         + 'letter-spacing:normal;line-height:1.4;white-space:normal;max-width:300px;'
         + 'z-index:9999;pointer-events:none;display:none;'
         + 'box-shadow:0 2px 6px rgba(0,0,0,0.35);';

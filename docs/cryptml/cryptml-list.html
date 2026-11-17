@@ -4,24 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CryptML List / Browse</title>
+<link rel="stylesheet" href="../css/site.css">
 <style>
-  body { font-family: monospace; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
-  h1 { font-family: sans-serif; }
-  p, label { font-family: sans-serif; }
-  a { font-family: sans-serif; }
+  body { font-family: var(--mono-font); max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: var(--sans-font); }
+  p, label { font-family: var(--sans-font); }
+  a { font-family: var(--sans-font); }
   .toolbar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 1rem 0; }
-  button { padding: 0.4rem 0.8rem; font-family: sans-serif; cursor: pointer; }
-  input[type="text"] { font-family: monospace; padding: 0.35rem; font-size: 0.9rem; flex: 1; min-width: 12rem; }
-  #status { font-family: sans-serif; color: #555; min-height: 1.2em; margin: 0.5rem 0 1rem; }
-  #output { background: #f4f4f4; border: 1px solid #ccc; border-radius: 4px; padding: 1rem; overflow-x: auto; }
-  .file-header { font-family: sans-serif; font-weight: bold; margin: 1rem 0 0.15rem; white-space: nowrap; }
+  button { padding: 0.4rem 0.8rem; font-family: var(--sans-font); cursor: pointer; }
+  input[type="text"] { font-family: var(--mono-font); padding: 0.35rem; font-size: 0.9rem; flex: 1; min-width: 12rem; }
+  #status { font-family: var(--sans-font); color: var(--muted); min-height: 1.2em; margin: 0.5rem 0 1rem; }
+  #output { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1rem; overflow-x: auto; }
+  .file-header { font-family: var(--sans-font); font-weight: bold; margin: 1rem 0 0.15rem; white-space: nowrap; }
   .file-header:first-child { margin-top: 0; }
-  .file-uuid { font-family: monospace; color: #888; font-size: 0.82rem; margin: 0 0 0.3rem; }
-  .file-error { color: #b00; font-family: sans-serif; margin: 1rem 0 0.3rem; white-space: nowrap; }
+  .file-uuid { font-family: var(--mono-font); color: var(--muted); font-size: 0.82rem; margin: 0 0 0.3rem; }
+  .file-error { color: var(--error); font-family: var(--sans-font); margin: 1rem 0 0.3rem; white-space: nowrap; }
   .col-headers, .row { white-space: pre; font-size: 0.88rem; line-height: 1.5; }
-  .col-headers { font-weight: bold; color: #555; }
-  .row:hover { background: #e8e8e8; }
-  #summary { font-family: sans-serif; color: #555; margin-top: 1rem; }
+  .col-headers { font-weight: bold; color: var(--muted); }
+  .row:hover { background: var(--surface-hover); }
+  #summary { font-family: var(--sans-font); color: var(--muted); margin-top: 1rem; }
 </style>
 </head>
 <body>
@@ -92,7 +93,7 @@ async function loadPublishedCorpus() {
 function setStatus(text, isError = false) {
   const el = document.getElementById('status');
   el.textContent = text;
-  el.style.color = isError ? '#b00' : '#555';
+  el.style.color = isError ? 'var(--error)' : 'var(--muted)';
 }
 
 function globToRegExp(pattern) {

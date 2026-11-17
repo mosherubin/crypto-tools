@@ -4,25 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CryptML Validator</title>
+<link rel="stylesheet" href="../css/site.css">
 <style>
-  body { font-family: monospace; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-  h1 { font-family: sans-serif; }
-  p, label { font-family: sans-serif; }
-  a { font-family: sans-serif; }
+  body { font-family: var(--mono-font); max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: var(--sans-font); }
+  p, label { font-family: var(--sans-font); }
+  a { font-family: var(--sans-font); }
   .field-row { margin: 1.2rem 0; }
   .field-row label { display: block; margin-bottom: 0.4rem; font-weight: bold; }
-  input[type="file"] { font-family: sans-serif; }
-  #filename { font-family: sans-serif; color: #555; margin-top: 0.4rem; font-size: 0.9rem; }
-  textarea#paste { width: 100%; min-height: 10rem; font-family: monospace; font-size: 0.85rem; padding: 0.5rem; box-sizing: border-box; }
+  input[type="file"] { font-family: var(--sans-font); }
+  #filename { font-family: var(--sans-font); color: var(--muted); margin-top: 0.4rem; font-size: 0.9rem; }
+  textarea#paste { width: 100%; min-height: 10rem; font-family: var(--mono-font); font-size: 0.85rem; padding: 0.5rem; box-sizing: border-box; }
   #result { margin-top: 1.5rem; }
-  .valid { font-family: sans-serif; font-weight: bold; color: #0a0; }
-  .invalid-header { font-family: sans-serif; font-weight: bold; color: #b00; margin-bottom: 0.5rem; }
-  #errors { background: #fee; border: 1px solid #b00; padding: 1rem 1rem 1rem 2rem; border-radius: 4px; }
+  .valid { font-family: var(--sans-font); font-weight: bold; color: var(--success); }
+  .invalid-header { font-family: var(--sans-font); font-weight: bold; color: var(--error); margin-bottom: 0.5rem; }
+  #errors { background: var(--error-surface); border: 1px solid var(--error); padding: 1rem 1rem 1rem 2rem; border-radius: 4px; }
   #errors li { margin: 0.3rem 0; font-size: 0.9rem; }
-  .warnings-header { font-family: sans-serif; font-weight: bold; color: #960; margin: 1rem 0 0.5rem; }
-  #warnings { background: #ffc; border: 1px solid #a80; padding: 1rem 1rem 1rem 2rem; border-radius: 4px; }
+  .warnings-header { font-family: var(--sans-font); font-weight: bold; color: var(--warning); margin: 1rem 0 0.5rem; }
+  #warnings { background: var(--warning-surface); border: 1px solid var(--warning); padding: 1rem 1rem 1rem 2rem; border-radius: 4px; }
   #warnings li { margin: 0.3rem 0; font-size: 0.9rem; }
-  .error-box { background: #fee; border: 1px solid #b00; padding: 1rem; border-radius: 4px; white-space: pre-wrap; }
+  .error-box { background: var(--error-surface); border: 1px solid var(--error); padding: 1rem; border-radius: 4px; white-space: pre-wrap; }
 </style>
 </head>
 <body>

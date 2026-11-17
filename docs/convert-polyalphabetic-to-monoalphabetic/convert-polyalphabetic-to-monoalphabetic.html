@@ -4,22 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Convert Polyalphabetic to Monoalphabetic</title>
+<link rel="stylesheet" href="../css/site.css">
 <style>
-  body { font-family: monospace; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-  h1 { font-family: sans-serif; }
-  p, label { font-family: sans-serif; }
-  textarea { font-family: monospace; font-size: 0.95rem; width: 100%; box-sizing: border-box; }
-  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: sans-serif; cursor: pointer; }
+  body { font-family: var(--mono-font); max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-family: var(--sans-font); }
+  p, label { font-family: var(--sans-font); }
+  textarea { font-family: var(--mono-font); font-size: 0.95rem; width: 100%; box-sizing: border-box; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: var(--sans-font); cursor: pointer; }
   #output {
-    background: #f4f4f4;
+    background: var(--surface);
     padding: 1rem;
     margin-top: 1.5rem;
     height: 28rem;
     overflow-y: auto;
     white-space: pre-wrap;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
   }
-  a { font-family: sans-serif; }
+  a { font-family: var(--sans-font); }
 </style>
 </head>
 <body>

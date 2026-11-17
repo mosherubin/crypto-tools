@@ -4,29 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hebrew to Latin Transliterator</title>
+<link rel="stylesheet" href="../css/site.css">
 <style>
-  body { font-family: monospace; max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
-  h1, h2 { font-family: sans-serif; }
-  p, label { font-family: sans-serif; }
-  a { font-family: sans-serif; }
+  body { font-family: var(--mono-font); max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+  h1, h2 { font-family: var(--sans-font); }
+  p, label { font-family: var(--sans-font); }
+  a { font-family: var(--sans-font); }
   .field { margin-top: 1rem; }
   .field label { display: block; margin-bottom: 0.3rem; }
-  textarea { font-family: monospace; font-size: 1rem; padding: 0.5rem; width: 100%; box-sizing: border-box; }
+  textarea { font-family: var(--mono-font); font-size: 1rem; padding: 0.5rem; width: 100%; box-sizing: border-box; }
   #input { height: 6rem; }
-  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: sans-serif; cursor: pointer; }
+  button { margin-top: 1rem; padding: 0.5rem 1rem; font-family: var(--sans-font); cursor: pointer; }
   #output {
-    background: #f4f4f4;
+    background: var(--surface);
     padding: 1rem;
     margin-top: 1.5rem;
     min-height: 4rem;
     overflow-y: auto;
     overflow-x: auto;
     white-space: pre-wrap;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
   }
   table { border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
-  th, td { border: 1px solid #ccc; padding: 0.2rem 0.6rem; text-align: center; }
-  th { font-family: sans-serif; background: #f4f4f4; }
+  th, td { border: 1px solid var(--border); padding: 0.2rem 0.6rem; text-align: center; }
+  th { font-family: var(--sans-font); background: var(--surface); }
 </style>
 </head>
 <body>
