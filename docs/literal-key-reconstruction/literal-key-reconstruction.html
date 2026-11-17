@@ -42,6 +42,8 @@
 
   #picker { margin-top: 1rem; min-height: 2.5rem; }
   #picker button { font-family: var(--mono-font); font-size: 1rem; padding: 0.3rem 0.55rem; margin: 0 0.15rem 0.3rem 0; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  #guide-btn { padding: 5px 14px; font-size: 0.85em; }
   #picker button.likely-letter { background: var(--warning-surface); border: 1px solid var(--warning); border-radius: 3px; }
   #legend { font-size: 0.85rem; color: var(--muted); }
   #match-summary { font-family: var(--sans-font); }
@@ -52,7 +54,10 @@
 </head>
 <body>
   <p><a href="../index.html">&larr; back to tools</a></p>
-  <h1>Literal Key Reconstruction</h1>
+  <div class="header-row">
+    <h1>Literal Key Reconstruction</h1>
+    <button id="guide-btn" onclick="window.open('literal-key-reconstruction-guide.html', '_blank')">Guide</button>
+  </div>
   <p>Reconstruct the literal key (the word or phrase) behind a transposition cipher's numerical key, using the keyword reconstruction table of <i>Military Cryptanalysis IV</i> and <i>Military Cryptanalytics II</i>.</p>
 
   <div class="field">
