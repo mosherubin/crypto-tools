@@ -9,7 +9,7 @@ A collection of cryptanalysis tools and utilities for classical cipher analysis,
 
 ## GitHub Pages
 
-This site is published via GitHub Pages, configured to deploy from `main` / `docs`. Any HTML+JS tool placed in `docs/` becomes part of the live site, linked from `docs/index.html`.
+This site is published via GitHub Pages, configured to deploy from `main` / `docs`. Each HTML+JS tool lives in its own subfolder of `docs/` (e.g. `docs/stethoscope/`) and becomes part of the live site, linked from `docs/index.html`. Shared scripts, styles and images are in `docs/js/`, `docs/css/` and `docs/graphics/`.
 
 ## License
 

@@ -45,7 +45,7 @@ function main() {
     }
 
     // Schema validation treats cryptml_uuid as optional; membership in this
-    // directory requires it -- see "Corpus identity" in docs/cryptml-spec.md.
+    // directory requires it -- see "Corpus identity" in docs/cryptml/cryptml-spec.md.
     if (!isValidUuid(data.cryptml_uuid)) {
       errors.push(`${filename}: missing or invalid cryptml_uuid -- every file under tools/CryptML/input/ must have one (assign it via the Editor's "Prepare for the corpus" action)`);
       continue;

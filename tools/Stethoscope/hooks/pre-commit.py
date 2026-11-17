@@ -2,7 +2,7 @@
 Pre-commit hook: auto-increments the STETHOSCOPE minor version whenever
 stethoscope files are among the staged changes.
 
-Trigger: any staged file under tools/Stethoscope/ or docs/stethoscope.html
+Trigger: any staged file under tools/Stethoscope/ or docs/stethoscope/stethoscope.html
 Action:  VERSION minor += 1  →  patch (version OLD) → (version NEW) in all
          listed PATCHED_FILES  →  git add those files into the same commit.
 """
@@ -20,12 +20,12 @@ def repo_root() -> str:
 ROOT = repo_root()
 VERSION_FILE = os.path.join(ROOT, 'tools', 'Stethoscope', 'VERSION')
 PATCHED_FILES = [
-    os.path.join(ROOT, 'docs', 'stethoscope.html'),
+    os.path.join(ROOT, 'docs', 'stethoscope', 'stethoscope.html'),
     os.path.join(ROOT, 'tools', 'Stethoscope', 'Basic', 'server.py'),
 ]
 
 STETHOSCOPE_PATHS = ('tools/Stethoscope', 'tools\\Stethoscope',
-                     'docs/stethoscope.html', 'docs\\stethoscope.html')
+                     'docs/stethoscope/stethoscope.html', 'docs\\stethoscope\\stethoscope.html')
 
 
 def staged_files():
