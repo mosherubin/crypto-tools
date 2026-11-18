@@ -34,6 +34,22 @@ table { border-collapse: collapse; margin: 1em 0; display: block; overflow-x: au
 th, td { border: 1px solid var(--border); padding: 0.35em 0.7em; vertical-align: top; }
 th { background: var(--surface); text-align: left; }
 
+.indented { margin-left: 2em; }
+
+a.pdf-button {
+  display: inline-block;
+  margin-left: 0.4em;
+  padding: 0 0.6em;
+  font-size: 0.8em;
+  line-height: 1.6;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+}
+a.pdf-button:hover { background: var(--surface-hover); }
+
 hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 
 nav#TOC { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 1rem; margin-bottom: 2rem; }

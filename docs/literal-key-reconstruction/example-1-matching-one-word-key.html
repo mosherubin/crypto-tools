@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Moshe Rubin" />
+  <title>Literal Key Reconstruction — Example 1</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../css/site.css" />
+  <link rel="stylesheet" href="../css/document.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Literal Key Reconstruction — Example 1</h1>
+<p class="subtitle">Matching a one-word literal key</p>
+<p class="author">Moshe Rubin</p>
+</header>
+<p><a href="literal-key-reconstruction-guide.html#examples">← back to
+the guide</a></p>
+<h2 id="the-numerical-key">The numerical key</h2>
+<p>Our example will use the numerical key
+“11-13-1-8-5-4-6-3-2-12-7-10-9”, trying to reconstruct the original
+literal key. As a first step, we will assume the literal key is a single
+English word. Here is our plan:</p>
+<ul>
+<li>Using a word list, we’ll search for a single word that matches our
+numerical key.</li>
+<li>Should we fail to find the literal key, we will search again with a
+larger word list.</li>
+<li>If we still fail to find the key, we should assume the key consists
+of two or more words.</li>
+</ul>
+<h2 id="step-by-step">Step by step</h2>
+<p>We begin by pasting the numerical key into the “Numerical key” text
+field:</p>
+<p><img src="graphics/example-1-10.png"
+title="Pasting the numerical key in the field" /></p>
+<p>Click the “Build table” button to initialize the tool with your
+numerical key. You can see that the reconstruction table has been set up
+for you:</p>
+<p><img src="graphics/example-1-20.png"
+title="The initialized reconstruction table" /></p>
+<p>As a first step, we will scroll past the reconstruction table to the
+“Word list matching” section:</p>
+<p><img src="graphics/example-1-30.png"
+title="The initialized &#39;word list matching&#39; section" /></p>
+<p>Let’s search for a one-word solution to our numerical key. First, we
+select a word list file (the parent guide file provide links to English
+word lists):</p>
+<p><img src="graphics/example-1-40.png"
+title="The initialized &#39;word list matching&#39; section" /></p>
+<p>Now we want to tell the tool the range of words we are looking for in
+the literal key. In addition, we specify the minimum number of letters a
+word can have.</p>
+<div class="indented">
+<p>The smaller the minimal letter value, the more time the tool needs to
+run. If you think the smallest word in the key can be three letters
+(e.g., “the”, “and”), then set the minimum value to three (3). If you
+believe the word “a” or “i” may have been used in the literal key, you
+will need to specify a value of one (1).</p>
+</div>
+<p>In our case, we will specify that we are looking for a single word.
+In this case the minimum word size value should be the number of values
+in the numerical key:</p>
+<p><img src="graphics/example-1-50.png"
+title="Setting the word list matching filter" /></p>
+<p>After a moment, you can see the result:</p>
+<p><img src="graphics/example-1-60.png" title="The solution" /></p>
+<h2 id="post-mortem">Post mortem</h2>
+<p>In this simple example, after providing a good word list, we
+specified in the matching filter that we’re looking for a single word
+that matches the numerical key. Fortunately, we did not have to use a
+larger word list, or assume multiple words in the literal key.</p>
+</body>
+</html>
