@@ -39,7 +39,6 @@
 </header>
 <p><a href="literal-key-reconstruction.html">← back to Literal Key
 Reconstruction</a></p>
-<p>Here is my first text change.</p>
 <h2 id="what-is-this-tool-used-for">What is this tool used for?</h2>
 <p>A <strong>literal key</strong> is a key made of letters: a word, a
 phrase or a sentence. A <strong>numerical key</strong> is a sequence of
@@ -85,11 +84,11 @@ right; and so on:</p>
 <p>Moving in the opposite direction, i.e., reconstructing the literal
 key given the derived numerical key, is a more difficult challenge.</p>
 <p>This tool helps a cryptanalyst reconstruct an original literal key
-from its numerical.</p>
+from its numerical key.</p>
 <div class="indented">
 <p><b>NOTE</b>: A given numerical key can map to more than one possible
-and valid literal keys. For example, the numerical key
-“1-9-2-6-7-3-4-8-5”, can be derived by numerous literal leys, including
+and valid literal key. For example, the numerical key
+“1-9-2-6-7-3-4-8-5”, can be derived by numerous literal keys, including
 “AVAILABLE”, “BUCKTEETH”, and even “DUET TESTS”. A cryptanalyst should
 use common sense and collateral information to decide on the most
 probable literal key.</p>
@@ -158,12 +157,14 @@ next higher number lies to the <em>right</em>, it stays in the same row;
 when it lies to the <em>left</em>, it drops to a new row. Letters never
 decrease from one number to the next, and a new row means the letter
 <em>must</em> increase. So the number of rows is the fewest different
-letters the literal key can have.</p>
+letters the literal key can have. The line above the table states this,
+for example <em>9 numbers in 5 rows: the literal key contains at least 5
+different letters.</em></p>
 <p><strong>Reading a cell.</strong> Each cell shows:</p>
 <ul>
 <li>its number;</li>
-<li>the <strong>likely</strong> letters, estimated from English letter
-frequencies;</li>
+<li>the <strong>likely</strong> range, for example <code>J-L</code>,
+estimated from English letter frequencies;</li>
 <li>in grey, the <strong>hard limits</strong>: the only letters the cell
 can possibly hold.</li>
 </ul>
@@ -171,14 +172,31 @@ can possibly hold.</li>
 far as it is known.</p>
 <p><strong>Placing letters.</strong> Click a cell, then click a letter
 in the picker below the table or type it. Letters outside the cell’s
-limits are greyed out, and likely letters are highlighted. Every letter
-you place narrows the limits of the other cells; when a cell is left
-with only one possible letter, the tool fills it in for you, in <em>blue
-italic</em>.</p>
+limits are greyed out, and the letters in the likely range are
+highlighted. <strong>Clear letter</strong> removes the cell’s letter.
+Every letter you place narrows the limits of the other cells; when a
+cell is left with only one possible letter, the tool fills it in for
+you, in <em>blue italic</em>.</p>
+<p><strong>Adjusting a likely range.</strong> The estimate is only a
+guide. If you think a cell’s letter lies elsewhere, move its likely
+range one letter at a time:</p>
+<ul>
+<li><strong>click</strong> a letter of the range to move it one letter
+toward A;</li>
+<li><strong>right-click</strong> it to move it one letter toward Z.</li>
+</ul>
+<p>For example, three right-clicks on the start of <code>J-L</code> give
+<code>K-L</code>, then <code>L</code>, and a right-click on the single
+<code>L</code> widens it to <code>L-M</code>. A move that would take the
+range outside the hard limits, or put its start after its end, is
+ignored. An adjusted range is shown in brown and applies to that cell
+only. To go back to the estimate, select the cell and press
+<strong>Reset range</strong> in the picker.</p>
 <p><strong>Keyboard.</strong> The left and right arrow keys move along
 the key, Delete or Backspace clears a cell, and Escape deselects it.</p>
 <p><strong>Undo, Redo and Reset</strong> step back, step forward, or
-clear every placed letter.</p>
+start the table afresh. Undo and Redo cover adjusted ranges as well as
+letters; Reset clears every placed letter and every adjusted range.</p>
 <p>When every cell is filled, the tool reports whether the resulting
 literal key derives the numerical key exactly.</p>
 <h3 id="trial-word">Trial word</h3>

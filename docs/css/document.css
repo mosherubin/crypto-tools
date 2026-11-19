@@ -18,6 +18,7 @@ header#title-block-header .author, header#title-block-header .date { color: var(
 img { max-width: 100%; height: auto; }
 
 code, pre { font-family: var(--mono-font); font-size: 0.9em; }
+pre code { font-size: 1em; }
 :not(pre) > code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 4px; }
 pre {
   background: var(--surface);
@@ -35,6 +36,7 @@ th, td { border: 1px solid var(--border); padding: 0.35em 0.7em; vertical-align:
 th { background: var(--surface); text-align: left; }
 
 .indented { margin-left: 2em; }
+.large { font-size: 1.3em; }
 
 a.pdf-button {
   display: inline-block;

@@ -5,8 +5,6 @@ author: "Moshe Rubin"
 
 [&larr; back to Literal Key Reconstruction](literal-key-reconstruction.html)
 
-Here is my first text change.
-
 ## What is this tool used for?
 
 A **literal key** is a key made of letters: a word, a phrase or a sentence.
@@ -29,10 +27,10 @@ gets 1; G gets 2; the two I's get 3 and 4, from left to right; and so on:
 Moving in the opposite direction, i.e., reconstructing the literal key given the 
 derived numerical key, is a more difficult challenge.
 
-This tool helps a cryptanalyst reconstruct an original literal key from its numerical.
+This tool helps a cryptanalyst reconstruct an original literal key from its numerical key.
 
 ::: indented
-<b>NOTE</b>: A given numerical key can map to more than one possible and valid literal keys.  For example, the numerical key "1-9-2-6-7-3-4-8-5", can be derived by numerous literal leys, including "AVAILABLE", "BUCKTEETH", and even "DUET TESTS".  A cryptanalyst should use common sense and collateral information to decide on the most probable literal key.
+<b>NOTE</b>: A given numerical key can map to more than one possible and valid literal key.  For example, the numerical key "1-9-2-6-7-3-4-8-5", can be derived by numerous literal keys, including "AVAILABLE", "BUCKTEETH", and even "DUET TESTS".  A cryptanalyst should use common sense and collateral information to decide on the most probable literal key.
 
 As this note implies, literal keys can consist of one or more words.
 :::
@@ -101,26 +99,44 @@ sits in a row of its own choosing: while the next higher number lies to the
 *right*, it stays in the same row; when it lies to the *left*, it drops to a
 new row. Letters never decrease from one number to the next, and a new row
 means the letter *must* increase. So the number of rows is the fewest
-different letters the literal key can have.
+different letters the literal key can have. The line above the table states
+this, for example *9 numbers in 5 rows: the literal key contains at least 5
+different letters.*
 
 **Reading a cell.** Each cell shows:
 
 * its number;
-* the **likely** letters, estimated from English letter frequencies;
+* the **likely** range, for example `J-L`, estimated from English letter
+  frequencies;
 * in grey, the **hard limits**: the only letters the cell can possibly hold.
 
 The bottom row, **Key**, spells out the literal key as far as it is known.
 
 **Placing letters.** Click a cell, then click a letter in the picker below the
-table or type it. Letters outside the cell's limits are greyed out, and likely
-letters are highlighted. Every letter you place narrows the limits of the other
-cells; when a cell is left with only one possible letter, the tool fills it in
-for you, in *blue italic*.
+table or type it. Letters outside the cell's limits are greyed out, and the
+letters in the likely range are highlighted. **Clear letter** removes the
+cell's letter. Every letter you place narrows the limits of the other cells;
+when a cell is left with only one possible letter, the tool fills it in for
+you, in *blue italic*.
+
+**Adjusting a likely range.** The estimate is only a guide. If you think a
+cell's letter lies elsewhere, move its likely range one letter at a time:
+
+* **click** a letter of the range to move it one letter toward A;
+* **right-click** it to move it one letter toward Z.
+
+For example, three right-clicks on the start of `J-L` give `K-L`, then `L`,
+and a right-click on the single `L` widens it to `L-M`. A move that would take
+the range outside the hard limits, or put its start after its end, is ignored.
+An adjusted range is shown in brown and applies to that cell only. To go back
+to the estimate, select the cell and press **Reset range** in the picker.
 
 **Keyboard.** The left and right arrow keys move along the key, Delete or
 Backspace clears a cell, and Escape deselects it.
 
-**Undo, Redo and Reset** step back, step forward, or clear every placed letter.
+**Undo, Redo and Reset** step back, step forward, or start the table afresh.
+Undo and Redo cover adjusted ranges as well as letters; Reset clears every
+placed letter and every adjusted range.
 
 When every cell is filled, the tool reports whether the resulting literal key
 derives the numerical key exactly.
