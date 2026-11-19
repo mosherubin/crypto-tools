@@ -42,8 +42,14 @@
 
   #picker { margin-top: 1rem; min-height: 2.5rem; }
   #picker button { font-family: var(--mono-font); font-size: 1rem; padding: 0.3rem 0.55rem; margin: 0 0.15rem 0.3rem 0; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  #guide-btn { padding: 5px 14px; font-size: 0.85em; }
   #picker button.likely-letter { background: var(--warning-surface); border: 1px solid var(--warning); border-radius: 3px; }
   #legend { font-size: 0.85rem; color: var(--muted); }
+  #legend .user-range { color: var(--accent); }
+  .likely.user-range { color: var(--accent); }
+  .likely-end { padding: 0 0.1rem; border-radius: 2px; }
+  .likely-end:hover { background: var(--warning-surface); outline: 1px solid var(--warning); }
   #match-summary { font-family: var(--sans-font); }
   #search-progress { display: none; width: 10rem; }
   #matches { margin-top: 0.5rem; }
@@ -52,7 +58,10 @@
 </head>
 <body>
   <p><a href="../index.html">&larr; back to tools</a></p>
-  <h1>Literal Key Reconstruction</h1>
+  <div class="header-row">
+    <h1>Literal Key Reconstruction</h1>
+    <button id="guide-btn" onclick="window.open('literal-key-reconstruction-guide.html', '_blank')">Guide</button>
+  </div>
   <p>Reconstruct the literal key (the word or phrase) behind a transposition cipher's numerical key, using the keyword reconstruction table of <i>Military Cryptanalysis IV</i> and <i>Military Cryptanalytics II</i>.</p>
 
   <div class="field">
@@ -79,8 +88,11 @@
     <div class="scroll"><table id="table"></table></div>
     <p id="legend">
       Each cell shows its number, the <b>likely</b> letters (estimated from English letter frequencies) and, in grey, the hard limits.
-      Chosen letters are black; <span class="deduced">forced letters are blue italic</span>.
+      Chosen letters are black; <span class="deduced">forced letters are blue italic</span>;
+      <span class="user-range">likely ranges you have adjusted are brown</span>.
       Click a cell, then click or type a letter. Arrow keys move, Delete clears.
+      To adjust a likely range, click one of its letters to move it toward A, or right-click it to move it toward Z;
+      <b>Reset range</b> puts the computed range back.
     </p>
     <div id="picker"></div>
     <div class="inline">
@@ -149,6 +161,8 @@ const byId = id => document.getElementById(id);
 // Cells are indexed by number - 1; `letters` holds the user's chosen letter (0-25) or null per cell.
 let table = null;
 let letters = [];
+// Per cell, a likely range {low, high} the user set by hand, or null to use the estimate.
+let likelyOverrides = [];
 let selected = null;
 let undoStack = [];
 let redoStack = [];
@@ -253,11 +267,27 @@ function withLetter(cell, letter) {
   return next;
 }
 
-function commit(nextLetters) {
-  undoStack.push(letters);
+function commit(nextLetters, nextOverrides = likelyOverrides) {
+  undoStack.push({ letters, likelyOverrides });
   redoStack = [];
+  const lettersChanged = nextLetters !== letters;
   letters = nextLetters;
-  renderAndSearch();
+  likelyOverrides = nextOverrides;
+  if (lettersChanged) renderAndSearch();
+  else render();
+}
+
+function displayedLikelyRange(cellLetters, cell, limits) {
+  const override = likelyOverrides[cell];
+  if (!override) return likelyRange(cellLetters, cell, limits);
+  const clamp = letter => Math.max(limits.low[cell], Math.min(limits.high[cell], letter));
+  return { low: clamp(override.low), high: clamp(override.high) };
+}
+
+function withLikelyOverride(cell, range) {
+  const next = likelyOverrides.slice();
+  next[cell] = range;
+  return next;
 }
 
 function fitWord(cellLetters, word, startPosition) {
@@ -357,8 +387,8 @@ function renderCell(td, cell, limits) {
     td.append(element('div', letters[cell] === null ? 'letter deduced' : 'letter', ALPHABET[limits.low[cell]]));
     return;
   }
-  const likely = likelyRange(letters, cell, limits);
-  td.append(element('div', 'likely', rangeText(likely.low, likely.high)));
+  const likely = displayedLikelyRange(letters, cell, limits);
+  td.append(likelyLine(cell, likely, limits));
   td.append(element('div', 'limits', rangeText(limits.low[cell], limits.high[cell])));
 }
 
@@ -414,7 +444,7 @@ function renderPicker() {
   if (selected === null) return;
   const others = withLetter(selected, null);
   const limits = computeLimits(others);
-  const likely = likelyRange(others, selected, limits);
+  const likely = displayedLikelyRange(others, selected, limits);
   [...ALPHABET].forEach((letter, index) => {
     const button = element('button', '', letter);
     button.disabled = index < limits.low[selected] || index > limits.high[selected];
@@ -422,10 +452,49 @@ function renderPicker() {
     button.addEventListener('click', () => commit(withLetter(selected, index)));
     picker.append(button);
   });
-  const clear = element('button', '', 'Clear');
+  const clear = element('button', '', 'Clear letter');
   clear.disabled = letters[selected] === null;
   clear.addEventListener('click', () => commit(withLetter(selected, null)));
   picker.append(clear);
+  if (limits.low[selected] === limits.high[selected]) return;
+  const resetRange = element('button', '', 'Reset range');
+  resetRange.title = 'Go back to the likely range estimated from English letter frequencies';
+  resetRange.disabled = !likelyOverrides[selected];
+  resetRange.addEventListener('click', () => commit(letters, withLikelyOverride(selected, null)));
+  picker.append(resetRange);
+}
+
+// A left click moves a likely-range letter one step toward A, a right click one step toward Z.
+// A one-letter range widens: its left click moves the start, its right click moves the end.
+function likelyEnd(cell, text, limits, towardA, towardZ) {
+  const span = element('span', 'likely-end', text);
+  span.title = 'Click: one letter toward A. Right-click: one letter toward Z.';
+  const adjust = (event, range) => {
+    event.preventDefault();
+    event.stopPropagation();
+    selected = cell;
+    const valid = range.low >= limits.low[cell] && range.high <= limits.high[cell] && range.low <= range.high;
+    if (valid) commit(letters, withLikelyOverride(cell, range));
+    else render();
+  };
+  span.addEventListener('click', event => adjust(event, towardA));
+  span.addEventListener('contextmenu', event => adjust(event, towardZ));
+  return span;
+}
+
+function likelyLine(cell, likely, limits) {
+  const { low, high } = likely;
+  const line = element('div', likelyOverrides[cell] ? 'likely user-range' : 'likely');
+  if (low === high) {
+    line.append(likelyEnd(cell, ALPHABET[low], limits, { low: low - 1, high }, { low, high: high + 1 }));
+    return line;
+  }
+  line.append(
+    likelyEnd(cell, ALPHABET[low], limits, { low: low - 1, high }, { low: low + 1, high }),
+    '-',
+    likelyEnd(cell, ALPHABET[high], limits, { low, high: high - 1 }, { low, high: high + 1 }),
+  );
+  return line;
 }
 
 function renderVerification(limits) {
@@ -548,7 +617,7 @@ function render() {
   renderVerification(limits);
   byId('undo').disabled = undoStack.length === 0;
   byId('redo').disabled = redoStack.length === 0;
-  byId('reset').disabled = letters.every(letter => letter === null);
+  byId('reset').disabled = letters.every(letter => letter === null) && likelyOverrides.every(range => range === null);
 }
 
 function select(cell) {
@@ -574,6 +643,7 @@ function start(key) {
     return;
   }
   letters = key.map(() => null);
+  likelyOverrides = key.map(() => null);
   selected = null;
   undoStack = [];
   redoStack = [];
@@ -610,18 +680,18 @@ byId('derive').addEventListener('click', () => {
 });
 
 byId('undo').addEventListener('click', () => {
-  redoStack.push(letters);
-  letters = undoStack.pop();
+  redoStack.push({ letters, likelyOverrides });
+  ({ letters, likelyOverrides } = undoStack.pop());
   renderAndSearch();
 });
 
 byId('redo').addEventListener('click', () => {
-  undoStack.push(letters);
-  letters = redoStack.pop();
+  undoStack.push({ letters, likelyOverrides });
+  ({ letters, likelyOverrides } = redoStack.pop());
   renderAndSearch();
 });
 
-byId('reset').addEventListener('click', () => commit(letters.map(() => null)));
+byId('reset').addEventListener('click', () => commit(letters.map(() => null), letters.map(() => null)));
 
 byId('trial-apply').addEventListener('click', () => {
   const message = byId('trial-message');

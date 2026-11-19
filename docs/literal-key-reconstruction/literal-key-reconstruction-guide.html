@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Moshe Rubin" />
+  <title>Literal Key Reconstruction — Guide</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../css/site.css" />
+  <link rel="stylesheet" href="../css/document.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Literal Key Reconstruction — Guide</h1>
+<p class="author">Moshe Rubin</p>
+</header>
+<p><a href="literal-key-reconstruction.html">← back to Literal Key
+Reconstruction</a></p>
+<h2 id="what-is-this-tool-used-for">What is this tool used for?</h2>
+<p>A <strong>literal key</strong> is a key made of letters: a word, a
+phrase or a sentence. A <strong>numerical key</strong> is a sequence of
+numbers. One produced from a literal key is called a <strong>derived
+numerical key</strong>.</p>
+<p>The usual method numbers the letters of the literal key in
+alphabetical order: the letter earliest in the alphabet gets 1, the next
+gets 2, and so on. A letter that occurs more than once is numbered from
+left to right.</p>
+<p>For example, in the key word LOGISTICS, C comes first in the
+alphabet, so it gets 1; G gets 2; the two I’s get 3 and 4, from left to
+right; and so on:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">L</th>
+<th style="text-align: center;">O</th>
+<th style="text-align: center;">G</th>
+<th style="text-align: center;">I</th>
+<th style="text-align: center;">S</th>
+<th style="text-align: center;">T</th>
+<th style="text-align: center;">I</th>
+<th style="text-align: center;">C</th>
+<th style="text-align: center;">S</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">8</td>
+</tr>
+</tbody>
+</table>
+<p>(After Callimahos, <em>Military Cryptanalytics</em>, part I, par.
+38.)</p>
+<p>Moving in the opposite direction, i.e., reconstructing the literal
+key given the derived numerical key, is a more difficult challenge.</p>
+<p>This tool helps a cryptanalyst reconstruct an original literal key
+from its numerical key.</p>
+<div class="indented">
+<p><b>NOTE</b>: A given numerical key can map to more than one possible
+and valid literal key. For example, the numerical key
+“1-9-2-6-7-3-4-8-5”, can be derived by numerous literal keys, including
+“AVAILABLE”, “BUCKTEETH”, and even “DUET TESTS”. A cryptanalyst should
+use common sense and collateral information to decide on the most
+probable literal key.</p>
+<p>As this note implies, literal keys can consist of one or more
+words.</p>
+</div>
+<h2 id="screen-shot">Screen shot</h2>
+<p>The following is a partially loaded initial screen:</p>
+<p><img src="graphics/initial-screenshot.png"
+title="Initial screenshot of Literal Key Reconstruction tool" /></p>
+<p>The screenshot shows the numerical key “6-7-5-2-3-1-4-9-8” derived
+from the literal key “STRIKEOUT”. The tool has created a “literal key
+reconstruction table” to aid in manually reconstructing the literal
+key.</p>
+<p>The tool has other useful sections, including the “Trial word” and
+“Word list matching” aids.</p>
+<p>The following section describes each of these aids.</p>
+<h2 id="the-different-tool-aids">The different tool aids</h2>
+<p>As mentioned in the previous section, the Literal Key Reconstruction
+tool offers different aids to simplify the task of reconstructing the
+original literal key. Let’s examine each part of the tool.</p>
+<h3 id="numerical-key">Numerical key</h3>
+<p>The whole point of the tool is to convert a numerical key to a
+literal one. Therefore, you must provide a numerical key in this text
+box.</p>
+<p>Type the numbers in key order and press <strong>Build table</strong>.
+Separate the numbers with dashes, spaces or commas:
+<code>6-9-1-4-11-7-10-2-3-8-5</code>,
+<code>6 9 1 4 11 7 10 2 3 8 5</code> and
+<code>6,9,1,4,11,7,10,2,3,8,5</code> are all read the same way.</p>
+<p>A key of length <em>n</em> must use each number from 1 to <em>n</em>
+exactly once. If it doesn’t, the tool says which numbers are missing and
+builds nothing.</p>
+<p><strong>Build table</strong> always starts over: it builds a new
+reconstruction table, clears any letters you have placed, and starts a
+new word-list search.</p>
+<p>Example: You solved a transposition cipher that uses the numerical
+key “9-1-11-6-5-10-2-12-7-4-3-8”. You should type this into the
+Numerical Key text field.</p>
+<h3 id="derive-a-numerical-key-from-a-literal-key">Derive a numerical
+key from a literal key</h3>
+<p>This aid works in the opposite direction: type a literal key, a word
+or a phrase, and press <strong>Derive numerical key</strong>. The tool
+numbers its letters as described above, puts the result in the
+<strong>Numerical key</strong> box, and builds the reconstruction table,
+just as <strong>Build table</strong> would.</p>
+<p>Only letters count. Upper and lower case are treated the same, and
+spaces, punctuation and digits are ignored, so <code>Duet tests</code>
+and <code>DUETTESTS</code> derive the same key.</p>
+<p>This is useful for practice: derive the key of a word you know, then
+try to reconstruct the word from the table. It also shows what the table
+looks like for a known answer.</p>
+<h3 id="reconstruction-table">Reconstruction table</h3>
+<p>This aid is based on the keyword reconstruction table described by
+Friedman (<em>Military Cryptanalysis IV</em>) and Callimahos
+(<em>Military Cryptanalytics II</em>).</p>
+<div class="indented">
+<p><b>NOTE</b>: Before using this aid, be sure to use the “word list
+matching” aid found below. If the matching fails to find the literal
+key, you can always come back to the reconstruction table aid for manual
+analysis.</p>
+</div>
+<p><strong>How the table is built.</strong> The numerical key runs
+across the top. Each number sits in a row of its own choosing: while the
+next higher number lies to the <em>right</em>, it stays in the same row;
+when it lies to the <em>left</em>, it drops to a new row. Letters never
+decrease from one number to the next, and a new row means the letter
+<em>must</em> increase. So the number of rows is the fewest different
+letters the literal key can have. The line above the table states this,
+for example <em>9 numbers in 5 rows: the literal key contains at least 5
+different letters.</em></p>
+<p><strong>Reading a cell.</strong> Each cell shows:</p>
+<ul>
+<li>its number;</li>
+<li>the <strong>likely</strong> range, for example <code>J-L</code>,
+estimated from English letter frequencies;</li>
+<li>in grey, the <strong>hard limits</strong>: the only letters the cell
+can possibly hold.</li>
+</ul>
+<p>The bottom row, <strong>Key</strong>, spells out the literal key as
+far as it is known.</p>
+<p><strong>Placing letters.</strong> Click a cell, then click a letter
+in the picker below the table or type it. Letters outside the cell’s
+limits are greyed out, and the letters in the likely range are
+highlighted. <strong>Clear letter</strong> removes the cell’s letter.
+Every letter you place narrows the limits of the other cells; when a
+cell is left with only one possible letter, the tool fills it in for
+you, in <em>blue italic</em>.</p>
+<p><strong>Adjusting a likely range.</strong> The estimate is only a
+guide. If you think a cell’s letter lies elsewhere, move its likely
+range one letter at a time:</p>
+<ul>
+<li><strong>click</strong> a letter of the range to move it one letter
+toward A;</li>
+<li><strong>right-click</strong> it to move it one letter toward Z.</li>
+</ul>
+<p>For example, three right-clicks on the start of <code>J-L</code> give
+<code>K-L</code>, then <code>L</code>, and a right-click on the single
+<code>L</code> widens it to <code>L-M</code>. A move that would take the
+range outside the hard limits, or put its start after its end, is
+ignored. An adjusted range is shown in brown and applies to that cell
+only. To go back to the estimate, select the cell and press
+<strong>Reset range</strong> in the picker.</p>
+<p><strong>Keyboard.</strong> The left and right arrow keys move along
+the key, Delete or Backspace clears a cell, and Escape deselects it.</p>
+<p><strong>Undo, Redo and Reset</strong> step back, step forward, or
+start the table afresh. Undo and Redo cover adjusted ranges as well as
+letters; Reset clears every placed letter and every adjusted range.</p>
+<p>When every cell is filled, the tool reports whether the resulting
+literal key derives the numerical key exactly.</p>
+<h3 id="trial-word">Trial word</h3>
+<p>When you suspect a word belongs somewhere in the literal key, try it
+here. Type the word, enter the key position where it starts (1 is the
+leftmost number of the key), and press <strong>Try</strong>.</p>
+<p>If the word fits, its letters are placed in the table in one step,
+and the limits of every other cell narrow just as if you had placed them
+by hand. Letters already in those cells are replaced.
+<strong>Undo</strong> takes the whole word back.</p>
+<p>If the word cannot fit, nothing changes and the tool says where the
+alphabetical order breaks, for example: <em>ACT does not fit: the
+alphabetical order breaks at position 5.</em> A word that runs past the
+end of the key is rejected too.</p>
+<p>A good strategy is to try a likely word, see how much of the key it
+settles, and undo it if the rest of the table leads nowhere.</p>
+<h3 id="word-list-matching">Word list matching</h3>
+<p>This aid searches a word list for words that fit the table. Load a
+plain-text file with one word per line (case doesn’t matter; lines with
+anything other than letters are skipped).</p>
+<p>To specify a word list, you will need to download such a file that
+contains a significant number of words (you can use this tool to
+reconstruct keys in any Latin character language (e.g., English, French,
+German). Searching the Internet will find such lists. Here are links to
+English lists you may want to download and use:</p>
+<ul>
+<li><a
+href="https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt">Google
+20,000 most common English words</a> (20,000 words). Few obscure words,
+so the matches are short and readable.</li>
+<li><a
+href="https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-usa.txt">Google
+10,000 most common US English words</a> (10,000 words). Even shorter;
+good for a first pass.</li>
+<li><a
+href="https://people.sc.fsu.edu/~jburkardt/datasets/words/wordlist.txt">John
+Burkardt’s word list</a> (300,260 words). A large general list.</li>
+<li><a
+href="https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt">dwyl
+English words, letters only</a> (about 370,000 words). Very complete,
+but full of rare words that fit by accident.</li>
+<li><a
+href="https://downloads.sourceforge.net/wordlist/12dicts-6.0.2.zip">12dicts
+by Alan Beale</a> (a zip of several carefully checked lists of common
+words; unzip it and load one of the <code>.txt</code> files).</li>
+</ul>
+<p>Start with a small list of common words; switch to a large one only
+if nothing sensible turns up.</p>
+<p>The tool shows two dynamic lists generated while searching
+proceeds.</p>
+<p><strong>Longest words that fit anywhere</strong> shows up to 60 words
+that fit somewhere in the key, longest first, each with the positions it
+would occupy, for example <code>PAPERWORK 6-14</code>. A long word
+rarely fits by accident, so it is a strong clue. Click a word to place
+it in the table.</p>
+<p><strong>Words and phrases filling the positions</strong> fills a
+stretch of the key completely with one or more words, using these
+settings:</p>
+<ul>
+<li><strong>Positions … to …</strong>: the stretch of the key to fill.
+It starts out as the whole key.</li>
+<li><strong>holding from … to … words</strong>: how many words the
+phrase may contain.</li>
+<li><strong>words of at least … letters</strong>: the shortest word
+allowed. Raising it cuts down on short-word noise.</li>
+</ul>
+<p>Phrases with the fewest words are listed first, and the search stops
+after 300 matches. A long search runs in the background: a progress bar
+shows how far it has got, and <strong>Stop</strong> halts it. Click a
+phrase to place it in the table.</p>
+<p>Every letter you place, by any means, restarts both lists, so they
+always reflect the table as it now stands. The best way to work is to
+pin a long word from the first list, then let the second list fill in
+the rest.</p>
+<h2 id="examples">Examples</h2>
+<ul>
+<li><a href="example-1-matching-one-word-key.html">Matching a one-word
+literal key</a></li>
+<li><a href="example-2-matching-multi-word-key.html">Matching a
+multi-word literal key</a></li>
+<li><a href="example-3-manually-solving-one-word-key.html">Manually
+solving a one-word literal key</a></li>
+</ul>
+<h2 id="references">References</h2>
+<p>The following are valuable references in the open cryptanalytic
+literature that deal with manually reconstructing a literal key given a
+numerical one.</p>
+<ul>
+<li>Callimahos, Lambros D., and William F. Friedman. <em>Military
+Cryptanalytics, Part II</em>. Washington, DC: National Security Agency,
+February 1958. Sec. 3, pp. 500–502. <a
+href="docum/Keyword-Recovery.Military-Cryptanalytics-II-section-3.pp.500-502.pdf"
+class="pdf-button" target="_blank">PDF</a></li>
+<li>Dr. Cryptogram [E. L. Newman]. <em>The Cryptogram</em> 16, no. 3
+(June–July 1947): 44–45. <a
+href="docum/Numerical-Keyword-Recovery.The-Cryptogram.JJ1947.pdf"
+class="pdf-button" target="_blank">PDF</a></li>
+<li>Friedman, William F. <em>Military Cryptanalysis, Part IV:
+Transposition and Fractionating Systems</em>. Washington, DC: Government
+Printing Office, 1941. Pp. 15–17. <a
+href="docum/Keyword-Recovery.Military-Cryptanalysis-IV.pp.15-17.pdf"
+class="pdf-button" target="_blank">PDF</a></li>
+<li>Gaines, Helen Fouché. <em>Elementary Cryptanalysis: A Study of
+Ciphers and Their Solution</em>. Boston: American Photographic
+Publishing, 1939. Pp. 64–65. Reprinted as <em>Cryptanalysis: A Study of
+Ciphers and Their Solution</em>. New York: Dover, 1956. <a
+href="docum/Elementary-Cryptanalysis.Keyword-Recovery.pp-64-65.pdf"
+class="pdf-button" target="_blank">PDF</a></li>
+</ul>
+</body>
+</html>

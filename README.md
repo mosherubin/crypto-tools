@@ -17,6 +17,8 @@ Every page links `docs/css/site.css`, which holds the shared fonts and colours (
 pandoc -s NAME.md -o NAME.html --css ../css/site.css --css ../css/document.css
 ```
 
+While writing, `python tools/DocsWatcher/watch_docs.py docs` runs that command for you every time a `.md` file under `docs/` is saved (give another folder to watch that one instead; with no folder it watches the current directory); refresh the page in the browser to see the result.
+
 ## License
 
 See [LICENSE](LICENSE).

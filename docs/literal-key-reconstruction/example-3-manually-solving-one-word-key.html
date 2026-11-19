@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Moshe Rubin" />
+  <title>Literal Key Reconstruction — Example 3</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../css/site.css" />
+  <link rel="stylesheet" href="../css/document.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Literal Key Reconstruction — Example 3</h1>
+<p class="subtitle">Manually solving a one-word literal key</p>
+<p class="author">Moshe Rubin</p>
+</header>
+<p><a href="literal-key-reconstruction-guide.html#examples">← back to
+the guide</a></p>
+<h2 id="the-challenge">The challenge</h2>
+<p>In this example, we will attempt to <u>manually</u> reconstruct a
+literal key from a numerical one. By “manually” we mean not making use
+of the automated aids such as word list matching. Manual reconstruction
+is a much more difficult task, possibly requiring backtracking
+assumptions made. Again, keep in mind that there is occasionally more
+than one literal word that produces the numerical key being
+analyzed.</p>
+<h2 id="the-numerical-key">The numerical key</h2>
+<p>For this example, I requested from AI to extract a random none-letter
+word from a large word list, to derive its numerical key, and to present
+it to me without divulging the original literal key – all done to “keep
+me honest” when trying to solve it.</p>
+<p>Here is the numerical key:</p>
+<pre class="large"><code>1-4-6-8-9-2-7-5-3</code></pre>
+<h2 id="step-by-step">Step by step</h2>
+<p>We begin by priming the “Literal Key Reconstruction” tool with the
+numerical key:</p>
+<p><img src="graphics/example-3-10.png"
+title="The tool, primed for example 3" /></p>
+<p>Let’s look at the word suffix, a vulnerable entry for many numerical
+keys:</p>
+<p><img src="graphics/example-3-20.png"
+title="Examining the word suffix" /></p>
+<p>Note the ascending diagonal of the cells: they constituted a diagonal
+from bottom-left to top-right.</p>
+<div class="indented">
+<p>We will refer to these columns, from left to right, as “column 7”,
+column 5”, and column 3”, identified by the numerical value at the top
+of each column.</p>
+</div>
+<p>If you think about it, the letter behind the cell in column 7 must
+alphabetically follow the letter in column 5, which in turn must follow
+the letter in column 3. Examining a list of the 100 most common
+three-letter suffixes in English, here are the ones whose letters honor
+the three reconstruction cells:</p>
+<pre class="large"><code>TED 1511
+LED 661
+RED 611
+NED 480
+SED 337
+HED 306
+TIC 297
+ZED 296 
+KED 262 
+IED 242 
+GED 231 
+PED 224 
+MED 192 
+URE 136 
+VED 129</code></pre>
+<p>Of the 15 suffixes, 13 of them end with “ED”. We will therefore
+assume the moment that our numerical key ends in “ED”:</p>
+<p><img src="graphics/example-3-30.png"
+title="After filling in ED in the suffix" /></p>
+<p>Inserting “E” in column 5 forces an “E” in column 4, and inserting
+“D” in column 3 modifies the true letter ranges in columns 1 and 2.</p>
+<p>Looking at column 1, after inserting “D” in column 3, the true range
+of letters is now A-D (the bolded A-C is the tools recommended range
+based on letter frequencies). Of the three possible letters, “AE”
+doesn’t look promising. “CE” is certainly possible but no common English
+word comes to mind. For now, we’ll go with a “B” in column 1:</p>
+<p><img src="graphics/example-3-40.png"
+title="After filling in B in column 1" /></p>
+<p>Let’s try to complete the three-letter suffix by examining column 7.
+The true range is wide at F-Y, while the tool reduces that range to F-R
+based on letter frequencies.</p>
+<p>Trying column 7 as “F” gives us:</p>
+<p><img src="graphics/example-3-50.png"
+title="After inserting F in column 7" /></p>
+<p>This forces column 6 to represent an “F”, too. Something doesn’t look
+right with the two Fs, so we undo the assignment by highlighting the “F”
+and clicking “Clear letter”. Now we assign the next letter “G”:</p>
+<p><img src="graphics/example-3-60.png"
+title="After inserting G in column 7" /></p>
+<p>In column 2, the only feasible letter in the range B-D is “D”:</p>
+<p><img src="graphics/example-3-70.png"
+title="After inserting D in column 2" /></p>
+<p>Inserting an “F” in column 6 does not bring any word to mind, but
+inserting a “G” does:</p>
+<p><img src="graphics/example-3-80.png"
+title="After inserting D in column 2" /></p>
+<p>The last remaining row is row 4. We can assume the letters there
+occur further down tha alphabet than “H” amd “M”. The word “BEGRUDGED”
+fits the bill and solves the problem:</p>
+<p><img src="graphics/example-3-90.png" title="The solution" /></p>
+<h2 id="post-mortem">Post Mortem</h2>
+<p>Reconstructing a key manually is naturally more difficult than word
+list matching. Nonetheless, there are cases where one is forced to at
+least partially solve it manually. These include literal keys with
+non-dictionary words and English or foreign names or words.</p>
+<p>Be sure to read the references in the top page; these give good
+rules-of-thumb when reconstructing literal keys manually.</p>
+</body>
+</html>

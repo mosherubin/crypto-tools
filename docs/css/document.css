@@ -18,6 +18,7 @@ header#title-block-header .author, header#title-block-header .date { color: var(
 img { max-width: 100%; height: auto; }
 
 code, pre { font-family: var(--mono-font); font-size: 0.9em; }
+pre code { font-size: 1em; }
 :not(pre) > code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 4px; }
 pre {
   background: var(--surface);
@@ -33,6 +34,23 @@ blockquote { margin: 1em 0; padding: 0 1em; color: var(--muted); border-left: 3p
 table { border-collapse: collapse; margin: 1em 0; display: block; overflow-x: auto; }
 th, td { border: 1px solid var(--border); padding: 0.35em 0.7em; vertical-align: top; }
 th { background: var(--surface); text-align: left; }
+
+.indented { margin-left: 2em; }
+.large { font-size: 1.3em; }
+
+a.pdf-button {
+  display: inline-block;
+  margin-left: 0.4em;
+  padding: 0 0.6em;
+  font-size: 0.8em;
+  line-height: 1.6;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+}
+a.pdf-button:hover { background: var(--surface-hover); }
 
 hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 
