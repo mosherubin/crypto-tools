@@ -10,11 +10,16 @@
 <body>
   <header>
     <h1>Moshe Rubin's crypto-tools</h1>
+    <p class="intro">Browser-based tools for classical cryptanalysis, each with a guide to the method behind it. The first is Literal Key Reconstruction, which recovers the word or phrase behind a transposition numerical key, following the methods of Friedman's <i>Military Cryptanalysis</i> and Callimahos's <i>Military Cryptanalytics</i>. More tools will follow as their guides are written.</p>
+    <p class="intro">Every tool runs in your browser, with nothing to install.</p>
+    <!-- Original intro, to restore when more tools are published.
     <p class="intro">Browser-based tools for classical cryptanalysis: diagnosing an unknown ciphertext, solving polyalphabetic and transposition ciphers, and exchanging ciphertexts in the CryptML format. Many of them put into practice the methods of the classic texts, such as Friedman's <i>Military Cryptanalysis</i>, Callimahos's <i>Military Cryptanalytics</i> and Sinkov's <i>Elementary Cryptanalysis</i>.</p>
     <p class="intro">Every tool runs in your browser, with nothing to install. The source code is on <a href="https://github.com/mosherubin/crypto-tools">GitHub</a>.</p>
+    -->
   </header>
 
   <main>
+    <!-- Hidden until their guides are written.
     <h2 title="Tests that characterize a ciphertext and help identify the type of cipher.">Diagnostics</h2>
     <ul class="tools">
       <li><a href="stethoscope/stethoscope.html">STETHOSCOPE Cryptanalytic Diagnostics</a>
@@ -40,15 +45,19 @@
       <li><a href="decimate-alphabet/decimate-alphabet.html">Decimate Alphabet</a>
         <div class="description">Decimate an alphabet at every interval and show the cycle decomposition for each.</div></li>
     </ul>
+    -->
 
     <h2 title="Tools for working with transposition ciphers and their keys.">Transposition ciphers</h2>
     <ul class="tools">
+      <!-- Hidden until its guide is written.
       <li><a href="columnar-transposition/columnar-transposition.html">Columnar Transposition Table</a>
         <div class="description">Write a ciphertext into a columnar transposition table under a given key, left-to-right or right-to-left.</div></li>
+      -->
       <li><a href="literal-key-reconstruction/literal-key-reconstruction.html">Literal Key Reconstruction</a>
         <div class="description">Recover the word or phrase behind a transposition numerical key, using the keyword reconstruction table.</div></li>
     </ul>
 
+    <!-- Hidden until their guides are written.
     <h2 title="Tools for creating, checking and browsing files in the CryptML ciphertext-exchange format.">CryptML</h2>
     <ul class="tools">
       <li><a href="cryptml/cryptml-editor.html">CryptML Editor</a>
@@ -68,6 +77,7 @@
       <li><a href="hebrew-transliterator/hebrew-transliterator.html">Hebrew to Latin Transliterator</a>
         <div class="description">Map Hebrew letters to fixed Latin stand-ins so a Hebrew ciphertext can be run through the ASCII-only tools.</div></li>
     </ul>
+    -->
   </main>
 
   <footer>
