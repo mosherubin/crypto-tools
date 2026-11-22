@@ -10,7 +10,7 @@
 <body>
   <header>
     <h1>Moshe Rubin's crypto-tools</h1>
-    <p class="intro">Browser-based tools for classical cryptanalysis, each with a guide to the method behind it. The first is Literal Key Reconstruction, which recovers the word or phrase behind a transposition numerical key, following the methods of Friedman's <i>Military Cryptanalysis</i> and Callimahos's <i>Military Cryptanalytics</i>. More tools will follow as their guides are written.</p>
+    <p class="intro">Browser-based tools for classical cryptanalysis, each with a guide to the method behind it. Find Repetitions locates the repeated sequences within and between ciphertexts that reveal a cipher's period or messages sent in the same key. Literal Key Reconstruction recovers the word or phrase behind a transposition numerical key. Both follow the methods of the classic texts, such as Friedman's <i>Military Cryptanalysis</i> and Callimahos's <i>Military Cryptanalytics</i>. More tools will follow as their guides are written.</p>
     <p class="intro">Every tool runs in your browser, with nothing to install.</p>
     <!-- Original intro, to restore when more tools are published.
     <p class="intro">Browser-based tools for classical cryptanalysis: diagnosing an unknown ciphertext, solving polyalphabetic and transposition ciphers, and exchanging ciphertexts in the CryptML format. Many of them put into practice the methods of the classic texts, such as Friedman's <i>Military Cryptanalysis</i>, Callimahos's <i>Military Cryptanalytics</i> and Sinkov's <i>Elementary Cryptanalysis</i>.</p>
@@ -19,19 +19,23 @@
   </header>
 
   <main>
-    <!-- Hidden until their guides are written.
     <h2 title="Tests that characterize a ciphertext and help identify the type of cipher.">Diagnostics</h2>
     <ul class="tools">
+      <!-- Hidden until its guide is written.
       <li><a href="stethoscope/stethoscope.html">STETHOSCOPE Cryptanalytic Diagnostics</a>
         <div class="description">Run a battery of statistical tests on a ciphertext to help identify the type of cipher.</div></li>
+      -->
       <li><a href="find-repetitions/find-repetitions.html">Find Repetitions</a>
-        <div class="description">Find repeated sequences within one ciphertext or across several, with their positions and intervals.</div></li>
+        <div class="description">Find repeated sequences within one ciphertext or across several, with the positions where each one occurs.</div></li>
+      <!-- Hidden until their guides are written.
       <li><a href="isomorph/isomorph.html">Isomorph Search</a>
         <div class="description">Search one or more ciphertexts for isomorphs: sequences sharing the same pattern of repeated letters.</div></li>
       <li><a href="check-tetragram/check-tetragram.html">Check Tetragram</a>
         <div class="description">Look up a tetragram, with optional wildcards, against the frequency data used by the Quagmire solver.</div></li>
+      -->
     </ul>
 
+    <!-- Hidden until their guides are written.
     <h2 title="Tools for solving periodic polyalphabetic ciphers and reconstructing their alphabets.">Polyalphabetic ciphers</h2>
     <ul class="tools">
       <li><a href="solve-polyalphabetic-isologs/solve-polyalphabetic-isologs.html">Solve Polyalphabetic Isologs</a>

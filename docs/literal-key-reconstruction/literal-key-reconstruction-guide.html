@@ -86,7 +86,7 @@ key given the derived numerical key, is a more difficult challenge.</p>
 <p>This tool helps a cryptanalyst reconstruct an original literal key
 from its numerical key.</p>
 <div class="indented">
-<p><b>NOTE</b>: A given numerical key can map to more than one possible
+<p><b>NOTE:</b>: A given numerical key can map to more than one possible
 and valid literal key. For example, the numerical key
 “1-9-2-6-7-3-4-8-5”, can be derived by numerous literal keys, including
 “AVAILABLE”, “BUCKTEETH”, and even “DUET TESTS”. A cryptanalyst should
@@ -98,7 +98,9 @@ words.</p>
 <h2 id="screen-shot">Screen shot</h2>
 <p>The following is a partially loaded initial screen:</p>
 <p><img src="graphics/initial-screenshot.png"
-title="Initial screenshot of Literal Key Reconstruction tool" /></p>
+title="Initial screenshot of Literal Key Reconstruction tool"
+alt="Initial screenshot of Literal Key Reconstruction tool" /><br />
+</p>
 <p>The screenshot shows the numerical key “6-7-5-2-3-1-4-9-8” derived
 from the literal key “STRIKEOUT”. The tool has created a “literal key
 reconstruction table” to aid in manually reconstructing the literal
@@ -213,7 +215,7 @@ alphabetical order breaks at position 5.</em> A word that runs past the
 end of the key is rejected too.</p>
 <p>A good strategy is to try a likely word, see how much of the key it
 settles, and undo it if the rest of the table leads nowhere.</p>
-<h3 id="word-list-matching">Word list matching</h3>
+<h3 id="word-lists">Word list matching</h3>
 <p>This aid searches a word list for words that fit the table. Load a
 plain-text file with one word per line (case doesn’t matter; lines with
 anything other than letters are skipped).</p>
@@ -264,9 +266,14 @@ phrase may contain.</li>
 allowed. Raising it cuts down on short-word noise.</li>
 </ul>
 <p>Phrases with the fewest words are listed first, and the search stops
-after 300 matches. A long search runs in the background: a progress bar
-shows how far it has got, and <strong>Stop</strong> halts it. Click a
-phrase to place it in the table.</p>
+after 300 matches; the line beside <strong>Search again</strong> says
+when it has. Press <strong>Show 600 more</strong> to carry on from where
+it stopped, as often as you like. To keep the page responsive, each
+press replaces the phrases on screen with the next 600, headed by the
+range they cover, for example <em>Showing matches 301-900</em>. A long
+search runs in the background: a progress bar shows how far it has got,
+and <strong>Stop</strong> halts it. Click a phrase to place it in the
+table.</p>
 <p>Every letter you place, by any means, restarts both lists, so they
 always reflect the table as it now stands. The best way to work is to
 pin a long word from the first list, then let the second list fill in

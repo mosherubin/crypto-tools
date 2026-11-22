@@ -53,6 +53,7 @@
   #match-summary { font-family: var(--sans-font); }
   #search-progress { display: none; width: 10rem; }
   #matches { margin-top: 0.5rem; }
+  #matches-range { margin-top: 0.5rem; font-weight: bold; }
   #matches button, #longest-words button { font-family: var(--mono-font); font-size: 1rem; margin: 0 0.3rem 0.3rem 0; padding: 0.2rem 0.5rem; }
 </style>
 </head>
@@ -139,9 +140,11 @@
     <h3>Words and phrases filling the positions</h3>
     <div class="inline field">
       <button id="search-toggle" disabled>Search again</button>
+      <button id="more-matches" title="Carry on the search where it stopped and show the next 600 phrases in place of these">Show 600 more</button>
       <progress id="search-progress" max="1" value="0"></progress>
       <span id="match-summary"></span>
     </div>
+    <div id="matches-range"></div>
     <div id="matches"></div>
   </div>
 
@@ -152,7 +155,8 @@ const LETTER_FREQUENCY = [
   6.75, 7.51, 1.93, 0.10, 5.99, 6.33, 9.06, 2.76, 0.98, 2.36, 0.15, 1.97, 0.07,
 ];
 const LIKELY_TAIL = 0.1;
-const MAX_MATCHES_SHOWN = 300;
+const FIRST_MATCHES_SHOWN = 300;
+const MORE_MATCHES_SHOWN = 600;
 const SEARCH_SLICE_MILLISECONDS = 40;
 const MAX_LONGEST_WORDS_SHOWN = 60;
 
@@ -170,6 +174,8 @@ let redoStack = [];
 let wordIndex = new Map();
 let wordCount = 0;
 let search = null;
+// A search that stopped at its limit of matches, kept so "Show 600 more" can carry it on.
+let pausedSearch = null;
 
 function parseNumericalKey(text) {
   const key = (text.match(/\d+/g) || []).map(Number);
@@ -536,10 +542,23 @@ function showSearchState(summaryText, running) {
   byId('search-progress').style.display = running ? 'inline-block' : 'none';
   byId('search-toggle').textContent = running ? 'Stop' : 'Search again';
   byId('search-toggle').disabled = wordCount === 0;
+  byId('more-matches').style.display = pausedSearch ? 'inline-block' : 'none';
 }
 
-function endSearch(summaryText) {
+// Only one page of matches is on screen at a time; after the first page, say which matches it holds.
+function renderMatchesRange(run) {
+  let text = '';
+  if (run.firstShown > 1) {
+    text = run.found >= run.firstShown
+      ? `Showing matches ${run.firstShown}-${run.found}`
+      : `No more matches after ${run.firstShown - 1}`;
+  }
+  byId('matches-range').textContent = text;
+}
+
+function endSearch(summaryText, paused = null) {
   search = null;
+  pausedSearch = paused;
   showSearchState(summaryText, false);
 }
 
@@ -564,8 +583,9 @@ function runSearchSlice(run) {
     button.addEventListener('click', () => commit(phrase.letters));
     byId('matches').append(button);
     run.found++;
-    if (run.found === MAX_MATCHES_SHOWN) {
-      endSearch(`Stopped at the first ${run.found} that fit ${run.span}, ${percentDone(run)} of the way through.`);
+    renderMatchesRange(run);
+    if (run.found === run.limit) {
+      endSearch(`Stopped after ${run.found} matches that fit ${run.span}, ${percentDone(run)} of the way through.`, run);
       return;
     }
   }
@@ -576,7 +596,9 @@ function runSearchSlice(run) {
 
 function startSearch() {
   search = null;
+  pausedSearch = null;
   byId('matches').replaceChildren();
+  byId('matches-range').textContent = '';
   if (wordCount === 0) {
     showSearchState('', false);
     return;
@@ -603,6 +625,8 @@ function startSearch() {
     steps: findPhrases(from, to, minWords, maxWords, minLength),
     span: `positions ${from + 1}-${to + 1}`,
     found: 0,
+    firstShown: 1,
+    limit: FIRST_MATCHES_SHOWN,
     done: 0,
   };
   runSearchSlice(search);
@@ -722,6 +746,15 @@ byId('word-file').addEventListener('change', async event => {
 ['span-from', 'span-to', 'words-min', 'words-max', 'word-length-min']
   .forEach(id => byId(id).addEventListener('input', startSearch));
 byId('word-length-min').addEventListener('input', renderLongestWords);
+byId('more-matches').addEventListener('click', () => {
+  search = pausedSearch;
+  pausedSearch = null;
+  search.limit += MORE_MATCHES_SHOWN;
+  search.firstShown = search.found + 1;
+  byId('matches').replaceChildren();
+  renderMatchesRange(search);
+  runSearchSlice(search);
+});
 
 byId('search-toggle').addEventListener('click', () => {
   if (search === null) {

@@ -30,7 +30,7 @@ derived numerical key, is a more difficult challenge.
 This tool helps a cryptanalyst reconstruct an original literal key from its numerical key.
 
 ::: indented
-<b>NOTE</b>: A given numerical key can map to more than one possible and valid literal key.  For example, the numerical key "1-9-2-6-7-3-4-8-5", can be derived by numerous literal keys, including "AVAILABLE", "BUCKTEETH", and even "DUET TESTS".  A cryptanalyst should use common sense and collateral information to decide on the most probable literal key.
+<b>NOTE:</b>: A given numerical key can map to more than one possible and valid literal key.  For example, the numerical key "1-9-2-6-7-3-4-8-5", can be derived by numerous literal keys, including "AVAILABLE", "BUCKTEETH", and even "DUET TESTS".  A cryptanalyst should use common sense and collateral information to decide on the most probable literal key.
 
 As this note implies, literal keys can consist of one or more words.
 :::
@@ -39,7 +39,7 @@ As this note implies, literal keys can consist of one or more words.
 
 The following is a partially loaded initial screen:
 
-![](graphics/initial-screenshot.png "Initial screenshot of Literal Key Reconstruction tool")
+![Initial screenshot of Literal Key Reconstruction tool](graphics/initial-screenshot.png "Initial screenshot of Literal Key Reconstruction tool")\
 
 The screenshot shows the numerical key "6-7-5-2-3-1-4-9-8" derived from the literal key "STRIKEOUT".  The tool has created a "literal key reconstruction table" to aid in manually reconstructing the literal key.
 
@@ -160,7 +160,7 @@ rejected too.
 A good strategy is to try a likely word, see how much of the key it settles,
 and undo it if the rest of the table leads nowhere.
 
-### Word list matching
+### Word list matching {#word-lists}
 
 This aid searches a word list for words that fit the table. Load a plain-text
 file with one word per line (case doesn't matter; lines with anything other
@@ -205,7 +205,10 @@ completely with one or more words, using these settings:
   down on short-word noise.
 
 Phrases with the fewest words are listed first, and the search stops after
-300 matches. A long search runs in the background: a progress bar shows how
+300 matches; the line beside **Search again** says when it has. Press **Show 600
+more** to carry on from where it stopped, as often as you like. To keep the
+page responsive, each press replaces the phrases on screen with the next 600,
+headed by the range they cover, for example *Showing matches 301-900*. A long search runs in the background: a progress bar shows how
 far it has got, and **Stop** halts it. Click a phrase to place it in the table.
 
 Every letter you place, by any means, restarts both lists, so they always
