@@ -8,23 +8,22 @@ author: "Moshe Rubin"
 
 ## The numerical key
 
-Our example is taken from Military Cryptanalytics, part III, page 307:
+Our example is taken from *Military Cryptanalytics*, Part III, page 307:
 
-![Military cryptanalytics, part III, page 307](graphics/example-2-10.png "Military cryptanalytics, part III, page 307")\
+![Military Cryptanalytics, Part III, page 307](graphics/example-2-10.png "Military Cryptanalytics, Part III, page 307")\
 
-Although the example brought is a transposition matrix with blanks within, we are 
+Although the example is a transposition matrix containing blanks, we are 
 interested in the numerical key on top of the matrix:
 
 ```
 21 13 10 18 6 5 16 19 1 20 7 17 14 9 2 12 8 15 11 4 3
 ```
 
-As we saw in [Example 1](example-1-matching-one-word-key.html), here is our plan:
+As in [Example 1](example-1-matching-one-word-key.html), we start with a plan:
 
-* Given the length of the numerical key, we assume the liternal key in multi-word.
-* Using a word list, we'll search for a multi-word key that matches our numerical key.
-* If we don't find the literal key, we can select one or both of the following:
-    * Search again with a larger word list.
+* Search for 1–5 words of at least 3 letters.
+* If nothing fits, or only near-misses do, lower the minimum word length.
+* Failing that, try a larger word list.
 
 ## Step by step
 
@@ -32,10 +31,10 @@ First, enter the numerical key into the text box and click "Build table":
 
 ![Insert numerical key, initialize tool](graphics/example-2-20.png "Insert numerical key, initialize tool")\
 
-Scroll down to use word matching to discover the literal key, specifying Google's 20,000 common word list.  Now let's decide the parameters for matching words to the numberical key.  The numerical key has 21 values, so a single word is less probablr.  Let's widen our net and assume the following:
+Scroll down to use word matching to discover the literal key, specifying [Google's 20,000 common word list](literal-key-reconstruction-guide.html#word-lists).  Now let's decide the parameters for matching words to the numerical key.  The numerical key has 21 values, so a single 21-letter word is very unlikely.  Let's widen our net and assume the following:
 
-* There can be from one to five words
-* The minimum number of letters per word can be three (3).
+* There can be from one to five words.
+* Words have at least three letters, which keeps the search fast and the results short.
 
 Here is the word list matching filter:
 
@@ -45,20 +44,26 @@ By this time, the results should be in:
 
 ![The matching results](graphics/example-2-40.png "The matching results")\
 
-Looking in the section titled "Words and phrases filling the positions", the first match is familiar to us:
+Looking in the section titled "Words and phrases filling the positions", the first match, `UNITED STATE SPF AMERICA`, is familiar to us:
 
 ![A familiar result](graphics/example-2-50.png "A familiar result")\
 
-By now we can guess the correct literal key: "UNITEST STATES OF AMERICA".  The reason our word matching did not find the correct literal key was our setting "words of at least" to three (3), while the correct key has the two-letter word "OF".  We make two changes to the filter:
+By now we can guess the correct literal key: "UNITED STATES OF AMERICA".
 
-* Knowing the answer has four words, fixing the count at 4 removes the noise that a minimum of 2 would otherwise bring.
-* Changing the "words of at least" setting to two (2) to acommodate two-letter words (e.g., "OF").
+::: indented
+The matcher found `UNITED STATE SPF AMERICA` because the S moves from STATES to the next word. P can stand where O stood because both fall between N and R in this key. That's what makes the real answer easy to guess.
+:::
+
+The reason our word matching did not find the correct literal key was that setting "words of at least" to three (3) ruled out two-letter words like "OF".  We make two changes to the filter:
+
+* Set "words of at least" to two (2) to allow two-letter words (e.g., "OF").
+* Set both word counts to 4. This offsets the extra noise and run time that two-letter words bring.
 
 This results in:
 
 ![Improved filter, better results](graphics/example-2-60.png "Improved filter, better results")\
 
-The matcher found other solution such as `UNITED STATE SOG AMERICA` and `UNITED STATES OGAM ERICA`.  These fit because their letters fall in the same alphabetical order as the real key. The search can’t tell them apart from the true answer.  We need to use our intelligence to decide which is the correct key.
+Besides the correct `UNITED STATES OF AMERICA`, the matcher found other incorrect matches such as `UNITED STATE SPF AMERICA` and `UNITED STATES OH AMERICA`.  These fit because their letters fall in the same alphabetical order as the real key. The search can’t tell them apart from the true answer.  As always, we need to use our intelligence to decide what the correct key is.
 
 ### Longest words that fit anywhere
 
@@ -66,12 +71,14 @@ Now is a good opportunity to look at the section titled "Longest words that fit 
 
 ### Results: Words and phrases filling the positions
 
-In this section, the matcher found the probable phrase: UNITED STATES OF AMERICA.  Clicking on that word in the results sets up the reconstruction table with the solution:
+In this section, the matcher found the probable phrase mentioned above: UNITED STATES OF AMERICA.  Clicking that phrase in the results sets up the reconstruction table with the solution:
 
 ![The completed reconstruction table](graphics/example-2-70.png "The completed reconstruction table")\
 
-The reconstruction table states clearly "Literal key: UNITESSTATESOFAMERICA — it derives the numerical key exactly". 
+The reconstruction table states clearly "Literal key: UNITEDSTATESOFAMERICA — it derives the numerical key exactly". 
 
 ## Summary
 
-Because the numerical key was so long, to find the literal key requires a wider net.  This was accomplished by searching for 1-5 words in the literal key.  We set "words of at least" to three (3) to reduce run time and output noise.  The literal key was apparent, even with "words of at least" set to three.  Setting it to two (2) gave us the correct literal key.
+Because the numerical key was so long, finding the literal key required a wider net.  This was accomplished by searching for 1–5 words in the literal key.  We set "words of at least" to three (3) to reduce run time and output noise, and the literal key was apparent.  Lowering the minimum to two (2) found it exactly.
+
+Remember that short words such as OF, IN, TO and A are common in phrases. A minimum of 3 can miss the key, but a near-miss usually points to it.  Reduce it to two (2) to catch two-letter words, or one (1) if you suspect A or I.
