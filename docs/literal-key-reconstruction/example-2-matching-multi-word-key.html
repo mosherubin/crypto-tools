@@ -44,61 +44,96 @@ the guide</a></p>
 <p>Our example is taken from Military Cryptanalytics, part III, page
 307:</p>
 <p><img src="graphics/example-2-10.png"
-title="Military cryptanalytics, part III, page 307" /></p>
+title="Military cryptanalytics, part III, page 307"
+alt="Military cryptanalytics, part III, page 307" /><br />
+</p>
 <p>Although the example brought is a transposition matrix with blanks
 within, we are interested in the numerical key on top of the matrix:</p>
 <pre><code>21 13 10 18 6 5 16 19 1 20 7 17 14 9 2 12 8 15 11 4 3</code></pre>
 <p>As we saw in <a href="example-1-matching-one-word-key.html">Example
 1</a>, here is our plan:</p>
 <ul>
-<li>Using a word list, we’ll search for a single word that matches our
-numerical key.</li>
-<li>Should we fail to find the literal key, we will search again with a
-larger word list.</li>
-<li>If we still fail to find the key, we should assume the key consists
-of two or more words.</li>
+<li>Given the length of the numerical key, we assume the liternal key in
+multi-word.</li>
+<li>Using a word list, we’ll search for a multi-word key that matches
+our numerical key.</li>
+<li>If we don’t find the literal key, we can select one or both of the
+following:
+<ul>
+<li>Search again with a larger word list.</li>
+</ul></li>
 </ul>
 <h2 id="step-by-step">Step by step</h2>
 <p>First, enter the numerical key into the text box and click “Build
 table”:</p>
 <p><img src="graphics/example-2-20.png"
-title="Insert numerical key, initialize tool" /></p>
+title="Insert numerical key, initialize tool"
+alt="Insert numerical key, initialize tool" /><br />
+</p>
 <p>Scroll down to use word matching to discover the literal key,
-specifying our English word list of choice. Now let’s decide the
+specifying Google’s 20,000 common word list. Now let’s decide the
 parameters for matching words to the numberical key. The numerical key
-has 21 values, so although there could be a single 21-letter word, let’s
-widen our net and assume the following:</p>
+has 21 values, so a single word is less probablr. Let’s widen our net
+and assume the following:</p>
 <ul>
 <li>There can be from one to five words</li>
 <li>The minimum number of letters per word can be three (3).</li>
 </ul>
 <p>Here is the word list matching filter:</p>
-<p><img src="graphics/example-2-30.png"
-title="Set the matching filter" /></p>
+<p><img src="graphics/example-2-30.png" title="Set the matching filter"
+alt="Set the matching filter" /><br />
+</p>
 <p>By this time, the results should be in:</p>
-<p><img src="graphics/example-2-40.png"
-title="The matching results" /></p>
+<p><img src="graphics/example-2-40.png" title="The matching results"
+alt="The matching results" /><br />
+</p>
 <p>Looking in the section titled “Words and phrases filling the
-positions”, the first three are familiar to us:</p>
-<p><img src="graphics/example-2-50.png"
-title="Three familiar results" /></p>
-<p>By now we can guess the literal key: “UNITEST STATES OF AMERICA”. The
-reason our word matching did not find the correct literal key was our
-setting “words of at least” to three (3), while the literal key has the
-two-letter word “OF”. Changing the “words of at least” setting to two
-(2) results in:</p>
+positions”, the first match is familiar to us:</p>
+<p><img src="graphics/example-2-50.png" title="A familiar result"
+alt="A familiar result" /><br />
+</p>
+<p>By now we can guess the correct literal key: “UNITEST STATES OF
+AMERICA”. The reason our word matching did not find the correct literal
+key was our setting “words of at least” to three (3), while the correct
+key has the two-letter word “OF”. We make two changes to the filter:</p>
+<ul>
+<li>Knowing the answer has four words, fixing the count at 4 removes the
+noise that a minimum of 2 would otherwise bring.</li>
+<li>Changing the “words of at least” setting to two (2) to acommodate
+two-letter words (e.g., “OF”).</li>
+</ul>
+<p>This results in:</p>
 <p><img src="graphics/example-2-60.png"
-title="Improved filter, better results" /></p>
-<h2 id="longest-words-that-fit-anywhere">Longest words that fit
-anywhere</h2>
+title="Improved filter, better results"
+alt="Improved filter, better results" /><br />
+</p>
+<p>The matcher found other solution such as
+<code>UNITED STATE SOG AMERICA</code> and
+<code>UNITED STATES OGAM ERICA</code>. These fit because their letters
+fall in the same alphabetical order as the real key. The search can’t
+tell them apart from the true answer. We need to use our intelligence to
+decide which is the correct key.</p>
+<h3 id="longest-words-that-fit-anywhere">Longest words that fit
+anywhere</h3>
 <p>Now is a good opportunity to look at the section titled “Longest
 words that fit anywhere”. The results listed here are long words that
 match a portion of the numerical key, not necessarily positioned at the
 beginning of the numerical key. Thus, we see 60 such words that match
 different positions. Had we not solved the literal key, we might have
-searched for hints within this result list, with “AMERICA” and “UNITED”
-standing out.</p>
-<h2 id="post-mortem">Post Mortem</h2>
+searched for hints within this result list, with “AMERICA”, “UNITED”,
+and “STATES” standing out.</p>
+<h3 id="results-words-and-phrases-filling-the-positions">Results: Words
+and phrases filling the positions</h3>
+<p>In this section, the matcher found the probable phrase: UNITED STATES
+OF AMERICA. Clicking on that word in the results sets up the
+reconstruction table with the solution:</p>
+<p><img src="graphics/example-2-70.png"
+title="The completed reconstruction table"
+alt="The completed reconstruction table" /><br />
+</p>
+<p>The reconstruction table states clearly “Literal key:
+UNITESSTATESOFAMERICA — it derives the numerical key exactly”.</p>
+<h2 id="summary">Summary</h2>
 <p>Because the numerical key was so long, to find the literal key
 requires a wider net. This was accomplished by searching for 1-5 words
 in the literal key. We set “words of at least” to three (3) to reduce

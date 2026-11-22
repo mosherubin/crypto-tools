@@ -59,11 +59,15 @@ me honest” when trying to solve it.</p>
 <p>We begin by priming the “Literal Key Reconstruction” tool with the
 numerical key:</p>
 <p><img src="graphics/example-3-10.png"
-title="The tool, primed for example 3" /></p>
+title="The tool, primed for example 3"
+alt="The tool, primed for example 3" /><br />
+</p>
 <p>Let’s look at the word suffix, a vulnerable entry for many numerical
 keys:</p>
 <p><img src="graphics/example-3-20.png"
-title="Examining the word suffix" /></p>
+title="Examining the word suffix"
+alt="Examining the word suffix" /><br />
+</p>
 <p>Note the ascending diagonal of the cells: they constituted a diagonal
 from bottom-left to top-right.</p>
 <div class="indented">
@@ -94,7 +98,9 @@ VED 129</code></pre>
 <p>Of the 15 suffixes, 13 of them end with “ED”. We will therefore
 assume the moment that our numerical key ends in “ED”:</p>
 <p><img src="graphics/example-3-30.png"
-title="After filling in ED in the suffix" /></p>
+title="After filling in ED in the suffix"
+alt="After filling in ED in the suffix" /><br />
+</p>
 <p>Inserting “E” in column 5 forces an “E” in column 4, and inserting
 “D” in column 3 modifies the true letter ranges in columns 1 and 2.</p>
 <p>Looking at column 1, after inserting “D” in column 3, the true range
@@ -103,30 +109,42 @@ based on letter frequencies). Of the three possible letters, “AE”
 doesn’t look promising. “CE” is certainly possible but no common English
 word comes to mind. For now, we’ll go with a “B” in column 1:</p>
 <p><img src="graphics/example-3-40.png"
-title="After filling in B in column 1" /></p>
+title="After filling in B in column 1"
+alt="After filling in B in column 1" /><br />
+</p>
 <p>Let’s try to complete the three-letter suffix by examining column 7.
 The true range is wide at F-Y, while the tool reduces that range to F-R
 based on letter frequencies.</p>
 <p>Trying column 7 as “F” gives us:</p>
 <p><img src="graphics/example-3-50.png"
-title="After inserting F in column 7" /></p>
+title="After inserting F in column 7"
+alt="After inserting F in column 7" /><br />
+</p>
 <p>This forces column 6 to represent an “F”, too. Something doesn’t look
 right with the two Fs, so we undo the assignment by highlighting the “F”
 and clicking “Clear letter”. Now we assign the next letter “G”:</p>
 <p><img src="graphics/example-3-60.png"
-title="After inserting G in column 7" /></p>
+title="After inserting G in column 7"
+alt="After inserting G in column 7" /><br />
+</p>
 <p>In column 2, the only feasible letter in the range B-D is “D”:</p>
 <p><img src="graphics/example-3-70.png"
-title="After inserting D in column 2" /></p>
+title="After inserting D in column 2"
+alt="After inserting D in column 2" /><br />
+</p>
 <p>Inserting an “F” in column 6 does not bring any word to mind, but
 inserting a “G” does:</p>
 <p><img src="graphics/example-3-80.png"
-title="After inserting D in column 2" /></p>
+title="After inserting G in column 2"
+alt="After inserting D in column 2" /><br />
+</p>
 <p>The last remaining row is row 4. We can assume the letters there
 occur further down tha alphabet than “H” amd “M”. The word “BEGRUDGED”
 fits the bill and solves the problem:</p>
-<p><img src="graphics/example-3-90.png" title="The solution" /></p>
-<h2 id="post-mortem">Post Mortem</h2>
+<p><img src="graphics/example-3-90.png" title="The solution"
+alt="The solution" /><br />
+</p>
+<h2 id="summary">Summary</h2>
 <p>Reconstructing a key manually is naturally more difficult than word
 list matching. Nonetheless, there are cases where one is forced to at
 least partially solve it manually. These include literal keys with

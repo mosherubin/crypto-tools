@@ -1,15 +1,241 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Find Repetitions — Guide</title>
-<link rel="stylesheet" href="../css/site.css">
-<link rel="stylesheet" href="../css/document.css">
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Moshe Rubin" />
+  <title>Find Repetitions — Guide</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../css/site.css" />
+  <link rel="stylesheet" href="../css/document.css" />
 </head>
 <body>
-<p><a href="find-repetitions.html">&larr; back to Find Repetitions</a></p>
-<h1>Find Repetitions — Guide</h1>
-<p><em>(Guide content coming soon.)</em></p>
+<header id="title-block-header">
+<h1 class="title">Find Repetitions — Guide</h1>
+<p class="author">Moshe Rubin</p>
+</header>
+<p><a href="find-repetitions.html">← back to Find Repetitions</a></p>
+<h2 id="what-is-this-tool-used-for">What is this tool used for?</h2>
+<p>A <strong>repetition</strong> is a sequence of ciphertext letters
+that occurs more than once, either within one ciphertext or in two
+different ciphertexts. Short repetitions happen by chance in any text,
+but long ones rarely do: a long repetition almost always means that the
+same plaintext was enciphered in the same way twice.</p>
+<p>Repetitions are among the first things a cryptanalyst looks for:</p>
+<ul>
+<li><strong>Within one ciphertext.</strong> In a periodic polyalphabetic
+cipher, such as the Vigenère, the same plaintext gives the same
+ciphertext only when both occurrences fall at the same point in the key.
+The distance between them, the <strong>interval</strong>, is then a
+multiple of the period. Factoring the intervals of several repetitions
+and looking for the factor they share points to the period. This is the
+method of Kasiski.</li>
+<li><strong>Between ciphertexts.</strong> A repetition shared by two
+messages suggests that they were enciphered with the same key, or that
+they contain the same stereotyped wording, such as a common opening or
+signature. Messages like these can often be set in depth and solved
+together.</li>
+</ul>
+<p>This tool finds every repetition at or above a length you choose,
+within each ciphertext and between every pair of ciphertexts, and lists
+where each one occurs.</p>
+<h2 id="parts-of-the-page">Parts of the page</h2>
+<p>Here are the parts of the page, from top to bottom:</p>
+<ul>
+<li>the ciphertext boxes and the <strong>Import</strong> button;</li>
+<li>the settings: <strong>Description</strong>, <strong>Character
+set</strong>, <strong>Dits character</strong>, <strong>Display
+ciphertext(s) in output</strong> and <strong>Minimum Sequence
+Length</strong>;</li>
+<li>the <strong>Run</strong> and <strong>Print</strong> buttons;</li>
+<li>the output report.</li>
+</ul>
+<p>Hover over any part of the page for a second to see a short tip about
+it.</p>
+<h2 id="entering-the-ciphertexts">Entering the ciphertexts</h2>
+<h3 id="typing-or-pasting">Typing or pasting</h3>
+<p>Type or paste one ciphertext into each box. Spaces and line breaks
+are ignored, so the ciphertext may be in five-letter groups or in one
+long line. Upper and lower case are treated the same.</p>
+<p>To add another box, press <strong>+</strong> under any box; to remove
+a box, press <strong>−</strong> under it. The first box can’t be
+removed. Empty boxes are skipped when the search runs.</p>
+<p>A character that is neither in the character set nor the dits
+character (see below) stops the search with an error naming the
+character and its position.</p>
+<h3 id="importing-a-file">Importing a file</h3>
+<p><strong>Import</strong> reads one or more ciphertexts from a text
+file, such as one exported from a CryptML file. The file is read like
+this:</p>
+<ul>
+<li>Ciphertexts are separated by blank lines or by comment lines, which
+start with <code>#</code>. One ciphertext may run over several lines, as
+long as no blank line comes between them.</li>
+<li>A comment line just before a ciphertext becomes its
+<strong>label</strong>, which is shown beside the box and in the report,
+for example <code>Ciphertext 2 (Intercept A50/18)</code>.</li>
+<li>A comment line of the form
+<code># Date: "…" Time: "…" Ditschar: "."</code>, with any field left
+out, gives the ciphertext’s date, time and dit character instead.</li>
+</ul>
+<p>For example:</p>
+<pre><code># Intercept A50/17
+# Date: &quot;12 March 1943&quot; Time: &quot;0815&quot;
+XKQBM TRWPA LMNVC
+ZJQOE TRWPA
+
+# Intercept A50/18
+TRWPA HHJKL QWOEP</code></pre>
+<p>The first ciphertext in the file goes into the first empty box, and
+each of the others gets a new box. If a ciphertext in the file is
+already in one of the boxes, or appears twice in the file, the tool says
+so and offers to skip it. Importing the same file twice by mistake would
+otherwise double every repetition.</p>
+<p>An imported ciphertext keeps its label, date, time and dit character
+only until you edit it by hand. After that it is treated like a typed
+one.</p>
+<h2 id="settings">Settings</h2>
+<h3 id="description-optional">Description (optional)</h3>
+<p>A label for this run. It is printed at the top of the report.</p>
+<h3 id="character-set">Character set</h3>
+<p>The symbols the ciphertexts are written in:</p>
+<ul>
+<li><code>[A-Za-z]</code>: the 26 letters (the default);</li>
+<li><code>[0-9]</code>: the 10 digits;</li>
+<li><code>[A-Za-z0-9]</code>: letters and digits;</li>
+<li><strong>Other…</strong>: any set you type, written as in a regular
+expression. The brackets are optional: <code>ADFGVX</code>,
+<code>[ADFGVX]</code> and <code>A-IK-Z</code> (a 25-letter alphabet
+without J) are all accepted. Case is ignored.</li>
+</ul>
+<h3 id="dits-character">Dits character</h3>
+<p>A <strong>dit</strong> marks a position whose symbol exists but could
+not be read, for example in a garbled intercept. Enter the character
+that marks such positions, such as <code>.</code> or <code>-</code>. It
+is empty, meaning no dits, by default.</p>
+<p>A dit keeps its place, so the positions of the letters after it are
+unchanged, but it never matches anything, not even another dit. A
+repetition therefore stops at a dit and never contains one.</p>
+<p>An imported ciphertext uses the dit character its file names, or none
+if the file names none; this setting applies only to ciphertexts you
+type or paste.</p>
+<h3 id="display-ciphertexts-in-output">Display ciphertext(s) in
+output</h3>
+<p>When checked, the report starts by printing each ciphertext in groups
+of five, ten groups to a line, with its letter count. Dits are printed
+as <code>.</code>. This makes it easy to check positions by hand.</p>
+<h3 id="minimum-sequence-length">Minimum Sequence Length</h3>
+<p>The shortest repetition to report; the default is 5. Every text
+repeats short sequences by chance, so a floor is needed. Lower it to
+look for weaker evidence, and raise it if the list is flooded with
+chance repetitions. For a period search, repetitions of three or four
+letters are often worth seeing as well.</p>
+<h2 id="running-the-search">Running the search</h2>
+<p>Press <strong>Run</strong>. Every ciphertext is searched against
+itself, and every pair of ciphertexts against each other.</p>
+<p><strong>Print</strong> opens the browser’s print dialog with just the
+report, so you can print it or save it as a PDF.</p>
+<h2 id="reading-the-report">Reading the report</h2>
+<p>The report has a header, giving the date and time of the run, the
+description, the character set and the number of dits, if any. The
+ciphertexts follow, if you asked for them, and then two tables.</p>
+<h3 id="repetitions-found">Repetitions found</h3>
+<p>Each line is one repetition, listed once for each pair of places it
+occurs:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MSG A, MSG B</td>
+<td>The two ciphertexts it occurs in, numbered as on the page. They are
+the same number for a repetition within one ciphertext.</td>
+</tr>
+<tr>
+<td>POS A, POS B</td>
+<td>Where it starts in each of them, counting the first letter as
+1.</td>
+</tr>
+<tr>
+<td>LEN</td>
+<td>Its length.</td>
+</tr>
+<tr>
+<td>TEXT</td>
+<td>The repeated letters.</td>
+</tr>
+</tbody>
+</table>
+<p>The longest repetitions are listed first. Each one is as long as it
+can be: it is reported in full, not as a set of shorter overlapping
+pieces.</p>
+<p>For a repetition within one ciphertext, POS B is always after POS A,
+and the <strong>interval</strong> is POS B − POS A. A sequence that
+occurs more than twice appears on one line for every pair of its
+occurrences: three occurrences give three lines, four give six.</p>
+<p>The tool does not compare a ciphertext with itself shifted by a
+single position: that comparison can only find runs of one repeated
+letter, such as <code>EEEEEE</code>.</p>
+<h3 id="repetition-counts">Repetition counts</h3>
+<p>This table lists every sequence that appears on more than two lines
+of the first table, with the number of lines. It picks out sequences
+that occur many times, such as a common word or a stereotyped phrase.
+Because the count is of pairs, a count of 3 usually means three
+occurrences, and a count of 6 four.</p>
+<h2 id="examples-of-finding-repetitions">Examples of finding
+repetitions</h2>
+<ul>
+<li><a href="example-1-single-ciphertext-manually-inserted.html">A
+single ciphertext manually inserted</a></li>
+<li><a
+href="example-2-multiple-ciphertexts-manually-inserted.html">Multiple
+ciphertexts manually inserted</a></li>
+<li><a
+href="example-3-multiple-ciphertexts-from-imported-file.html">Multiple
+ciphertexts from an imported file</a></li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li>Kasiski, Friedrich W. <em>Die Geheimschriften und die
+Dechiffrir-Kunst</em>. Berlin: E. S. Mittler und Sohn, 1863.</li>
+<li>Friedman, William F. <em>Military Cryptanalysis, Part II: Simpler
+Varieties of Polyalphabetic Substitution Systems</em>. Washington, DC:
+Government Printing Office, 1938.</li>
+<li>Gaines, Helen Fouché. <em>Elementary Cryptanalysis: A Study of
+Ciphers and Their Solution</em>. Boston: American Photographic
+Publishing, 1939. Reprinted as <em>Cryptanalysis: A Study of Ciphers and
+Their Solution</em>. New York: Dover, 1956.</li>
+</ul>
 </body>
 </html>

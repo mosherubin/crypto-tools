@@ -24,11 +24,11 @@ Here is the numerical key:
 
 We begin by priming the "Literal Key Reconstruction" tool with the numerical key:
 
-![](graphics/example-3-10.png "The tool, primed for example 3")
+![The tool, primed for example 3](graphics/example-3-10.png "The tool, primed for example 3")\
 
 Let's look at the word suffix, a vulnerable entry for many numerical keys:
 
-![](graphics/example-3-20.png "Examining the word suffix")
+![Examining the word suffix](graphics/example-3-20.png "Examining the word suffix")\
 
 Note the ascending diagonal of the cells: they constituted a diagonal from bottom-left to top-right.
 
@@ -58,37 +58,37 @@ VED 129
 
 Of the 15 suffixes, 13 of them end with "ED".  We will therefore assume the moment that our numerical key ends in "ED":
 
-![](graphics/example-3-30.png "After filling in ED in the suffix")
+![After filling in ED in the suffix](graphics/example-3-30.png "After filling in ED in the suffix")\
 
 Inserting "E" in column 5 forces an "E" in column 4, and inserting "D" in column 3 modifies the true letter ranges in columns 1 and 2.
 
 Looking at column 1, after inserting "D" in column 3, the true range of letters is now A-D (the bolded A-C is the tools recommended range based on letter frequencies).  Of the three possible letters, "AE" doesn't look promising.  "CE" is certainly possible but no common English word comes to mind.  For now, we'll go with a "B" in column 1:
 
-![](graphics/example-3-40.png "After filling in B in column 1")
+![After filling in B in column 1](graphics/example-3-40.png "After filling in B in column 1")\
 
 Let's try to complete the three-letter suffix by examining column 7.  The true range is wide at F-Y, while the tool reduces that range to F-R based on letter frequencies.
 
 Trying column 7 as "F" gives us:
 
-![](graphics/example-3-50.png "After inserting F in column 7")
+![After inserting F in column 7](graphics/example-3-50.png "After inserting F in column 7")\
 
 This forces column 6 to represent an "F", too.  Something doesn't look right with the two Fs, so we undo the assignment by highlighting the "F" and clicking "Clear letter".  Now we assign the next letter "G":
 
-![](graphics/example-3-60.png "After inserting G in column 7")
+![After inserting G in column 7](graphics/example-3-60.png "After inserting G in column 7")\
 
 In column 2, the only feasible letter in the range B-D is "D":
 
-![](graphics/example-3-70.png "After inserting D in column 2")
+![After inserting D in column 2](graphics/example-3-70.png "After inserting D in column 2")\
 
 Inserting an "F" in column 6 does not bring any word to mind, but inserting a "G" does:
 
-![](graphics/example-3-80.png "After inserting D in column 2")
+![After inserting D in column 2](graphics/example-3-80.png "After inserting G in column 2")\
 
 The last remaining row is row 4.  We can assume the letters there occur further down tha alphabet than "H" amd "M".  The word "BEGRUDGED" fits the bill and solves the problem:
 
-![](graphics/example-3-90.png "The solution")
+![The solution](graphics/example-3-90.png "The solution")\
 
-## Post Mortem
+## Summary
 
 Reconstructing a key manually is naturally more difficult than word list matching.  Nonetheless, there are cases where one is forced to at least partially solve it manually.  These include literal keys with non-dictionary words and English or foreign names or words.
 
