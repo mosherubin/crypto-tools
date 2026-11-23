@@ -19,6 +19,10 @@ interested in the numerical key on top of the matrix:
 21 13 10 18 6 5 16 19 1 20 7 17 14 9 2 12 8 15 11 4 3
 ```
 
+::: indented
+In footnote 48 above, Lambros D. Callimahos challenges the reader to recover the literal key.  We will do that with our tool.
+:::
+
 As in [Example 1](example-1-matching-one-word-key.html), we start with a plan:
 
 * Search for 1–5 words of at least 3 letters.

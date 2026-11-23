@@ -226,6 +226,12 @@ German). Searching the Internet will find such lists. Here are links to
 English lists you may want to download and use:</p>
 <ul>
 <li><a
+href="https://www.cryptogram.org/resource-area/aca-word-lists/">The ACA
+(American Cryptogram Association) word lists</a>. Public word lists for
+languages from Croatian and Czech to Spanish and Swedish. Very useful
+for reconstructing literal keys in both English and foreign
+languages.</li>
+<li><a
 href="https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt">Google
 20,000 most common English words</a> (20,000 words). Few obscure words,
 so the matches are short and readable.</li>
@@ -264,18 +270,42 @@ It starts out as the whole key.</li>
 phrase may contain.</li>
 <li><strong>words of at least … letters</strong>: the shortest word
 allowed. Raising it cuts down on short-word noise.</li>
-<li><strong>At most … one-letter and … two-letter words</strong>:
-optional limits on how many short words a phrase may contain; leave a
-box blank for no limit. Short words fit almost anywhere, so a long key
-searched with a minimum of 1 or 2 can run for hours, especially with a
-list full of two-letter abbreviations.</li>
-<li><strong>Keep only A and I as one-letter words</strong>: many word
-lists include every letter of the alphabet as a word. While this is
-ticked, as it is at the start, all of them except A and I are ignored;
-untick it to use every one-letter word in the list. Together with limits
-such as one one-letter word and one two-letter word, it can bring a long
-search down to a few minutes.</li>
 </ul>
+<p>The following options are valuable when a word match takes an
+inordinate amount of time. A slow run is likely when several of these
+come together:</p>
+<ul>
+<li>a long key, such as the 37 numbers of PETER PIPER PICKED A PECK OF
+PICKLED PEPPERS;</li>
+<li>a phrase of many words, such as 8 to 8;</li>
+<li><strong>words of at least</strong> set to 1 or 2, because the key
+may hold words such as A, I, OF or TO;</li>
+<li>a word list with many one- and two-letter entries: every letter of
+the alphabet, or abbreviations such as CD, NH and TV. The Google and
+dwyl lists above are like this.</li>
+</ul>
+<p>The reason is how the search works. It builds each phrase one word at
+a time, trying every word that fits the next stretch of the key, and
+follows each try to the end of the phrase. Hardly any long word fits a
+given stretch, but a stretch of one or two positions is fitted by
+hundreds of short entries, and each of them starts a new line of tries.
+Over eight words, these multiply into a search that can run for days.
+Cutting down the short words cuts those lines off early. The following
+two options address these issues:</p>
+<ul>
+<li><strong>At most … one-letter and … two-letter words</strong>: limits
+on how many short words a phrase may contain; leave a box blank for no
+limit. A real phrase rarely needs more than one or two, so low limits
+lose little.</li>
+<li><strong>Keep only A and I as one-letter words</strong>: ignores
+every other single letter in the word list. It is ticked at the start;
+untick it only if your key may use another letter as a word.</li>
+</ul>
+<p>Used together, they matter more than either alone. With the Google
+list, PETER PIPER’s key, 8 words and a minimum of 1, the search ran all
+night and reached only 20%; with this box ticked and limits of one
+one-letter and one two-letter word, it finishes in under three
+minutes.</p>
 <p>Phrases with the fewest words are listed first, and the search stops
 after 300 matches; the line beside <strong>Search again</strong> says
 when it has. Press <strong>Show 600 more</strong> to carry on from where
