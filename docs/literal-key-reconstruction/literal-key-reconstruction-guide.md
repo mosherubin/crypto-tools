@@ -172,6 +172,7 @@ any Latin character language (e.g., English, French, German).  Searching the
 Internet will find such lists.  Here are links to English lists you may want
 to download and use:
 
+* [The ACA (American Cryptogram Association) word lists](https://www.cryptogram.org/resource-area/aca-word-lists/). Public word lists for languages from Croatian and Czech to Spanish and Swedish.  Very useful for reconstructing literal keys in both English and foreign languages.
 * [Google 20,000 most common English words](https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt)
   (20,000 words). Few obscure words, so the matches are short and readable.
 * [Google 10,000 most common US English words](https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-usa.txt)
@@ -203,13 +204,44 @@ completely with one or more words, using these settings:
 * **holding from … to … words**: how many words the phrase may contain.
 * **words of at least … letters**: the shortest word allowed. Raising it cuts
   down on short-word noise.
+  
+The following options are valuable when a word match takes an inordinate
+amount of time. A slow run is likely when several of these come together:
+
+* a long key, such as the 37 numbers of PETER PIPER PICKED A PECK OF PICKLED
+  PEPPERS;
+* a phrase of many words, such as 8 to 8;
+* **words of at least** set to 1 or 2, because the key may hold words such as
+  A, I, OF or TO;
+* a word list with many one- and two-letter entries: every letter of the
+  alphabet, or abbreviations such as CD, NH and TV. The Google and dwyl lists
+  above are like this.
+
+The reason is how the search works. It builds each phrase one word at a time,
+trying every word that fits the next stretch of the key, and follows each try
+to the end of the phrase. Hardly any long word fits a given stretch, but a
+stretch of one or two positions is fitted by hundreds of short entries, and
+each of them starts a new line of tries. Over eight words, these multiply into
+a search that can run for days. Cutting down the short words cuts those lines
+off early.  The following two options address these issues:
+
+* **At most … one-letter and … two-letter words**: limits on how many short
+  words a phrase may contain; leave a box blank for no limit. A real phrase
+  rarely needs more than one or two, so low limits lose little.
+* **Keep only A and I as one-letter words**: ignores every other single
+  letter in the word list. It is ticked at the start; untick it only if your
+  key may use another letter as a word.
+
+Used together, they matter more than either alone. With the Google list,
+PETER PIPER's key, 8 words and a minimum of 1, the search ran all night and
+reached only 20%; with this box ticked and limits of one one-letter and one
+two-letter word, it finishes in under three minutes.
 
 Phrases with the fewest words are listed first, and the search stops after
 300 matches; the line beside **Search again** says when it has. Press **Show 600
 more** to carry on from where it stopped, as often as you like. To keep the
 page responsive, each press replaces the phrases on screen with the next 600,
-headed by the range they cover, for example *Showing matches 301-900*. A long search runs in the background: a progress bar shows how
-far it has got, and **Stop** halts it. Click a phrase to place it in the table.
+headed by the range they cover, for example *Showing matches 301-900*. A long search runs in the background: a progress bar shows how far it has got, and **Stop** halts it. Click a phrase to place it in the table.
 
 Every letter you place, by any means, restarts both lists, so they always
 reflect the table as it now stands. The best way to work is to pin a long word

@@ -40,10 +40,8 @@ Set the matching filter:
 * Positions 1 to 13 already cover the whole key, which you want to match, so leave them alone.
 * The word range of 1 to 1 means you're looking for a single word that solves the numerical key.
 * Leave the default value for minimum number of letters.  With one word specified, this value will only trim the "Longest words" results.
-
-::: indented
-When the key may contain several words, the smaller the minimum word length, the more time the tool needs to run.  If you think the smallest word in the key may be three letters (e.g., "the", "and"), then set the minimum value to three (3).  If you believe the single-letter words "A" or "I" may have been used in the literal key, you will need to specify a value of one (1). That slows the search, but may be needed to find the correct solution.
-:::
+    * When the key may contain several words, the smaller the minimum word length, the more time the tool needs to run.  If you think the smallest word in the key may be three letters (e.g., "the", "and"), then set the minimum value to three (3).  If you believe the single-letter words "A" or "I" may have been used in the literal key, you will need to specify a value of one (1). That slows the search, but may be needed to find the correct solution.
+    * The one- and two-letter limits are left blank, and the A-and-I box stays ticked.
 
 ![Setting the word list matching filter](graphics/example-1-50.png "Setting the word list matching filter")\
 
@@ -52,7 +50,7 @@ After a moment, you can see the results:
 ![The search results](graphics/example-1-60.png "The search results")\
 
 ::: indented
-<b>Note:</b> This screenshot shows proper names, brand names and abbreviations, such as PUBMED, XHTML, SONOMA and COHEN. Frequency lists built from web text include them. You should be aware of such noise when using public word lists.
+<b>Note:</b> This screenshot shows proper names, brand names and abbreviations, such as PUBMED, SONOMA, XHTML, COHEN. Frequency lists built from web text include them. You should be aware of such noise when using public word lists.
 :::
 
 ### Results: Longest words that fit anywhere
