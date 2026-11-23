@@ -133,6 +133,14 @@
       <input type="number" id="word-length-min" min="1" value="5">
       <label for="word-length-min">letters</label>
     </div>
+    <div class="inline field">
+      <label for="one-letter-max">At most</label>
+      <input type="number" id="one-letter-max" min="0" placeholder="any">
+      <label for="two-letter-max">one-letter and</label>
+      <input type="number" id="two-letter-max" min="0" placeholder="any">
+      <label for="two-letter-max">two-letter words</label>
+      <label><input type="checkbox" id="only-a-and-i"> Keep only A and I as one-letter words</label>
+    </div>
     <h3>Longest words that fit anywhere</h3>
     <p id="longest-summary"></p>
     <div id="longest-words"></div>
@@ -158,6 +166,8 @@ const LIKELY_TAIL = 0.1;
 const FIRST_MATCHES_SHOWN = 300;
 const MORE_MATCHES_SHOWN = 600;
 const SEARCH_SLICE_MILLISECONDS = 40;
+// Many word lists include every letter as a "word"; those letters fit almost anywhere and make phrase searches explode.
+const ONE_LETTER_WORDS = ['A', 'I'];
 const MAX_LONGEST_WORDS_SHOWN = 60;
 
 const byId = id => document.getElementById(id);
@@ -171,6 +181,7 @@ let selected = null;
 let undoStack = [];
 let redoStack = [];
 // Words grouped by their own numerical key: a word can only fill a span whose numbers rank the same way.
+let listWords = [];
 let wordIndex = new Map();
 let wordCount = 0;
 let search = null;
@@ -333,14 +344,19 @@ function longestFittingWords(minLength) {
 // Searches phrases of the fewest words first. Yields after every word tried so the caller can pause;
 // `done` is the fraction of the search already covered, each word count getting an equal portion
 // and each level sharing its parent's portion equally among its candidate words.
-function* findPhrases(from, to, minWords, maxWords, minLength) {
+function* findPhrases(from, to, minWords, maxWords, minLength, shortWordLimits) {
   const candidates = new Map();
   const candidatesFor = (start, end) => {
     const span = `${start}-${end}`;
     if (!candidates.has(span)) candidates.set(span, spanCandidates(start, end));
     return candidates.get(span);
   };
-  function* extend(start, words, cellLetters, wordsLeft, done, share) {
+  const isLimited = word => word.length in shortWordLimits;
+  const withinLimit = (word, shortWordCounts) =>
+    !isLimited(word) || shortWordCounts[word.length] < shortWordLimits[word.length];
+  const countWord = (word, shortWordCounts) =>
+    isLimited(word) ? { ...shortWordCounts, [word.length]: shortWordCounts[word.length] + 1 } : shortWordCounts;
+  function* extend(start, words, cellLetters, wordsLeft, done, share, shortWordCounts) {
     if (wordsLeft === 0) {
       yield { done, phrase: { words, letters: cellLetters } };
       return;
@@ -349,14 +365,17 @@ function* findPhrases(from, to, minWords, maxWords, minLength) {
     const lastEnd = to - (wordsLeft - 1) * minLength;
     const options = [];
     for (let end = firstEnd; end <= lastEnd; end++) {
-      candidatesFor(start, end).forEach(word => options.push({ word, end }));
+      candidatesFor(start, end)
+        .filter(word => withinLimit(word, shortWordCounts))
+        .forEach(word => options.push({ word, end }));
     }
     for (const [index, option] of options.entries()) {
       const doneBefore = done + share * index / options.length;
       yield { done: doneBefore };
       const { next, conflicts } = fitWord(cellLetters, option.word, start);
       if (conflicts.length === 0) {
-        yield* extend(option.end + 1, [...words, option.word], next, wordsLeft - 1, doneBefore, share / options.length);
+        yield* extend(option.end + 1, [...words, option.word], next, wordsLeft - 1, doneBefore,
+          share / options.length, countWord(option.word, shortWordCounts));
       }
     }
   }
@@ -365,7 +384,7 @@ function* findPhrases(from, to, minWords, maxWords, minLength) {
   for (let phraseLength = minWords; phraseLength <= mostWords; phraseLength++) {
     const done = (phraseLength - minWords) * share;
     yield { done, phraseLength };
-    yield* extend(from, [], letters, phraseLength, done, share);
+    yield* extend(from, [], letters, phraseLength, done, share, { 1: 0, 2: 0 });
   }
 }
 
@@ -594,6 +613,11 @@ function runSearchSlice(run) {
   setTimeout(() => runSearchSlice(run), 0);
 }
 
+function shortWordLimit(id) {
+  const value = byId(id).value.trim();
+  return value === '' ? Infinity : Number(value);
+}
+
 function startSearch() {
   search = null;
   pausedSearch = null;
@@ -608,6 +632,7 @@ function startSearch() {
   const minWords = Number(byId('words-min').value);
   const maxWords = Number(byId('words-max').value);
   const minLength = Number(byId('word-length-min').value);
+  const shortWordLimits = { 1: shortWordLimit('one-letter-max'), 2: shortWordLimit('two-letter-max') };
   if (!(from >= 0 && to >= from && to < table.key.length)) {
     showSearchState(`Positions must run from 1 to ${table.key.length}.`, false);
     return;
@@ -616,13 +641,17 @@ function startSearch() {
     showSearchState('The word count must run from 1 upwards, and words need at least 1 letter.', false);
     return;
   }
+  if (!Object.values(shortWordLimits).every(limit => limit >= 0 && (Number.isInteger(limit) || limit === Infinity))) {
+    showSearchState('The most one- and two-letter words must be whole numbers from 0 upwards, or blank for any number.', false);
+    return;
+  }
   const positionCount = to - from + 1;
   if (minWords * minLength > positionCount) {
     showSearchState(`${minWords} word${minWords > 1 ? 's' : ''} of at least ${minLength} letters cannot fit in ${positionCount} positions.`, false);
     return;
   }
   search = {
-    steps: findPhrases(from, to, minWords, maxWords, minLength),
+    steps: findPhrases(from, to, minWords, maxWords, minLength, shortWordLimits),
     span: `positions ${from + 1}-${to + 1}`,
     found: 0,
     firstShown: 1,
@@ -647,6 +676,11 @@ function render() {
 function select(cell) {
   selected = cell;
   render();
+}
+
+function loadListWords() {
+  const onlyAAndI = byId('only-a-and-i').checked;
+  loadWords(onlyAAndI ? listWords.filter(word => word.length > 1 || ONE_LETTER_WORDS.includes(word)) : listWords);
 }
 
 function renderAndSearch() {
@@ -739,11 +773,18 @@ byId('word-file').addEventListener('change', async event => {
   const file = event.target.files[0];
   if (!file) return;
   const words = (await file.text()).split(/\r?\n/).map(line => line.trim().toUpperCase());
-  loadWords(words.filter(word => /^[A-Z]+$/.test(word)));
+  listWords = words.filter(word => /^[A-Z]+$/.test(word));
+  loadListWords();
   renderAndSearch();
 });
 
-['span-from', 'span-to', 'words-min', 'words-max', 'word-length-min']
+byId('only-a-and-i').addEventListener('change', () => {
+  if (listWords.length === 0) return;
+  loadListWords();
+  renderAndSearch();
+});
+
+['span-from', 'span-to', 'words-min', 'words-max', 'word-length-min', 'one-letter-max', 'two-letter-max']
   .forEach(id => byId(id).addEventListener('input', startSearch));
 byId('word-length-min').addEventListener('input', renderLongestWords);
 byId('more-matches').addEventListener('click', () => {
