@@ -208,8 +208,9 @@ completely with one or more words, using these settings:
   words fit almost anywhere, so a long key searched with a minimum of 1 or 2
   can run for hours, especially with a list full of two-letter abbreviations.
 * **Keep only A and I as one-letter words**: many word lists include every
-  letter of the alphabet as a word. Tick this to ignore all of them except A
-  and I. Together with limits such as one one-letter word and one two-letter
+  letter of the alphabet as a word. While this is ticked, as it is at the
+  start, all of them except A and I are ignored; untick it to use every
+  one-letter word in the list. Together with limits such as one one-letter word and one two-letter
   word, it can bring a long search down to a few minutes.
 
 Phrases with the fewest words are listed first, and the search stops after
