@@ -2,6 +2,7 @@
 title: "Literal Key Reconstruction — Example 1"
 subtitle: "Matching a one-word literal key"
 author: "Moshe Rubin"
+toc: true
 ---
 
 [&larr; back to the guide](literal-key-reconstruction-guide.html#examples)
