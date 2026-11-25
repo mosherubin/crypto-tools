@@ -130,6 +130,9 @@ function buildChains(topContents, botContents) {
       usedBot.add(prevPos);
     }
 
+    if (chain.length > 1 && chain[chain.length - 1] === chain[0]) {
+      chain.pop();
+    }
     if (chain.length >= 2) {
       chains.push([startPos, chain.join('')]);
     }
