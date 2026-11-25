@@ -54,12 +54,13 @@ def single_character(value: str) -> str:
 
 def format_results(results: list) -> str:
     lines = ["REPETITIONS FOUND"]
-    lines.append(f"{'MSG A':>6} {'MSG B':>6} {'POS A':>6} {'POS B':>6} {'LEN':>4}   TEXT")
+    lines.append(f"{'MSG A':>6} {'MSG B':>6} {'POS A':>6} {'POS B':>6} {'LEN':>4} {'DIST':>6}   TEXT")
     for r in sorted(results, key=lambda r: (-r.length, r.message_a, r.message_b, r.position_a)):
+        distance = r.position_b - r.position_a if r.message_a == r.message_b else ""
         lines.append(
             f"{r.message_a:>6} {r.message_b:>6} "
             f"{r.position_a + 1:>6} {r.position_b + 1:>6} "
-            f"{r.length:>4}   {r.text}"
+            f"{r.length:>4} {distance:>6}   {r.text}"
         )
     if not results:
         lines.append("(none found)")

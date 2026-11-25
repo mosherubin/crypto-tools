@@ -600,7 +600,7 @@ function formatResults(results, minLength) {
     var lines = [];
     lines.push('REPETITIONS FOUND  (minimum length ' + minLength + ')');
     lines.push(padStart('MSG A', 6) + ' ' + padStart('MSG B', 6) + ' ' + padStart('POS A', 6) + ' ' +
-               padStart('POS B', 6) + ' ' + padStart('LEN', 4) + '   TEXT');
+               padStart('POS B', 6) + ' ' + padStart('LEN', 4) + ' ' + padStart('DIST', 6) + '   TEXT');
 
     results.sort(function(a, b) {
         if (b.length !== a.length) return b.length - a.length;
@@ -611,10 +611,11 @@ function formatResults(results, minLength) {
 
     for (var i = 0; i < results.length; i++) {
         var r = results[i];
+        var distance = r.messageA === r.messageB ? r.positionB - r.positionA : '';
         lines.push(
             padStart(r.messageA + 1, 6) + ' ' + padStart(r.messageB + 1, 6) + ' ' +
             padStart(r.positionA + 1, 6) + ' ' + padStart(r.positionB + 1, 6) + ' ' +
-            padStart(r.length, 4) + '   ' + r.text
+            padStart(r.length, 4) + ' ' + padStart(distance, 6) + '   ' + r.text
         );
     }
 
