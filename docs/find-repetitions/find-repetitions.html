@@ -117,7 +117,7 @@
 <body>
 <p><a href="../index.html">&larr; back to tools</a></p>
 <div class="header-row">
-  <h1>Find Repetitions <span style="letter-spacing:normal; font-size:0.75em;">(version 0.1)</span></h1>
+  <h1>Find Repetitions <span style="letter-spacing:normal; font-size:0.75em;">(version 1.0)</span></h1>
   <button id="guide-btn" onclick="window.open('find-repetitions-guide.html', '_blank')">Guide</button>
 </div>
 
@@ -576,7 +576,7 @@ function runHeader() {
     var hh   = String(n.getHours()).padStart(2, '0');
     var mm   = String(n.getMinutes()).padStart(2, '0');
     var ss   = String(n.getSeconds()).padStart(2, '0');
-    return 'FIND REPETITIONS (version 0.1)  (Moshe Rubin)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
+    return 'FIND REPETITIONS (version 1.0)  Timestamp  ' + dd + ' ' + mon + ' ' + yyyy + '  -  ' + hh + ':' + mm + ':' + ss;
 }
 
 function formatCiphertextBlock(text, index, importLabel, importDate, importTime) {

@@ -38,11 +38,75 @@
 <p class="subtitle">Multiple ciphertexts manually inserted</p>
 <p class="author">Moshe Rubin</p>
 </header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#the-ciphertexts" id="toc-the-ciphertexts">The
+ciphertexts</a></li>
+<li><a href="#step-by-step" id="toc-step-by-step">Step by step</a></li>
+<li><a href="#what-the-search-results-show"
+id="toc-what-the-search-results-show">What the search results
+show</a></li>
+</ul>
+</nav>
 <p><a
 href="find-repetitions-guide.html#examples-of-finding-repetitions">←
 back to the guide</a></p>
+<p>In this example we will see how to enter multiple ciphertexts,
+searching for repetitions between all of them (and within each
+message).</p>
 <h2 id="the-ciphertexts">The ciphertexts</h2>
+<p>The following three messages are taken from <em>Military
+Cryptanalytics</em>, Part III, page 97 (section 32):</p>
+<pre><code>HUFII OCQJJ IVZOZ VPDGO VVVKW UEWHU
+UQHUM RZVQR UAKVD NNEZV GJPGH AYJDR
+UWNGR YSKBL QVUXN PHDPR SVKZP PPKGS
+LLPRV RBHAK WUAVW YUEZQ XAPQY GPSVS
+FNRAK CIFGZ UVCCP DKCWV XTWFM RFKBV
+ROQOJ DRUWN GRYSK BL
+
+JUFII OCQJJ IVZOZ IBFEJ SUBRJ SPKTS
+RZVXT WFMRF QHHFO RFJPD GOVVV KWUHE
+NDBDD RHWUN KCMPD GOVZS ENDBD DRHWU
+NPPKP EQOY
+
+FJUHF FKDEN ALUPZ KQMVB JWVPK EUBDD
+RHWUM RHVGP DNCUJ CDZCY RHUJU FZPQP
+YQCYH OEQZV XKCQF TVHNS VCCEJ PEAMP
+APOEP BHMVJ UNMHH WKCVG DSWJU EQZBO
+FFYUE ZQXAP QYGPA RPZVX CFNRA KCIFG
+ZUVCC PDKCO GJWZH APUFZ FVHAV XMHFF
+KMYHS TBSKC VRQIJ YCPZH UHCBM THOFH</code></pre>
 <h2 id="step-by-step">Step by step</h2>
-<h2 id="what-the-repetitions-show">What the repetitions show</h2>
+<p>We begin by copying the first ciphertext into the input box labeled
+<strong>Ciphertext 1</strong>:</p>
+<p><img src="graphics/example-2-10.png"
+title="After inserting ciphertext #1"
+alt="After inserting ciphertext #1" /><br />
+</p>
+<p>To add the second ciphertext, click <strong>+</strong> under the
+first box and paste it in. Do the same for the third, enter a
+description, and check <strong>Display ciphertext(s) in output</strong>.
+The page now looks like this:</p>
+<p><img src="graphics/example-2-20.png"
+title="All three messages inserted"
+alt="All three messages inserted" /><br />
+</p>
+<p>Click <strong>Run</strong> to execute the search.</p>
+<h2 id="what-the-search-results-show">What the search results show</h2>
+<p><img src="graphics/example-2-30.png" title="The search results"
+alt="The search results" /><br />
+</p>
+<p>These results are identical to the ones shown in <em>Military
+Cryptanalytics</em> (see the underlined repetitions):</p>
+<p><img src="graphics/example-2-40.png"
+title="The results in Military Cryptanalytics"
+alt="The results in Military Cryptanalytics" /><br />
+</p>
+<p>The 13-letter repetition <code>JDRUWNGRYSKBL</code> within message 1
+and the 10-letter <code>PDGOVVVKWU</code> shared by messages 1 and 2 are
+the ones the book studies. For what repetitions between messages can
+tell you, see <a
+href="find-repetitions-guide.html#uses-of-repetitions-between-messages">Uses
+of repetitions between messages</a>.</p>
 </body>
 </html>

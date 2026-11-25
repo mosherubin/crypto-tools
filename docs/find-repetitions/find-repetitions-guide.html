@@ -37,6 +37,65 @@
 <h1 class="title">Find Repetitions — Guide</h1>
 <p class="author">Moshe Rubin</p>
 </header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#what-is-this-tool-used-for"
+id="toc-what-is-this-tool-used-for">What is this tool used for?</a></li>
+<li><a href="#parts-of-the-page" id="toc-parts-of-the-page">Parts of the
+page</a></li>
+<li><a href="#entering-the-ciphertexts"
+id="toc-entering-the-ciphertexts">Entering the ciphertexts</a>
+<ul>
+<li><a href="#typing-or-pasting" id="toc-typing-or-pasting">Typing or
+pasting</a></li>
+<li><a href="#importing-a-file" id="toc-importing-a-file">Importing a
+file</a></li>
+</ul></li>
+<li><a href="#settings" id="toc-settings">Settings</a>
+<ul>
+<li><a href="#description-optional"
+id="toc-description-optional">Description (optional)</a></li>
+<li><a href="#character-set" id="toc-character-set">Character
+set</a></li>
+<li><a href="#dits-character" id="toc-dits-character">Dits
+character</a></li>
+<li><a href="#display-ciphertexts-in-output"
+id="toc-display-ciphertexts-in-output">Display ciphertext(s) in
+output</a></li>
+<li><a href="#minimum-sequence-length"
+id="toc-minimum-sequence-length">Minimum Sequence Length</a></li>
+</ul></li>
+<li><a href="#running-the-search" id="toc-running-the-search">Running
+the search</a></li>
+<li><a href="#reading-the-report" id="toc-reading-the-report">Reading
+the report</a>
+<ul>
+<li><a href="#repetitions-found" id="toc-repetitions-found">Repetitions
+found</a></li>
+<li><a href="#repetition-counts" id="toc-repetition-counts">Repetition
+counts</a></li>
+</ul></li>
+<li><a href="#uses-of-repetitions-between-messages"
+id="toc-uses-of-repetitions-between-messages">Uses of repetitions
+between messages</a>
+<ul>
+<li><a href="#messages-in-the-same-monoalphabetic-system"
+id="toc-messages-in-the-same-monoalphabetic-system">Messages in the same
+monoalphabetic system</a></li>
+<li><a href="#polyalphabetic-messages-with-the-identical-key"
+id="toc-polyalphabetic-messages-with-the-identical-key">Polyalphabetic
+messages with the identical key</a></li>
+<li><a href="#message-housekeeping"
+id="toc-message-housekeeping">Message housekeeping</a></li>
+<li><a href="#reading-the-results" id="toc-reading-the-results">Reading
+the results</a></li>
+</ul></li>
+<li><a href="#examples-of-finding-repetitions"
+id="toc-examples-of-finding-repetitions">Examples of finding
+repetitions</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
+</ul>
+</nav>
 <p><a href="find-repetitions.html">← back to Find Repetitions</a></p>
 <h2 id="what-is-this-tool-used-for">What is this tool used for?</h2>
 <p>A <strong>repetition</strong> is a sequence of ciphertext letters
@@ -63,7 +122,7 @@ together.</li>
 within each ciphertext and between every pair of ciphertexts, and lists
 where each one occurs.</p>
 <h2 id="parts-of-the-page">Parts of the page</h2>
-<p>Here are the parts of the page, from top to bottom:</p>
+<p>From top to bottom, the page has:</p>
 <ul>
 <li>the ciphertext boxes and the <strong>Import</strong> button;</li>
 <li>the settings: <strong>Description</strong>, <strong>Character
@@ -80,8 +139,8 @@ it.</p>
 <p>Type or paste one ciphertext into each box. Spaces and line breaks
 are ignored, so the ciphertext may be in five-letter groups or in one
 long line. Upper and lower case are treated the same.</p>
-<p>To add another box, press <strong>+</strong> under any box; to remove
-a box, press <strong>−</strong> under it. The first box can’t be
+<p>To add another box, click <strong>+</strong> under any box; to remove
+a box, click <strong>−</strong> under it. The first box cannot be
 removed. Empty boxes are skipped when the search runs.</p>
 <p>A character that is neither in the character set nor the dits
 character (see below) stops the search with an error naming the
@@ -134,8 +193,8 @@ without J) are all accepted. Case is ignored.</li>
 <h3 id="dits-character">Dits character</h3>
 <p>A <strong>dit</strong> marks a position whose symbol exists but could
 not be read, for example in a garbled intercept. Enter the character
-that marks such positions, such as <code>.</code> or <code>-</code>. It
-is empty, meaning no dits, by default.</p>
+that marks such positions, such as <code>.</code> or <code>-</code>. By
+default it is empty, meaning there are no dits.</p>
 <p>A dit keeps its place, so the positions of the letters after it are
 unchanged, but it never matches anything, not even another dit. A
 repetition therefore stops at a dit and never contains one.</p>
@@ -154,7 +213,7 @@ look for weaker evidence, and raise it if the list is flooded with
 chance repetitions. For a period search, repetitions of three or four
 letters are often worth seeing as well.</p>
 <h2 id="running-the-search">Running the search</h2>
-<p>Press <strong>Run</strong>. Every ciphertext is searched against
+<p>Click <strong>Run</strong>. Every ciphertext is searched against
 itself, and every pair of ciphertexts against each other.</p>
 <p><strong>Print</strong> opens the browser’s print dialog with just the
 report, so you can print it or save it as a PDF.</p>
@@ -163,8 +222,8 @@ report, so you can print it or save it as a PDF.</p>
 description, the character set and the number of dits, if any. The
 ciphertexts follow, if you asked for them, and then two tables.</p>
 <h3 id="repetitions-found">Repetitions found</h3>
-<p>Each line is one repetition, listed once for each pair of places it
-occurs:</p>
+<p>Each line is one repetition, listed once for each pair of places
+where it occurs:</p>
 <table>
 <colgroup>
 <col style="width: 50%" />
@@ -192,6 +251,12 @@ the same number for a repetition within one ciphertext.</td>
 <td>Its length.</td>
 </tr>
 <tr>
+<td>DIST</td>
+<td>For a repetition within one ciphertext, the distance between its two
+occurrences, POS B − POS A. Left blank for a repetition between two
+different ciphertexts.</td>
+</tr>
+<tr>
 <td>TEXT</td>
 <td>The repeated letters.</td>
 </tr>
@@ -201,9 +266,12 @@ the same number for a repetition within one ciphertext.</td>
 can be: it is reported in full, not as a set of shorter overlapping
 pieces.</p>
 <p>For a repetition within one ciphertext, POS B is always after POS A,
-and the <strong>interval</strong> is POS B − POS A. A sequence that
-occurs more than twice appears on one line for every pair of its
-occurrences: three occurrences give three lines, four give six.</p>
+and DIST is the <strong>interval</strong> between them. With a repeating
+key, the intervals of genuine repetitions are multiples of the period,
+but those of chance repetitions need not be.</p>
+<p>A sequence that occurs more than twice appears on one line for every
+pair of its occurrences: three occurrences give three lines, four give
+six.</p>
 <p>The tool does not compare a ciphertext with itself shifted by a
 single position: that comparison can only find runs of one repeated
 letter, such as <code>EEEEEE</code>.</p>
@@ -213,6 +281,96 @@ of the first table, with the number of lines. It picks out sequences
 that occur many times, such as a common word or a stereotyped phrase.
 Because the count is of pairs, a count of 3 usually means three
 occurrences, and a count of 6 four.</p>
+<h2 id="uses-of-repetitions-between-messages">Uses of repetitions
+between messages</h2>
+<p>Repetitions between messages have many uses, grouped below.</p>
+<h3 id="messages-in-the-same-monoalphabetic-system">Messages in the same
+monoalphabetic system</h3>
+<ol type="1">
+<li><strong>Identifying messages that share an alphabet.</strong>
+Repetitions at any position between two messages show they probably use
+the same cipher alphabet. If messages that repeat within themselves
+never repeat against each other, they probably use different
+alphabets.</li>
+<li><strong>Finding stock phrases and probable words.</strong>
+Greetings, addresses, headings, signatures, <code>SECRET</code> and
+standard formulas recur in many messages. A repeat found across several
+messages is a strong candidate for such a phrase, and it gives you a
+crib.</li>
+<li><strong>Carrying solved text from one message to another.</strong>
+Once a stretch of one message is solved, the same ciphertext in another
+message is solved too, and the letters around it become new cribs.</li>
+<li><strong>Pooling for frequency counts.</strong> Messages known to
+share an alphabet can be counted together. A bigger sample gives far
+more reliable frequencies.</li>
+</ol>
+<h3 id="polyalphabetic-messages-with-the-identical-key">Polyalphabetic
+messages with the identical key</h3>
+<ol start="5" type="1">
+<li><strong>Detecting identical keys.</strong> In a periodic
+polyalphabetic cipher, a plaintext repeated at the same key phase gives
+the same ciphertext. Many long repetitions between messages mean they
+were probably enciphered with the same key.</li>
+<li><strong>Putting messages in depth.</strong> Each repetition gives an
+offset, <code>POS A − POS B</code>. If the offsets agree (taken mod the
+period), sliding one message by that amount lines up the key letters.
+Every column then holds letters from the same alphabet. Several
+repetitions with the same offset confirm the alignment.</li>
+<li><strong>Measuring the period.</strong> Within one message, the
+factors common to the <code>DIST</code> values point to the period.
+Between messages, the offsets give a second, independent check, because
+they must agree with the same period.</li>
+<li><strong>Comparing key start points.</strong> A repetition at the
+same position in two messages means the key started at the same point. A
+repetition at a constant non-zero offset means the key started at a
+different point. This tells you how the message indicators relate, and
+whether the key is being reused at a shifted setting.</li>
+<li><strong>Telling mono- from polyalphabetic.</strong> Between
+monoalphabetic messages, repetitions fall at any offset. Between
+polyalphabetic ones, they fall only at offsets that agree modulo the
+period.</li>
+<li><strong>Spotting autokey.</strong> In a plaintext autokey system,
+each letter is enciphered with the previous plaintext letters (after an
+introductory key), so a plaintext repeated in two messages gives a
+ciphertext repeat that starts late, by the length of the introductory
+key. A ciphertext repeat that begins a letter or two after the matching
+plaintext, with one isolated differing letter before it, points to an
+autokey with a short introductory key. In <a
+href="example-2-multiple-ciphertexts-manually-inserted.html#what-the-search-results-show">Example
+2</a>, the first letters of messages 1 and 2 (<code>H</code> and
+<code>J</code>) differ before the shared <code>UFIIOCQJJIVZOZ</code>.
+<em>Military Cryptanalytics</em> reads that isolated first letter as the
+sign of a 1-letter introductory key.</li>
+</ol>
+<h3 id="message-housekeeping">Message housekeeping</h3>
+<ol start="11" type="1">
+<li><strong>Clustering a collection.</strong> Messages that share many
+repetitions probably belong together, and a message with none belongs
+elsewhere. This is the “cryptographic homogeneity” that <em>Military
+Cryptanalytics</em> speaks of, and it tells you which messages to work
+on together.</li>
+<li><strong>Finding retransmissions, corrections and garbles.</strong> A
+long repeat covering nearly a whole message means a re-sent message. A
+long repeat interrupted by a few letters means the same plaintext with a
+transmission error or a changed word. Both are used for error correction
+and as cribs.</li>
+<li><strong>Spotting fixed formats.</strong> Repeats at the same
+position near the start or end of several messages reveal fixed openings
+and closings, and padding.</li>
+</ol>
+<h3 id="reading-the-results">Reading the results</h3>
+<ol start="14" type="1">
+<li><strong>Weighing chance.</strong> For random letters, the number of
+chance repeats of length <em>L</em> between messages of lengths
+<em>a</em> and <em>b</em> is about <code>a × b / 26^L</code>. For two
+100-letter messages that is about 0.6 at length 3 and about 0.001 at
+length 5. Real text is less uniform, so expect more. Longer repeats are
+strong evidence, and short ones may be chance.</li>
+</ol>
+<p>Repetitions between messages enciphered with different keys will not
+normally appear as repeated sequences. Isomorphs, which share a pattern
+of repeated letters rather than the letters themselves, are the tool for
+that case.</p>
 <h2 id="examples-of-finding-repetitions">Examples of finding
 repetitions</h2>
 <ul>
@@ -236,6 +394,8 @@ Government Printing Office, 1938.</li>
 Ciphers and Their Solution</em>. Boston: American Photographic
 Publishing, 1939. Reprinted as <em>Cryptanalysis: A Study of Ciphers and
 Their Solution</em>. New York: Dover, 1956.</li>
+<li>Callimahos, Lambros D. <em>Military Cryptanalytics, Part III</em>.
+Fort George G. Meade, MD: National Security Agency, 1977.</li>
 </ul>
 </body>
 </html>

@@ -38,11 +38,73 @@
 <p class="subtitle">Multiple ciphertexts from an imported file</p>
 <p class="author">Moshe Rubin</p>
 </header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#the-ciphertexts" id="toc-the-ciphertexts">The
+ciphertexts</a></li>
+<li><a href="#step-by-step" id="toc-step-by-step">Step by step</a></li>
+</ul>
+</nav>
 <p><a
 href="find-repetitions-guide.html#examples-of-finding-repetitions">←
 back to the guide</a></p>
+<p>This example is very similar to <a
+href="example-2-multiple-ciphertexts-manually-inserted.html">example
+2</a>. The only difference is that the ciphertexts are imported from a
+file rather than pasted in one at a time.</p>
 <h2 id="the-ciphertexts">The ciphertexts</h2>
+<p>For this example, we will use the same three ciphertexts as in
+example 2. We will first create a text file containing all three
+ciphertexts. The format is as follows:</p>
+<ul>
+<li>Ciphertexts are separated from each other with a blank line.</li>
+<li>There should be <strong>no</strong> blank lines within a single
+ciphertext.</li>
+<li>You may put any number of comment lines before a ciphertext; each
+starts with <code>#</code>.</li>
+<li>The last comment before a ciphertext becomes its name in the report.
+Earlier comments, such as the Source line, are ignored.</li>
+</ul>
+<p>Here are the three ciphertexts as saved in a text file:</p>
+<pre><code># Source: Military Cryptanalytics, Part III, page 97 (section 32)
+# Message No. 1
+HUFII OCQJJ IVZOZ VPDGO VVVKW UEWHU
+UQHUM RZVQR UAKVD NNEZV GJPGH AYJDR
+UWNGR YSKBL QVUXN PHDPR SVKZP PPKGS
+LLPRV RBHAK WUAVW YUEZQ XAPQY GPSVS
+FNRAK CIFGZ UVCCP DKCWV XTWFM RFKBV
+ROQOJ DRUWN GRYSK BL
+
+# Message No. 2
+JUFII OCQJJ IVZOZ IBFEJ SUBRJ SPKTS
+RZVXT WFMRF QHHFO RFJPD GOVVV KWUHE
+NDBDD RHWUN KCMPD GOVZS ENDBD DRHWU
+NPPKP EQOY
+
+# Message No. 3
+FJUHF FKDEN ALUPZ KQMVB JWVPK EUBDD
+RHWUM RHVGP DNCUJ CDZCY RHUJU FZPQP
+YQCYH OEQZV XKCQF TVHNS VCCEJ PEAMP
+APOEP BHMVJ UNMHH WKCVG DSWJU EQZBO
+FFYUE ZQXAP QYGPA RPZVX CFNRA KCIFG
+ZUVCC PDKCO GJWZH APUFZ FVHAV XMHFF
+KMYHS TBSKC VRQIJ YCPZH UHCBM THOFH</code></pre>
 <h2 id="step-by-step">Step by step</h2>
-<h2 id="what-the-repetitions-show">What the repetitions show</h2>
+<p>To import the three messages, click the <strong>Import</strong>
+button and load your text file. Adding a description and checking
+<strong>Display ciphertext(s) in output</strong> should give you the
+following:</p>
+<p><img src="graphics/example-3-10.png"
+title="After importing the ciphertexts"
+alt="After importing the ciphertexts" /><br />
+</p>
+<p>All that remains is to click <strong>Run</strong>.</p>
+<p>All other steps are identical to example 2, and the results are the
+same:</p>
+<p><img src="graphics/example-3-20.png" title="Results"
+alt="Results" /><br />
+</p>
+<p>In the report, each ciphertext is headed with its name, for example
+<code>Ciphertext 1 (Message No. 1, 167 letters)</code>.</p>
 </body>
 </html>
