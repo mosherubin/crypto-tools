@@ -26,9 +26,16 @@ def stylesheet_options(markdown):
             for option in ('--css', Path(os.path.relpath(sheet, markdown.parent)).as_posix())]
 
 
+def table_of_contents_options(markdown):
+    # Pandoc fills in the table of contents only with --toc; "toc: true" in the front matter alone leaves it empty.
+    front_matter = markdown.read_text(encoding='utf-8').split('\n---', 1)[0]
+    return ['--toc'] if 'toc: true' in front_matter.splitlines() else []
+
+
 def build(markdown, folder):
     html = markdown.with_suffix('.html')
-    result = subprocess.run(['pandoc', '-s', markdown.name, '-o', html.name, *stylesheet_options(markdown)],
+    result = subprocess.run(['pandoc', '-s', markdown.name, '-o', html.name,
+                             *table_of_contents_options(markdown), *stylesheet_options(markdown)],
                             cwd=markdown.parent, capture_output=True, text=True)
     stamp = time.strftime('%H:%M:%S')
     if result.returncode != 0:

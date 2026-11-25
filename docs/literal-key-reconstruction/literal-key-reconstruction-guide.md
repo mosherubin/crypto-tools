@@ -1,6 +1,7 @@
 ---
 title: "Literal Key Reconstruction — Guide"
 author: "Moshe Rubin"
+toc: true
 ---
 
 [&larr; back to Literal Key Reconstruction](literal-key-reconstruction.html)
