@@ -46,6 +46,7 @@ ciphertexts</a></li>
 <li><a href="#what-the-search-results-show"
 id="toc-what-the-search-results-show">What the search results
 show</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
 </ul>
 </nav>
 <p><a
@@ -56,7 +57,7 @@ searching for repetitions between all of them (and within each
 message).</p>
 <h2 id="the-ciphertexts">The ciphertexts</h2>
 <p>The following three messages are taken from <em>Military
-Cryptanalytics</em>, Part III, page 97 (section 32):</p>
+Cryptanalytics, Part III</em>, page 97 (section 32):</p>
 <pre><code>HUFII OCQJJ IVZOZ VPDGO VVVKW UEWHU
 UQHUM RZVQR UAKVD NNEZV GJPGH AYJDR
 UWNGR YSKBL QVUXN PHDPR SVKZP PPKGS
@@ -104,9 +105,28 @@ alt="The results in Military Cryptanalytics" /><br />
 </p>
 <p>The 13-letter repetition <code>JDRUWNGRYSKBL</code> within message 1
 and the 10-letter <code>PDGOVVVKWU</code> shared by messages 1 and 2 are
-the ones the book studies. For what repetitions between messages can
-tell you, see <a
+the ones the book studies.</p>
+<p>The three repetitions within a single message have DIST values of 97,
+21 and 25, which share no common factor. In <a
+href="example-1-single-ciphertext-manually-inserted.html#step-by-step">example
+1</a> the intervals 30 and 60 pointed to a period of 5. Here they do
+not, which argues against a simple repeating key. This is one of the
+reasons Callimahos considers a plaintext autokey system possible (Part
+III, section 32).</p>
+<p>For what repetitions between messages can tell you, see <a
 href="find-repetitions-guide.html#uses-of-repetitions-between-messages">Uses
 of repetitions between messages</a>.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>Callimahos, Lambros D. <em>Military Cryptanalytics, Part III</em>.
+Fort George G. Meade, MD: National Security Agency, 1977. Released 2020.
+(<a
+href="https://www.governmentattic.org/41docs/NSAmilitaryCryptalyticsPt3_1977.pdf">Available
+online</a>)
+<ul>
+<li>See section 32 (pp. 97 ff.) for a discussion of analyzing the
+ciphertexts on this page.</li>
+</ul></li>
+</ul>
 </body>
 </html>

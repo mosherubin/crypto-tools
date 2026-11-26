@@ -110,8 +110,7 @@ cipher, such as the Vigenère, the same plaintext gives the same
 ciphertext only when both occurrences fall at the same point in the key.
 The distance between them, the <strong>interval</strong>, is then a
 multiple of the period. Factoring the intervals of several repetitions
-and looking for the factor they share points to the period. This is the
-method of Kasiski.</li>
+and looking for the factor they share points to the period.</li>
 <li><strong>Between ciphertexts.</strong> A repetition shared by two
 messages suggests that they were enciphered with the same key, or that
 they contain the same stereotyped wording, such as a common opening or
@@ -317,9 +316,13 @@ period), sliding one message by that amount lines up the key letters.
 Every column then holds letters from the same alphabet. Several
 repetitions with the same offset confirm the alignment.</li>
 <li><strong>Measuring the period.</strong> Within one message, the
-factors common to the <code>DIST</code> values point to the period.
-Between messages, the offsets give a second, independent check, because
-they must agree with the same period.</li>
+factors common to the <code>DIST</code> values point to the period, as
+in <a href="example-1-single-ciphertext-manually-inserted.html">Example
+1</a>. If the long repetitions share no common factor, as in <a
+href="example-2-multiple-ciphertexts-manually-inserted.html#what-the-search-results-show">Example
+2</a>, the key probably does not repeat. Between messages, the offsets
+give a second, independent check, because they must agree with the same
+period.</li>
 <li><strong>Comparing key start points.</strong> A repetition at the
 same position in two messages means the key started at the same point. A
 repetition at a constant non-zero offset means the key started at a
@@ -333,22 +336,24 @@ period.</li>
 each letter is enciphered with the previous plaintext letters (after an
 introductory key), so a plaintext repeated in two messages gives a
 ciphertext repeat that starts late, by the length of the introductory
-key. A ciphertext repeat that begins a letter or two after the matching
-plaintext, with one isolated differing letter before it, points to an
-autokey with a short introductory key. In <a
+key (for a one-letter key, Callimahos, Part III, section 30; see
+References). A ciphertext repeat that begins a letter or two after the
+matching plaintext, with one isolated differing letter before it, points
+to an autokey with a short introductory key. In <a
 href="example-2-multiple-ciphertexts-manually-inserted.html#what-the-search-results-show">Example
 2</a>, the first letters of messages 1 and 2 (<code>H</code> and
 <code>J</code>) differ before the shared <code>UFIIOCQJJIVZOZ</code>.
-<em>Military Cryptanalytics</em> reads that isolated first letter as the
-sign of a 1-letter introductory key.</li>
+Callimahos (Part III, section 32; see References) reads the isolated
+first letters (and the 16th) as the sign of a 1-letter introductory
+key.</li>
 </ol>
 <h3 id="message-housekeeping">Message housekeeping</h3>
 <ol start="11" type="1">
 <li><strong>Clustering a collection.</strong> Messages that share many
 repetitions probably belong together, and a message with none belongs
-elsewhere. This is the “cryptographic homogeneity” that <em>Military
-Cryptanalytics</em> speaks of, and it tells you which messages to work
-on together.</li>
+elsewhere. This is the “cryptographic homogeneity” that Callimahos (Part
+III, section 32; see References) speaks of, and it tells you which
+messages to work on together.</li>
 <li><strong>Finding retransmissions, corrections and garbles.</strong> A
 long repeat covering nearly a whole message means a re-sent message. A
 long repeat interrupted by a few letters means the same plaintext with a
@@ -385,17 +390,43 @@ ciphertexts from an imported file</a></li>
 </ul>
 <h2 id="references">References</h2>
 <ul>
-<li>Kasiski, Friedrich W. <em>Die Geheimschriften und die
-Dechiffrir-Kunst</em>. Berlin: E. S. Mittler und Sohn, 1863.</li>
+<li>Callimahos, Lambros D. <em>Military Cryptanalytics, Part III</em>.
+Fort George G. Meade, MD: National Security Agency, 1977. Released 2020.
+(<a
+href="https://www.governmentattic.org/41docs/NSAmilitaryCryptalyticsPt3_1977.pdf">Available
+online</a>)
+<ul>
+<li>Section 32 (pp. 97 ff.) shows a good example of locating repetitions
+in multiple ciphertexts.</li>
+</ul></li>
+<li>Friedman, William F. <em>Military Cryptanalysis, Part I:
+Monoalphabetic Substitution Systems</em>. 4th ed. Washington, DC:
+National Security Agency, December 1952. Revised and enlarged by Lambros
+D. Callimahos. (<a
+href="https://www.nsa.gov/Portals/75/documents/news-features/declassified-documents/friedman-documents/publications/FOLDER_241/41748389078762.pdf">Available
+online</a>)
+<ul>
+<li>See pp. 83–87 for how to locate and underscore repetitions and
+gather them into a condensed table of repetitions. The topic runs
+through large portions of the book.</li>
+</ul></li>
 <li>Friedman, William F. <em>Military Cryptanalysis, Part II: Simpler
 Varieties of Polyalphabetic Substitution Systems</em>. Washington, DC:
-Government Printing Office, 1938.</li>
+Government Printing Office, 1938. Released 2014. (<a
+href="https://www.nsa.gov/Portals/75/documents/news-features/declassified-documents/friedman-documents/publications/FOLDER_252/41752429079163.pdf">Available
+online</a>)
+<ul>
+<li>This source explains how repeated sequences reveal the period of a
+periodic polyalphabetic cipher. See Section III, pp. 10–16.</li>
+</ul></li>
 <li>Gaines, Helen Fouché. <em>Elementary Cryptanalysis: A Study of
 Ciphers and Their Solution</em>. Boston: American Photographic
 Publishing, 1939. Reprinted as <em>Cryptanalysis: A Study of Ciphers and
-Their Solution</em>. New York: Dover, 1956.</li>
-<li>Callimahos, Lambros D. <em>Military Cryptanalytics, Part III</em>.
-Fort George G. Meade, MD: National Security Agency, 1977.</li>
+Their Solution</em>. New York: Dover, 1956.
+<ul>
+<li>This book discusses using repeated sequences to solve monoalphabetic
+ciphers and to find the period of polyalphabetic ones.</li>
+</ul></li>
 </ul>
 </body>
 </html>

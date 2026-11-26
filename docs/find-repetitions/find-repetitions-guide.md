@@ -20,7 +20,7 @@ Repetitions are among the first things a cryptanalyst looks for:
   occurrences fall at the same point in the key. The distance between them, the
   **interval**, is then a multiple of the period. Factoring the intervals of
   several repetitions and looking for the factor they share points to the
-  period. This is the method of Kasiski.
+  period.
 * **Between ciphertexts.** A repetition shared by two messages suggests that
   they were enciphered with the same key, or that they contain the same
   stereotyped wording, such as a common opening or signature. Messages like
@@ -217,7 +217,11 @@ Repetitions between messages have many uses, grouped below.
    letters from the same alphabet. Several repetitions with the same offset
    confirm the alignment.
 7. **Measuring the period.** Within one message, the factors common to the
-   `DIST` values point to the period. Between messages, the offsets give a
+   `DIST` values point to the period, as in
+   [Example 1](example-1-single-ciphertext-manually-inserted.html). If the long
+   repetitions share no common factor, as in
+   [Example 2](example-2-multiple-ciphertexts-manually-inserted.html#what-the-search-results-show),
+   the key probably does not repeat. Between messages, the offsets give a
    second, independent check, because they must agree with the same period.
 8. **Comparing key start points.** A repetition at the same position in two
    messages means the key started at the same point. A repetition at a constant
@@ -230,20 +234,24 @@ Repetitions between messages have many uses, grouped below.
 10. **Spotting autokey.** In a plaintext autokey system, each letter is
     enciphered with the previous plaintext letters (after an introductory key),
     so a plaintext repeated in two messages gives a ciphertext repeat that
-    starts late, by the length of the introductory key. A ciphertext repeat that
+    starts late, by the length of the introductory key (for a one-letter key,
+    Callimahos, Part III, section 30; see References). A ciphertext repeat that
     begins a letter or two after the matching plaintext, with one isolated
     differing letter before it, points to an autokey with a short introductory
-    key. In [Example 2](example-2-multiple-ciphertexts-manually-inserted.html#what-the-search-results-show),
+    key. In
+    [Example 2](example-2-multiple-ciphertexts-manually-inserted.html#what-the-search-results-show),
     the first letters of messages 1 and 2 (`H` and `J`) differ before the shared
-    `UFIIOCQJJIVZOZ`. *Military Cryptanalytics* reads that isolated first letter
-    as the sign of a 1-letter introductory key.
+    `UFIIOCQJJIVZOZ`. Callimahos (Part III, section 32; see References) reads
+    the isolated first letters (and the 16th) as the sign of a 1-letter
+    introductory key.
 
 ### Message housekeeping
 
 11. **Clustering a collection.** Messages that share many repetitions probably
     belong together, and a message with none belongs elsewhere. This is the
-    "cryptographic homogeneity" that *Military Cryptanalytics* speaks of, and it
-    tells you which messages to work on together.
+    "cryptographic homogeneity" that Callimahos (Part III, section 32;
+    see References) speaks of, and it tells you which messages to work on
+    together.
 12. **Finding retransmissions, corrections and garbles.** A long repeat covering
     nearly a whole message means a re-sent message. A long repeat interrupted by
     a few letters means the same plaintext with a transmission error or a
@@ -271,13 +279,28 @@ letters rather than the letters themselves, are the tool for that case.
 
 ## References
 
-* Kasiski, Friedrich W. *Die Geheimschriften und die Dechiffrir-Kunst*. Berlin:
-  E. S. Mittler und Sohn, 1863.
-* Friedman, William F. *Military Cryptanalysis, Part II: Simpler Varieties of
-  Polyalphabetic Substitution Systems*. Washington, DC: Government Printing
-  Office, 1938.
-* Gaines, Helen Fouché. *Elementary Cryptanalysis: A Study of Ciphers and Their
+- Callimahos, Lambros D. *Military Cryptanalytics, Part III*.
+  Fort George G. Meade, MD: National Security Agency, 1977.
+  Released 2020.
+  ([Available online](https://www.governmentattic.org/41docs/NSAmilitaryCryptalyticsPt3_1977.pdf))
+  - Section 32 (pp. 97 ff.) shows a good example of locating repetitions in
+    multiple ciphertexts.
+- Friedman, William F.
+  *Military Cryptanalysis, Part I: Monoalphabetic Substitution Systems*.
+  4th ed. Washington, DC: National Security Agency, December 1952.
+  Revised and enlarged by Lambros D. Callimahos.
+  ([Available online](https://www.nsa.gov/Portals/75/documents/news-features/declassified-documents/friedman-documents/publications/FOLDER_241/41748389078762.pdf))
+  - See pp. 83–87 for how to locate and underscore repetitions and gather them
+    into a condensed table of repetitions. The topic runs through large
+    portions of the book.
+- Friedman, William F. *Military Cryptanalysis, Part II: Simpler Varieties
+  of Polyalphabetic Substitution Systems*.
+  Washington, DC: Government Printing Office, 1938. Released 2014.
+  ([Available online](https://www.nsa.gov/Portals/75/documents/news-features/declassified-documents/friedman-documents/publications/FOLDER_252/41752429079163.pdf))
+  - This source explains how repeated sequences reveal the period of a periodic
+    polyalphabetic cipher. See Section III, pp. 10–16.
+- Gaines, Helen Fouché. *Elementary Cryptanalysis: A Study of Ciphers and Their
   Solution*. Boston: American Photographic Publishing, 1939. Reprinted as
   *Cryptanalysis: A Study of Ciphers and Their Solution*. New York: Dover, 1956.
-* Callimahos, Lambros D. *Military Cryptanalytics, Part III*. Fort George G. 
-  Meade, MD: National Security Agency, 1977.
+  - This book discusses using repeated sequences to solve monoalphabetic ciphers
+    and to find the period of polyalphabetic ones.
